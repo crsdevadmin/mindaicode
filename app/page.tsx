@@ -8,20 +8,28 @@ const STARTING_VALUES = [72, 38, 86, 24, 58, 46, 68, 32];
 
 export default function Home() {
   const [values, setValues] = useState(STARTING_VALUES);
-  const [active, setActive] = useState<[number, number] | null>([2, 3]);
+  const [active, setActive] = useState<[number, number] | null>([0, 1]);
+  const [comparison, setComparison] = useState<[number, number] | null>([
+    STARTING_VALUES[0],
+    STARTING_VALUES[1],
+  ]);
   const [sortedFrom, setSortedFrom] = useState(STARTING_VALUES.length);
   const [playing, setPlaying] = useState(false);
   const [speed, setSpeed] = useState(55);
-  const [comparisons, setComparisons] = useState(1);
+  const [comparisons, setComparisons] = useState(0);
   const [swaps, setSwaps] = useState(0);
+  const [currentPass, setCurrentPass] = useState(1);
   const cursor = useRef({ pass: 0, index: 0 });
+  const totalPasses = values.length - 1;
 
   const resetCursor = () => {
     cursor.current = { pass: 0, index: 0 };
     setSortedFrom(values.length);
     setComparisons(0);
     setSwaps(0);
+    setCurrentPass(1);
     setActive([0, 1]);
+    setComparison([values[0], values[1]]);
   };
 
   const shuffle = () => {
@@ -32,7 +40,9 @@ export default function Home() {
     setSortedFrom(next.length);
     setComparisons(0);
     setSwaps(0);
+    setCurrentPass(1);
     setActive([0, 1]);
+    setComparison([next[0], next[1]]);
   };
 
   const step = () => {
@@ -42,12 +52,14 @@ export default function Home() {
     if (pass >= values.length - 1) {
       setPlaying(false);
       setActive(null);
+      setComparison(null);
       setSortedFrom(0);
       return;
     }
 
     const next = [...values];
     setActive([index, index + 1]);
+    setComparison([next[index], next[index + 1]]);
     setComparisons((count) => count + 1);
 
     if (next[index] > next[index + 1]) {
@@ -59,6 +71,14 @@ export default function Home() {
     if (index + 1 >= end) {
       cursor.current = { pass: pass + 1, index: 0 };
       setSortedFrom(end);
+      setCurrentPass(Math.min(pass + 2, totalPasses));
+
+      if (pass === totalPasses - 1) {
+        setPlaying(false);
+        setActive(null);
+        setComparison(null);
+        setSortedFrom(0);
+      }
     } else {
       cursor.current = { pass, index: index + 1 };
     }
@@ -89,7 +109,15 @@ export default function Home() {
           <a href="#practice">Practice</a>
           <a href="#progress">Progress</a>
         </div>
-        <button className="profile" aria-label="Open student profile">JS</button>
+        <button
+          className="profile"
+          type="button"
+          disabled
+          aria-label="Login is not configured yet"
+          title="Login setup pending"
+        >
+          ?
+        </button>
       </nav>
 
       <section className="hero" id="top">
@@ -139,9 +167,9 @@ export default function Home() {
               <h3>Compare neighbors</h3>
               <p>Is the left value larger than the right? If yes, they swap places.</p>
               <div className="compare-card">
-                <span>{active ? values[active[0]] : "✓"}</span>
-                <b>{active ? ">" : "DONE"}</b>
-                <span>{active ? values[active[1]] : "✓"}</span>
+                <span>{comparison ? comparison[0] : "✓"}</span>
+                <b>{comparison ? ">" : "DONE"}</b>
+                <span>{comparison ? comparison[1] : "✓"}</span>
               </div>
               <div className="complexity">
                 <div><span>TIME</span><strong>O(n²)</strong></div>
@@ -151,7 +179,7 @@ export default function Home() {
 
             <div className="visualizer">
               <div className="visualizer-top">
-                <div><span className="tiny-label">PASS</span><strong>{Math.min(cursor.current.pass + 1, 8)} / 8</strong></div>
+                <div><span className="tiny-label">PASS</span><strong>{currentPass} / {totalPasses}</strong></div>
                 <div className="stats">
                   <span>{comparisons} comparisons</span>
                   <span>{swaps} swaps</span>
@@ -210,6 +238,18 @@ export default function Home() {
           <div><span>2</span><strong>Swap</strong><small>Move the larger right</small></div>
           <div className="arrow">→</div>
           <div><span>3</span><strong>Repeat</strong><small>Until all are sorted</small></div>
+        </div>
+      </section>
+
+      <section className="progress-strip" id="progress">
+        <div>
+          <span className="section-kicker">YOUR LEARNING PATH</span>
+          <h2>One algorithm down.<br />A whole world to explore.</h2>
+        </div>
+        <div className="progress-card">
+          <div className="progress-card-top"><span>Sorting foundations</span><strong>1 / 8</strong></div>
+          <div className="progress-track"><span /></div>
+          <p>Bubble Sort is your first step. Complete the lesson to continue to Selection Sort.</p>
         </div>
       </section>
 

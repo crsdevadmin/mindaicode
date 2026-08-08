@@ -48,7 +48,8 @@ a { color: inherit; text-decoration: none; }
 .nav-links { display: flex; height: 100%; align-items: center; gap: 34px; font-size: 13px; font-weight: 700; }
 .nav-links a { height: 100%; display: grid; place-items: center; position: relative; }
 .nav-links a.active::after { content: ""; position: absolute; bottom: -1px; left: 0; width: 100%; height: 3px; background: var(--coral); }
-.profile { width: 38px; height: 38px; border: 0; border-radius: 50%; background: var(--ink); color: white; font-weight: 800; cursor: pointer; }
+.profile { width: 38px; height: 38px; border: 0; border-radius: 50%; background: var(--ink); color: white; font-weight: 800; }
+.profile:disabled { cursor: not-allowed; opacity: .68; }
 
 .hero {
   max-width: 1440px;
@@ -168,6 +169,14 @@ h1 em { color: var(--cobalt); font-family: Georgia, serif; font-weight: 500; }
 .idea-steps span { margin: auto; display: grid; place-items: center; width: 42px; height: 42px; border-radius: 50%; background: var(--cobalt); color: white; font-weight: 900; }
 .idea-steps strong { font-size: 18px; }.idea-steps small { color: #72747a; }
 .arrow { color: var(--coral); font-size: 30px; }
+.progress-strip { max-width: 1180px; margin: 0 auto; padding: 0 4vw 100px; display: grid; grid-template-columns: 1fr 1fr; align-items: center; gap: 70px; }
+.progress-strip h2 { margin: 10px 0 0; font-size: clamp(38px, 4vw, 58px); line-height: 1.02; letter-spacing: -3px; }
+.progress-card { padding: 30px; border: 2px solid var(--ink); background: var(--paper); box-shadow: 7px 7px 0 var(--cobalt); }
+.progress-card-top { display: flex; justify-content: space-between; gap: 20px; font-size: 13px; font-weight: 850; }
+.progress-card-top strong { font-family: monospace; color: var(--cobalt); }
+.progress-track { height: 13px; margin: 20px 0; border: 2px solid var(--ink); background: white; }
+.progress-track span { display: block; width: 12.5%; height: 100%; background: var(--coral); }
+.progress-card p { margin: 0; color: #63656b; font-size: 13px; line-height: 1.55; }
 footer { padding: 28px 5vw; background: var(--ink); color: white; display: flex; align-items: center; justify-content: space-between; }
 .footer-brand .brand-mark { background: var(--coral); }
 footer p, footer a { font-size: 12px; color: #aaaeb8; }
@@ -197,6 +206,7 @@ footer p, footer a { font-size: 12px; color: #aaaeb8; }
   .speed-control { width: 100%; margin: 6px 0 0; justify-content: center; }
   .idea-steps { flex-direction: column; gap: 20px; }
   .arrow { transform: rotate(90deg); }
+  .progress-strip { grid-template-columns: 1fr; gap: 30px; padding-bottom: 70px; }
   footer { gap: 18px; flex-wrap: wrap; }
 }
 
