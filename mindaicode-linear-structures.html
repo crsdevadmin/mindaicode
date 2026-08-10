@@ -1,0 +1,693 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MindAICode — Stack, Queue &amp; Linked List</title>
+<style>
+  :root {
+    --bg:#0d1117; --panel:#161b22; --panel2:#1c2333; --accent:#58a6ff; --accent2:#f78166;
+    --purple:#d2a8ff; --green:#3fb950; --yellow:#d29922; --red:#f85149;
+    --text:#e6edf3; --muted:#8b949e; --border:#30363d;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family:'Segoe UI', system-ui, sans-serif; background:var(--bg); color:var(--text); min-height:100vh; }
+  header {
+    display:flex; align-items:center; justify-content:space-between;
+    padding:14px 28px; background:var(--panel); border-bottom:1px solid var(--border); flex-wrap:wrap; gap:8px;
+  }
+  .logo { font-size:22px; font-weight:800; }
+  .logo span { color:var(--accent); }
+  .tagline { display:flex; gap:14px; align-items:center; flex-wrap:wrap; font-size:13px; }
+  .tagline a { text-decoration:none; color:var(--muted); }
+  .container { max-width:1080px; margin:0 auto; padding:24px 20px 60px; }
+
+  .card { background:var(--panel); border:1px solid var(--border); border-radius:12px; padding:20px; margin-bottom:18px; }
+  h1 { font-size:24px; margin-bottom:6px; }
+  h2.secH { font-size:19px; margin-bottom:4px; }
+  h3 { font-size:16px; margin-bottom:10px; }
+  .subtitle { color:var(--muted); font-size:14px; margin-bottom:16px; }
+
+  .intro {
+    background:linear-gradient(135deg, rgba(88,166,255,.10), rgba(63,185,80,.08));
+    border:1px solid var(--border); border-radius:12px; padding:22px 24px; margin-bottom:18px;
+  }
+  .intro h1 { font-size:24px; margin-bottom:8px; }
+  .intro p { font-size:15px; line-height:1.7; margin-bottom:10px; }
+
+  .controls { display:flex; flex-wrap:wrap; gap:10px; align-items:center; margin-bottom:14px; }
+  button {
+    background:var(--accent); color:#0d1117; border:none; padding:9px 16px;
+    border-radius:8px; font-size:13.5px; font-weight:700; cursor:pointer; font-family:inherit;
+    transition:filter .15s, transform .1s;
+  }
+  button:hover { filter:brightness(1.14); }
+  button:active { transform:scale(.97); }
+  button.secondary { background:var(--panel2); color:var(--text); border:1px solid var(--border); }
+  button.danger { background:rgba(248,81,73,.16); color:var(--red); border:1px solid rgba(248,81,73,.4); }
+  button:disabled { opacity:.4; cursor:not-allowed; }
+  select, input[type=text], input[type=number] {
+    background:var(--panel2); border:1px solid var(--border); color:var(--text);
+    padding:8px 12px; border-radius:8px; font-size:13.5px; font-family:inherit;
+  }
+  input[type=text], input[type=number] { width:100px; }
+  label.lbl { font-size:12.5px; color:var(--muted); font-weight:700; }
+
+  .badgeLbl {
+    display:inline-block; font-size:11px; font-weight:700; padding:3px 10px; border-radius:10px;
+    background:rgba(210,168,255,.12); color:var(--purple); border:1px solid rgba(210,168,255,.35); margin-left:8px;
+  }
+  .badgeLbl.on { background:rgba(63,185,80,.14); color:var(--green); border-color:rgba(63,185,80,.4); }
+
+  /* ---- Stack (cafeteria plates) ---- */
+  .stackStage {
+    min-height:220px; display:flex; flex-direction:column-reverse; align-items:center; gap:6px;
+    padding:14px; background:var(--bg); border:1px dashed var(--border); border-radius:10px; margin-bottom:12px;
+  }
+  .plate {
+    width:180px; height:34px; border-radius:8px; background:var(--panel2); border:1.5px solid var(--border);
+    display:flex; align-items:center; justify-content:center; font-weight:700; font-family:Consolas, monospace;
+    transition:all .2s; position:relative;
+  }
+  .plate.top { border-color:var(--yellow); background:rgba(210,153,34,.18); box-shadow:0 0 10px rgba(210,153,34,.25); }
+  .plate.new { animation:popIn .3s ease; }
+  .plate.leaving { opacity:0; transform:translateY(-14px) scale(.85); }
+  @keyframes popIn { from { opacity:0; transform:translateY(-14px) scale(.85); } to { opacity:1; transform:none; } }
+  .stackFloor { width:200px; height:6px; background:var(--border); border-radius:4px; margin-top:2px; }
+  .emptyMsg { color:var(--muted); font-size:13px; font-style:italic; }
+
+  /* ---- Queue (ticket line) ---- */
+  .queueStage {
+    min-height:100px; display:flex; align-items:center; gap:8px; overflow-x:auto;
+    padding:18px 14px; background:var(--bg); border:1px dashed var(--border); border-radius:10px; margin-bottom:12px;
+  }
+  .qLabelWrap { display:flex; justify-content:space-between; font-size:11.5px; color:var(--muted); margin-bottom:6px; padding:0 4px; }
+  .ticket {
+    min-width:56px; height:44px; border-radius:8px; background:var(--panel2); border:1.5px solid var(--border);
+    display:flex; align-items:center; justify-content:center; font-weight:700; font-family:Consolas, monospace;
+    flex-shrink:0; transition:all .2s; position:relative;
+  }
+  .ticket.front { border-color:var(--green); background:rgba(63,185,80,.16); }
+  .ticket.rear { border-color:var(--accent2); }
+  .ticket.new { animation:slideIn .3s ease; }
+  .ticket.leaving { opacity:0; transform:translateX(-14px) scale(.85); }
+  @keyframes slideIn { from { opacity:0; transform:translateX(14px) scale(.85); } to { opacity:1; transform:none; } }
+  .arrowRight { color:var(--muted); font-size:16px; flex-shrink:0; }
+
+  /* ---- Linked List (train) ---- */
+  .listStage {
+    min-height:100px; display:flex; align-items:center; gap:2px; overflow-x:auto; flex-wrap:wrap; row-gap:14px;
+    padding:18px 14px; background:var(--bg); border:1px dashed var(--border); border-radius:10px; margin-bottom:12px;
+  }
+  .node {
+    display:flex; flex-shrink:0; border-radius:8px; overflow:hidden; border:1.5px solid var(--border); transition:all .2s;
+  }
+  .node.head { border-color:var(--green); }
+  .node .val { background:var(--panel2); padding:10px 14px; font-weight:700; font-family:Consolas, monospace; }
+  .node .ptr { background:var(--panel); padding:10px 8px; font-size:12px; color:var(--muted); display:flex; align-items:center; }
+  .node.hi .val { background:rgba(210,153,34,.3); color:var(--yellow); }
+  .node.new { animation:popIn .3s ease; }
+  .node.leaving { opacity:0; transform:scale(.85); }
+  .nullBox {
+    font-family:Consolas, monospace; font-size:13px; color:var(--muted); padding:10px 10px;
+    border:1.5px dashed var(--border); border-radius:8px; flex-shrink:0;
+  }
+  .headTag { font-size:10.5px; font-weight:700; color:var(--green); margin-right:6px; }
+
+  .note { font-size:13.5px; color:var(--muted); min-height:22px; margin-bottom:10px; line-height:1.55; }
+  .note b { color:var(--text); }
+  .log { font-size:12.5px; color:var(--muted); max-height:90px; overflow-y:auto; border-top:1px solid var(--border); padding-top:8px; line-height:1.7; }
+  .log div:last-child { color:var(--text); }
+
+  /* code */
+  .tabs { display:flex; gap:6px; margin-bottom:10px; }
+  .tab { background:var(--panel2); color:var(--muted); border:1px solid var(--border); padding:6px 16px;
+    border-radius:8px 8px 0 0; font-size:13px; font-weight:700; cursor:pointer; font-family:inherit; }
+  .tab.on { background:var(--accent); color:#0d1117; border-color:var(--accent); }
+  .codeWrap { display:none; } .codeWrap.on { display:block; }
+  .code { font-family:'Cascadia Code', Consolas, monospace; font-size:12.5px; line-height:1.55;
+    background:var(--panel2); border-radius:10px; padding:14px 0; overflow-x:auto; }
+  .code .line { padding:3px 14px; white-space:pre; }
+  .kw { color:#ff7b72; } .fn { color:#d2a8ff; } .num2 { color:#79c0ff; } .cm { color:#6e7681; }
+
+  table { width:100%; border-collapse:collapse; font-size:13.5px; }
+  th, td { text-align:left; padding:9px 10px; border-bottom:1px solid var(--border); }
+  th { color:var(--muted); font-size:12px; text-transform:uppercase; letter-spacing:.4px; }
+  td.num { font-variant-numeric:tabular-nums; }
+  .hl { color:var(--green); font-weight:700; }
+  .bad { color:var(--accent2); font-weight:700; }
+
+  @media (max-width:640px) {
+    header { padding:12px 16px; } .logo { font-size:19px; }
+    .container { padding:16px 14px 40px; }
+    .card, .intro { padding:16px; }
+    h1, .intro h1 { font-size:20px; }
+    .controls { flex-direction:column; align-items:stretch; }
+    button, select, input { width:100%; }
+    .plate { width:150px; }
+  }
+</style>
+<script>if(location.protocol.startsWith("http")){var m=document.createElement("link");m.rel="manifest";m.href="manifest.json";document.head.appendChild(m);}</script>
+<meta name="theme-color" content="#0d1117">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+</head>
+<body>
+
+<header>
+  <a href="mindaicode-home.html" style="text-decoration:none; color:inherit;">
+    <div class="logo">🧠 MindAI<span>Code</span></div>
+  </a>
+  <div class="tagline">
+    <a href="mindaicode-course-path.html" style="color:var(--purple); font-weight:600;">🗺️ Course path</a>
+    <a href="mindaicode-home.html">🏠 All algorithms</a>
+  </div>
+</header>
+
+<div class="container">
+
+  <div class="intro">
+    <h1>🧱 Stack, Queue &amp; Linked List</h1>
+    <p>Sorting and searching both work on <strong>arrays</strong> — one flat block of memory. But not every problem fits that shape. These three structures show up everywhere once you start writing real programs: undo history, browser tabs, printer jobs, autocomplete chains.</p>
+    <p style="margin-bottom:0; color:var(--muted); font-size:14px;">Module 3 · Prerequisite: Module 0 — Foundations (independent of sorting &amp; searching, you can start here any time).</p>
+  </div>
+
+  <!-- ================= STACK ================= -->
+  <div class="card">
+    <h2 class="secH">🍽️ Stack <span id="stackBadge" class="badgeLbl">not earned</span></h2>
+    <p class="subtitle">A stack of cafeteria trays: you can only add or remove from the <strong>top</strong>. Last one in is the first one out — <strong>LIFO</strong>.</p>
+
+    <div class="controls">
+      <label class="lbl" for="stackVal">Value</label>
+      <input type="text" id="stackVal" maxlength="6" placeholder="e.g. 7">
+      <button id="pushBtn">⬆ Push</button>
+      <button id="popBtn" class="secondary">⬇ Pop</button>
+      <button id="peekBtn" class="secondary">👁 Peek</button>
+      <button id="stackClearBtn" class="danger">Clear</button>
+    </div>
+
+    <div class="stackStage" id="stackStage"></div>
+    <div class="note" id="stackNote">Push a value to add a tray on top. Pop removes whichever tray is currently on top — never one from the middle or bottom.</div>
+    <div class="log" id="stackLog"></div>
+
+    <div class="tabs" style="margin-top:16px;">
+      <button class="tab on" data-target="stack-py" type="button">Python</button>
+      <button class="tab" data-target="stack-java" type="button">Java</button>
+    </div>
+    <div class="codeWrap on" id="stack-py">
+      <div class="code">
+        <div class="line"><span class="kw">class</span> <span class="fn">Stack</span>:</div>
+        <div class="line">    <span class="kw">def</span> <span class="fn">__init__</span>(self):</div>
+        <div class="line">        self.items = []</div>
+        <div class="line">    <span class="kw">def</span> <span class="fn">push</span>(self, value):</div>
+        <div class="line">        self.items.append(value)      <span class="cm"># add to the end = "top"</span></div>
+        <div class="line">    <span class="kw">def</span> <span class="fn">pop</span>(self):</div>
+        <div class="line">        <span class="kw">if not</span> self.items: <span class="kw">return None</span>  <span class="cm"># underflow</span></div>
+        <div class="line">        <span class="kw">return</span> self.items.pop()    <span class="cm"># remove from the end</span></div>
+        <div class="line">    <span class="kw">def</span> <span class="fn">peek</span>(self):</div>
+        <div class="line">        <span class="kw">return</span> self.items[-<span class="num2">1</span>] <span class="kw">if</span> self.items <span class="kw">else</span> <span class="kw">None</span></div>
+      </div>
+    </div>
+    <div class="codeWrap" id="stack-java">
+      <div class="code">
+        <div class="line"><span class="kw">class</span> <span class="fn">Stack</span> {</div>
+        <div class="line">    <span class="kw">private</span> List&lt;Integer&gt; items = <span class="kw">new</span> ArrayList&lt;&gt;();</div>
+        <div class="line">    <span class="kw">void</span> <span class="fn">push</span>(<span class="kw">int</span> value) { items.add(value); }</div>
+        <div class="line">    <span class="kw">Integer</span> <span class="fn">pop</span>() {</div>
+        <div class="line">        <span class="kw">if</span> (items.isEmpty()) <span class="kw">return null</span>;</div>
+        <div class="line">        <span class="kw">return</span> items.remove(items.size() - <span class="num2">1</span>);</div>
+        <div class="line">    }</div>
+        <div class="line">}</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= QUEUE ================= -->
+  <div class="card">
+    <h2 class="secH">🎟️ Queue <span id="queueBadge" class="badgeLbl">not earned</span></h2>
+    <p class="subtitle">A ticket-counter line: new people join at the <strong>rear</strong>, but only the person at the <strong>front</strong> gets served. First one in is the first one out — <strong>FIFO</strong>.</p>
+
+    <div class="controls">
+      <label class="lbl" for="queueVal">Value</label>
+      <input type="text" id="queueVal" maxlength="6" placeholder="e.g. A1">
+      <button id="enqBtn">➡ Enqueue</button>
+      <button id="deqBtn" class="secondary">⬅ Dequeue</button>
+      <button id="frontBtn" class="secondary">👁 Peek front</button>
+      <button id="queueClearBtn" class="danger">Clear</button>
+    </div>
+
+    <div class="qLabelWrap"><span>⬅ Front (served next)</span><span>Rear (joins here) ➡</span></div>
+    <div class="queueStage" id="queueStage"></div>
+    <div class="note" id="queueNote">Enqueue adds to the rear. Dequeue always removes from the front — whoever has been waiting longest.</div>
+    <div class="log" id="queueLog"></div>
+
+    <div class="tabs" style="margin-top:16px;">
+      <button class="tab on" data-target="queue-py" type="button">Python</button>
+      <button class="tab" data-target="queue-java" type="button">Java</button>
+    </div>
+    <div class="codeWrap on" id="queue-py">
+      <div class="code">
+        <div class="line"><span class="kw">from</span> collections <span class="kw">import</span> deque</div>
+        <div class="line">q = deque()</div>
+        <div class="line">q.append(value)        <span class="cm"># enqueue: join the rear</span></div>
+        <div class="line">front = q.popleft()    <span class="cm"># dequeue: leave from the front</span></div>
+        <div class="line"><span class="cm"># deque() is used instead of a plain list because</span></div>
+        <div class="line"><span class="cm"># removing from the front of a list is O(n); deque does it in O(1)</span></div>
+      </div>
+    </div>
+    <div class="codeWrap" id="queue-java">
+      <div class="code">
+        <div class="line">Queue&lt;String&gt; q = <span class="kw">new</span> LinkedList&lt;&gt;();</div>
+        <div class="line">q.add(value);        <span class="cm">// enqueue: join the rear</span></div>
+        <div class="line">String front = q.poll(); <span class="cm">// dequeue: leave from the front</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= LINKED LIST ================= -->
+  <div class="card">
+    <h2 class="secH">🚃 Linked List <span id="listBadge" class="badgeLbl">not earned</span></h2>
+    <p class="subtitle">Train carriages linked one to the next. Each node holds a value and a pointer to the <strong>next</strong> node — there's no single block of memory, just carriages hooked together.</p>
+
+    <div class="controls">
+      <label class="lbl" for="listVal">Value</label>
+      <input type="text" id="listVal" maxlength="6" placeholder="e.g. 9">
+      <button id="insHeadBtn">⬅ Insert at head</button>
+      <button id="insTailBtn">➡ Insert at tail</button>
+      <button id="delValBtn" class="secondary">🗑 Delete value</button>
+      <button id="listClearBtn" class="danger">Clear</button>
+    </div>
+
+    <div class="listStage" id="listStage"></div>
+    <div class="note" id="listNote">Insert at head hooks a new carriage on at the front and repoints the head. Delete searches carriage by carriage until it finds the value, then relinks around it.</div>
+    <div class="log" id="listLog"></div>
+
+    <div class="tabs" style="margin-top:16px;">
+      <button class="tab on" data-target="list-py" type="button">Python</button>
+      <button class="tab" data-target="list-java" type="button">Java</button>
+    </div>
+    <div class="codeWrap on" id="list-py">
+      <div class="code">
+        <div class="line"><span class="kw">class</span> <span class="fn">Node</span>:</div>
+        <div class="line">    <span class="kw">def</span> <span class="fn">__init__</span>(self, value):</div>
+        <div class="line">        self.value = value</div>
+        <div class="line">        self.next = <span class="kw">None</span>      <span class="cm"># the pointer to the next carriage</span></div>
+        <div class="line"></div>
+        <div class="line"><span class="kw">def</span> <span class="fn">insert_head</span>(head, value):</div>
+        <div class="line">    node = Node(value)</div>
+        <div class="line">    node.next = head       <span class="cm"># new node points at the old head</span></div>
+        <div class="line">    <span class="kw">return</span> node             <span class="cm"># it becomes the new head</span></div>
+        <div class="line"></div>
+        <div class="line"><span class="kw">def</span> <span class="fn">delete_value</span>(head, value):</div>
+        <div class="line">    <span class="kw">if</span> head <span class="kw">is None</span>: <span class="kw">return None</span></div>
+        <div class="line">    <span class="kw">if</span> head.value == value: <span class="kw">return</span> head.next  <span class="cm"># skip the head itself</span></div>
+        <div class="line">    prev = head</div>
+        <div class="line">    <span class="kw">while</span> prev.next <span class="kw">and</span> prev.next.value != value:</div>
+        <div class="line">        prev = prev.next</div>
+        <div class="line">    <span class="kw">if</span> prev.next:</div>
+        <div class="line">        prev.next = prev.next.next   <span class="cm"># relink around the found node</span></div>
+        <div class="line">    <span class="kw">return</span> head</div>
+      </div>
+    </div>
+    <div class="codeWrap" id="list-java">
+      <div class="code">
+        <div class="line"><span class="kw">class</span> <span class="fn">Node</span> {</div>
+        <div class="line">    <span class="kw">int</span> value; Node next;</div>
+        <div class="line">    Node(<span class="kw">int</span> v) { value = v; }</div>
+        <div class="line">}</div>
+        <div class="line">Node insertHead(Node head, <span class="kw">int</span> value) {</div>
+        <div class="line">    Node n = <span class="kw">new</span> Node(value);</div>
+        <div class="line">    n.next = head;</div>
+        <div class="line">    <span class="kw">return</span> n;</div>
+        <div class="line">}</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= COMPARISON TABLE ================= -->
+  <div class="card">
+    <h3>📈 When to use which</h3>
+    <div style="overflow-x:auto;">
+      <table>
+        <thead><tr><th>Operation</th><th>Array</th><th>Stack / Queue (array-backed)</th><th>Linked List</th></tr></thead>
+        <tbody>
+          <tr><td>Access by index</td><td class="num hl">O(1)</td><td class="num bad">not allowed</td><td class="num bad">O(n)</td></tr>
+          <tr><td>Insert / remove at one end</td><td class="num bad">O(n)*</td><td class="num hl">O(1)</td><td class="num hl">O(1) at head</td></tr>
+          <tr><td>Insert / remove in the middle</td><td class="num bad">O(n)</td><td class="num bad">not allowed</td><td class="num bad">O(n) to find + O(1) to relink</td></tr>
+          <tr><td>Search for a value</td><td class="num bad">O(n)</td><td class="num bad">O(n)</td><td class="num bad">O(n)</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p style="font-size:13.5px; color:var(--muted); margin-top:12px; line-height:1.65;">
+      *Removing from the very end of a dynamic array is O(1) amortized — that's exactly what makes it a good fit for a stack. Removing from the <em>front</em> of a plain array is O(n), because everything else has to shift down — which is why queues are usually built on a linked list or a <code>deque</code> instead.
+    </p>
+  </div>
+
+  <div class="card">
+    <h3>🧠 Quick check</h3>
+    <div id="quizQ" style="font-size:15px; margin-bottom:12px;"></div>
+    <div id="quizOpts"></div>
+    <div id="quizFb" style="font-size:13.5px; margin-top:10px; color:var(--muted); min-height:20px; line-height:1.6;"></div>
+  </div>
+
+</div>
+
+<script>
+/* ================= STACK ================= */
+let stackArr = [];
+let stackPushCount = 0, stackPopCount = 0;
+
+function renderStack() {
+  const box = document.getElementById('stackStage');
+  box.innerHTML = '';
+  if (stackArr.length === 0) {
+    box.innerHTML = '<div class="emptyMsg">Empty stack — push something onto it</div>';
+    return;
+  }
+  stackArr.forEach((v, i) => {
+    const p = document.createElement('div');
+    p.className = 'plate' + (i === stackArr.length - 1 ? ' top' : '');
+    p.textContent = v;
+    box.appendChild(p);
+  });
+  const floor = document.createElement('div');
+  floor.className = 'stackFloor';
+  box.appendChild(floor);
+}
+function stackLog(msg) {
+  const l = document.getElementById('stackLog');
+  const d = document.createElement('div');
+  d.innerHTML = msg;
+  l.appendChild(d);
+  while (l.children.length > 6) l.removeChild(l.firstChild);
+  l.scrollTop = l.scrollHeight;
+}
+function maybeStackBadge() {
+  if (stackPushCount >= 3 && stackPopCount >= 3) {
+    try { localStorage.setItem('mlds_badge_stack', '1'); } catch (e) {}
+    updateBadgeLabels();
+  }
+}
+document.getElementById('pushBtn').onclick = () => {
+  const inp = document.getElementById('stackVal');
+  const v = inp.value.trim() || String(Math.floor(Math.random() * 90) + 10);
+  stackArr.push(v);
+  stackPushCount++;
+  inp.value = '';
+  renderStack();
+  document.querySelector('#stackStage .plate:last-child')?.classList.add('new');
+  document.getElementById('stackNote').innerHTML = `Pushed <b>${v}</b> — it is now the top of the stack.`;
+  stackLog(`push(${v}) → top is now <b>${v}</b>`);
+  maybeStackBadge();
+};
+document.getElementById('popBtn').onclick = () => {
+  if (stackArr.length === 0) {
+    document.getElementById('stackNote').innerHTML = `<b>Stack underflow</b> — there is nothing to pop.`;
+    stackLog('pop() on empty stack → <b>underflow, returns null</b>');
+    return;
+  }
+  const v = stackArr.pop();
+  stackPopCount++;
+  renderStack();
+  document.getElementById('stackNote').innerHTML = `Popped <b>${v}</b> — it was the top, so it's the only thing that could come off.`;
+  stackLog(`pop() → removed <b>${v}</b>`);
+  maybeStackBadge();
+};
+document.getElementById('peekBtn').onclick = () => {
+  if (stackArr.length === 0) {
+    document.getElementById('stackNote').innerHTML = `Stack is empty — nothing to peek at.`;
+    return;
+  }
+  const v = stackArr[stackArr.length - 1];
+  document.getElementById('stackNote').innerHTML = `Peek shows <b>${v}</b> without removing it.`;
+  stackLog(`peek() → <b>${v}</b> (unchanged)`);
+};
+document.getElementById('stackClearBtn').onclick = () => {
+  stackArr = []; renderStack();
+  document.getElementById('stackNote').innerHTML = 'Stack cleared.';
+};
+
+/* ================= QUEUE ================= */
+let queueArr = [];
+let queueEnqCount = 0, queueDeqCount = 0;
+
+function renderQueue() {
+  const box = document.getElementById('queueStage');
+  box.innerHTML = '';
+  if (queueArr.length === 0) {
+    box.innerHTML = '<div class="emptyMsg">Empty queue — enqueue someone</div>';
+    return;
+  }
+  queueArr.forEach((v, i) => {
+    const t = document.createElement('div');
+    t.className = 'ticket' + (i === 0 ? ' front' : '') + (i === queueArr.length - 1 ? ' rear' : '');
+    t.textContent = v;
+    box.appendChild(t);
+    if (i < queueArr.length - 1) {
+      const arrow = document.createElement('span');
+      arrow.className = 'arrowRight';
+      arrow.textContent = '→';
+      box.appendChild(arrow);
+    }
+  });
+}
+function queueLog(msg) {
+  const l = document.getElementById('queueLog');
+  const d = document.createElement('div');
+  d.innerHTML = msg;
+  l.appendChild(d);
+  while (l.children.length > 6) l.removeChild(l.firstChild);
+  l.scrollTop = l.scrollHeight;
+}
+function maybeQueueBadge() {
+  if (queueEnqCount >= 3 && queueDeqCount >= 3) {
+    try { localStorage.setItem('mlds_badge_queue', '1'); } catch (e) {}
+    updateBadgeLabels();
+  }
+}
+document.getElementById('enqBtn').onclick = () => {
+  const inp = document.getElementById('queueVal');
+  const v = inp.value.trim() || String(Math.floor(Math.random() * 90) + 10);
+  queueArr.push(v);
+  queueEnqCount++;
+  inp.value = '';
+  renderQueue();
+  document.querySelector('#queueStage .ticket.rear')?.classList.add('new');
+  document.getElementById('queueNote').innerHTML = `<b>${v}</b> joined the rear of the queue.`;
+  queueLog(`enqueue(${v}) → rear is now <b>${v}</b>`);
+  maybeQueueBadge();
+};
+document.getElementById('deqBtn').onclick = () => {
+  if (queueArr.length === 0) {
+    document.getElementById('queueNote').innerHTML = `<b>Queue underflow</b> — nobody is waiting.`;
+    queueLog('dequeue() on empty queue → <b>underflow, returns null</b>');
+    return;
+  }
+  const v = queueArr.shift();
+  queueDeqCount++;
+  renderQueue();
+  document.getElementById('queueNote').innerHTML = `<b>${v}</b> was served and left from the front — they had been waiting longest.`;
+  queueLog(`dequeue() → served <b>${v}</b>`);
+  maybeQueueBadge();
+};
+document.getElementById('frontBtn').onclick = () => {
+  if (queueArr.length === 0) {
+    document.getElementById('queueNote').innerHTML = `Queue is empty — nobody at the front.`;
+    return;
+  }
+  document.getElementById('queueNote').innerHTML = `Front of the queue is <b>${queueArr[0]}</b> — next to be served.`;
+  queueLog(`front() → <b>${queueArr[0]}</b> (unchanged)`);
+};
+document.getElementById('queueClearBtn').onclick = () => {
+  queueArr = []; renderQueue();
+  document.getElementById('queueNote').innerHTML = 'Queue cleared.';
+};
+
+/* ================= LINKED LIST ================= */
+let listArr = []; // index 0 = head
+let listInsertedHead = false, listInsertedTail = false, listDeleted = false;
+
+function renderList() {
+  const box = document.getElementById('listStage');
+  box.innerHTML = '';
+  if (listArr.length === 0) {
+    box.innerHTML = '<div class="emptyMsg">Empty list — head points to null (∅)</div>';
+    return;
+  }
+  listArr.forEach((v, i) => {
+    const n = document.createElement('div');
+    n.className = 'node' + (i === 0 ? ' head' : '');
+    n.innerHTML = `<span class="val">${i === 0 ? '<span class=\"headTag\">HEAD</span>' : ''}${v}</span><span class="ptr">next →</span>`;
+    box.appendChild(n);
+  });
+  const nullBox = document.createElement('div');
+  nullBox.className = 'nullBox';
+  nullBox.textContent = '∅ null';
+  box.appendChild(nullBox);
+}
+function listLog(msg) {
+  const l = document.getElementById('listLog');
+  const d = document.createElement('div');
+  d.innerHTML = msg;
+  l.appendChild(d);
+  while (l.children.length > 6) l.removeChild(l.firstChild);
+  l.scrollTop = l.scrollHeight;
+}
+function maybeListBadge() {
+  if (listInsertedHead && listInsertedTail && listDeleted) {
+    try { localStorage.setItem('mlds_badge_list', '1'); } catch (e) {}
+    updateBadgeLabels();
+  }
+}
+document.getElementById('insHeadBtn').onclick = () => {
+  const inp = document.getElementById('listVal');
+  const v = inp.value.trim() || String(Math.floor(Math.random() * 90) + 10);
+  listArr.unshift(v);
+  listInsertedHead = true;
+  inp.value = '';
+  renderList();
+  document.getElementById('listNote').innerHTML = `New carriage <b>${v}</b> hooked in at the front. It now points to the old head, and the head pointer moves to it.`;
+  listLog(`insert_head(${v}) → new head is <b>${v}</b>`);
+  maybeListBadge();
+};
+document.getElementById('insTailBtn').onclick = () => {
+  const inp = document.getElementById('listVal');
+  const v = inp.value.trim() || String(Math.floor(Math.random() * 90) + 10);
+  listArr.push(v);
+  listInsertedTail = true;
+  inp.value = '';
+  renderList();
+  document.getElementById('listNote').innerHTML = `Walked to the last carriage and hooked <b>${v}</b> on after it. Its <b>next</b> pointer is now null.`;
+  listLog(`insert_tail(${v}) → new tail is <b>${v}</b>`);
+  maybeListBadge();
+};
+document.getElementById('delValBtn').onclick = () => {
+  const inp = document.getElementById('listVal');
+  const v = inp.value.trim();
+  if (!v) {
+    document.getElementById('listNote').innerHTML = `Type a value first, then Delete.`;
+    return;
+  }
+  const idx = listArr.indexOf(v);
+  if (idx === -1) {
+    document.getElementById('listNote').innerHTML = `<b>${v}</b> is not in this list — nothing to delete.`;
+    listLog(`delete_value(${v}) → not found`);
+    return;
+  }
+  listArr.splice(idx, 1);
+  listDeleted = true;
+  inp.value = '';
+  renderList();
+  document.getElementById('listNote').innerHTML = idx === 0
+    ? `<b>${v}</b> was the head — the node after it becomes the new head.`
+    : `Walked carriage by carriage until finding <b>${v}</b>, then relinked the carriage before it directly to the carriage after it.`;
+  listLog(`delete_value(${v}) → removed, relinked around it`);
+  maybeListBadge();
+};
+document.getElementById('listClearBtn').onclick = () => {
+  listArr = []; renderList();
+  document.getElementById('listNote').innerHTML = 'List cleared — head is now null.';
+};
+
+/* ================= BADGES ================= */
+function readFlag(key) { try { return localStorage.getItem(key) === '1'; } catch (e) { return false; } }
+function updateBadgeLabels() {
+  const map = { stackBadge: 'mlds_badge_stack', queueBadge: 'mlds_badge_queue', listBadge: 'mlds_badge_list' };
+  Object.entries(map).forEach(([elId, key]) => {
+    const el = document.getElementById(elId);
+    const on = readFlag(key);
+    el.textContent = on ? 'earned ✓' : 'not earned';
+    el.classList.toggle('on', on);
+  });
+}
+
+/* ================= CODE TABS ================= */
+document.querySelectorAll('.tabs').forEach(group => {
+  // collect the codeWrap siblings that immediately follow this tab group
+  const wraps = [];
+  let el = group.nextElementSibling;
+  while (el && el.classList.contains('codeWrap')) { wraps.push(el); el = el.nextElementSibling; }
+  group.querySelectorAll('.tab').forEach(tab => {
+    tab.onclick = () => {
+      group.querySelectorAll('.tab').forEach(t => t.classList.toggle('on', t === tab));
+      wraps.forEach(w => w.classList.toggle('on', w.id === tab.dataset.target));
+    };
+  });
+});
+
+/* ================= QUIZ ================= */
+const quiz = [
+  { q:'A stack follows which principle?',
+    opts:['FIFO — first in, first out','LIFO — last in, first out','Random access, order doesn\'t matter'],
+    ans:1, why:'A stack only allows adding and removing from the top, so whatever was pushed most recently is always the first thing popped — Last In, First Out.' },
+  { q:'A queue follows which principle?',
+    opts:['FIFO — first in, first out','LIFO — last in, first out','Whoever shouts loudest goes first'],
+    ans:0, why:'A queue adds at the rear and removes from the front, so the item that has been waiting longest always leaves first — First In, First Out.' },
+  { q:'Why is a plain array a poor choice for a queue\'s dequeue operation?',
+    opts:['Arrays can\'t store more than 100 items','Removing from the front means shifting every remaining item down, which is O(n)','Arrays don\'t support numbers'],
+    ans:1, why:'Removing the first element of an array forces every other element to shift left by one to fill the gap — that\'s O(n) work for a single removal. A linked list or deque removes from the front in O(1).' },
+  { q:'What is the time complexity of searching for a value inside a singly linked list?',
+    opts:['O(1), because pointers make it instant','O(log n), like binary search','O(n) — you must walk from the head, one node at a time'],
+    ans:2, why:'A linked list gives you no way to jump to the middle the way an array\'s index does. To find a value you must follow next pointers one node at a time from the head, so the worst case is O(n).' },
+  { q:'You delete the head node of a linked list. What has to happen?',
+    opts:['Nothing else — just remove it, the list fixes itself','The head pointer must be updated to point at the second node','Every other node must be deleted too'],
+    ans:1, why:'The head pointer is how the list "remembers" where it starts. If you remove the first node without updating that pointer, the rest of the list becomes unreachable.' },
+];
+let qi = 0, qCorrect = 0;
+function showQuiz() {
+  const item = quiz[qi];
+  document.getElementById('quizQ').innerHTML = `<strong>Q${qi + 1}/${quiz.length}:</strong> ${item.q}`;
+  const box = document.getElementById('quizOpts');
+  box.innerHTML = '';
+  document.getElementById('quizFb').textContent = '';
+  item.opts.forEach((o, i) => {
+    const b = document.createElement('button');
+    b.className = 'secondary';
+    b.style.cssText = 'display:block; width:100%; text-align:left; margin-bottom:8px; font-weight:500;';
+    b.textContent = o;
+    b.onclick = () => {
+      box.querySelectorAll('button').forEach(x => x.disabled = true);
+      const ok = i === item.ans;
+      if (ok) qCorrect++;
+      b.style.borderColor = ok ? 'var(--green)' : 'var(--red)';
+      b.style.background = ok ? 'rgba(63,185,80,.15)' : 'rgba(248,81,73,.15)';
+      if (!ok) {
+        const right = box.children[item.ans];
+        right.style.borderColor = 'var(--green)';
+        right.style.background = 'rgba(63,185,80,.15)';
+      }
+      let tail = '';
+      if (qi < quiz.length - 1) tail = ' <a href="#" id="nq" style="color:var(--accent)">Next →</a>';
+      else {
+        tail = ` 🎉 Done — ${qCorrect}/${quiz.length} correct.` +
+          (qCorrect < quiz.length ? ' <a href="#" id="rq" style="color:var(--accent)">Try again</a>' : '');
+        if (qCorrect === quiz.length) { try { localStorage.setItem('mlds_badge_quiz', '1'); } catch (e) {} updateBadgeLabels(); }
+      }
+      document.getElementById('quizFb').innerHTML = (ok ? '✅ Correct! ' : '❌ Not quite. ') + item.why + tail;
+      const nq = document.getElementById('nq');
+      if (nq) nq.onclick = e => { e.preventDefault(); qi++; showQuiz(); };
+      const rq = document.getElementById('rq');
+      if (rq) rq.onclick = e => { e.preventDefault(); qi = 0; qCorrect = 0; showQuiz(); };
+    };
+    box.appendChild(b);
+  });
+}
+
+renderStack();
+renderQueue();
+renderList();
+updateBadgeLabels();
+showQuiz();
+</script>
+<script>
+/* ===== Offline support (works when served over http/https) ===== */
+if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
+  window.addEventListener('load', function () {
+    navigator.serviceWorker.register('sw.js').catch(function () { /* offline mode simply unavailable */ });
+  });
+}
+</script>
+<script src="firebase-config.js"></script>
+<script src="mindaicode-auth.js"></script>
+</body>
+</html>

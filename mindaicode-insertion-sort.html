@@ -1,0 +1,1668 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MindAICode — Insertion Sort Visualizer</title>
+<style>
+  :root {
+    --bg: #0d1117;
+    --panel: #161b22;
+    --panel2: #1c2333;
+    --accent: #58a6ff;
+    --accent2: #f78166;
+    --purple: #d2a8ff;
+    --green: #3fb950;
+    --yellow: #d29922;
+    --text: #e6edf3;
+    --muted: #8b949e;
+    --border: #30363d;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+  }
+  header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 14px 28px;
+    background: var(--panel);
+    border-bottom: 1px solid var(--border);
+  }
+  .logo { font-size: 22px; font-weight: 800; letter-spacing: .5px; }
+  .logo span { color: var(--accent); }
+  .tagline { color: var(--muted); font-size: 13px; }
+
+  .container {
+    max-width: 1360px; margin: 0 auto; padding: 24px;
+    display: grid; grid-template-columns: 1fr 440px; gap: 20px;
+  }
+  @media (max-width: 900px) { .container { grid-template-columns: 1fr; } }
+
+  .card {
+    background: var(--panel); border: 1px solid var(--border);
+    border-radius: 12px; padding: 20px;
+  }
+  h1 { font-size: 24px; margin-bottom: 6px; }
+  h3 { font-size: 15px; margin-bottom: 10px; }
+  .subtitle { color: var(--muted); font-size: 14px; margin-bottom: 16px; }
+  .full { grid-column: 1 / -1; }
+
+  /* Beginner intro */
+  .intro {
+    grid-column: 1 / -1;
+    background: linear-gradient(135deg, rgba(88,166,255,.10), rgba(63,185,80,.08));
+    border: 1px solid var(--border); border-radius: 12px;
+    padding: 22px 24px;
+  }
+  .intro h2 { font-size: 20px; margin-bottom: 8px; }
+  .intro p { font-size: 15px; line-height: 1.7; margin-bottom: 10px; }
+  .intro .analogy {
+    background: var(--panel2); border-left: 4px solid var(--green);
+    padding: 12px 16px; border-radius: 8px; margin: 12px 0;
+  }
+  .steps3 { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 12px; }
+  .step3 {
+    flex: 1; min-width: 180px; background: var(--panel2);
+    border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px;
+    font-size: 13.5px; line-height: 1.5; color: var(--muted);
+  }
+  .step3 b { color: var(--accent); display: block; margin-bottom: 4px; font-size: 14px; }
+
+  /* Badges */
+  .badges { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+  .badge {
+    display: flex; align-items: center; gap: 6px;
+    background: var(--panel2); border: 1px solid var(--border);
+    border-radius: 20px; padding: 6px 14px;
+    font-size: 13px; color: var(--muted);
+    filter: grayscale(1); opacity: .55;
+    transition: all .4s;
+  }
+  .badge.earned {
+    filter: none; opacity: 1;
+    color: var(--text); border-color: var(--yellow);
+    background: rgba(210,153,34,.12);
+    box-shadow: 0 0 12px rgba(210,153,34,.25);
+  }
+
+  /* Stage */
+  #stage {
+    position: relative; height: 340px;
+    background: var(--panel2);
+    border: 1px solid var(--border); border-radius: 10px;
+    overflow: hidden; margin-bottom: 16px;
+  }
+  .ball {
+    position: absolute; bottom: 30px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 700; color: #fff;
+    background: radial-gradient(circle at 32% 30%, #79b8ff, #1f6feb 70%);
+    box-shadow: 0 6px 14px rgba(0,0,0,.45), inset 0 -6px 10px rgba(0,0,0,.25);
+    transition: left .6s cubic-bezier(.34,1.56,.64,1), bottom .4s ease, background .3s, transform .3s;
+    user-select: none;
+  }
+  .ball.comparing {
+    background: radial-gradient(circle at 32% 30%, #ffd77a, #d29922 70%);
+    transform: translateY(-10px);
+  }
+  .ball.shifting {
+    background: radial-gradient(circle at 32% 30%, #ffab91, #f4511e 70%);
+    transform: translateY(-14px);
+  }
+  .ball.key {
+    background: radial-gradient(circle at 32% 30%, #d9b3ff, #8e5fd6 70%);
+    transform: translateY(-42px) scale(1.1);
+    box-shadow: 0 12px 20px rgba(0,0,0,.5), 0 0 0 3px var(--purple);
+    z-index: 5;
+  }
+  .ball.sorted {
+    background: radial-gradient(circle at 32% 30%, #7ee787, #2ea043 70%);
+  }
+  /* Bar-chart mode */
+  .ball.bar-mode {
+    border-radius: 6px 6px 2px 2px;
+    align-items: flex-start; padding-top: 6px;
+    background: linear-gradient(180deg, #79b8ff, #1f6feb 85%);
+    box-shadow: 0 4px 10px rgba(0,0,0,.4);
+  }
+  .ball.bar-mode.comparing {
+    background: linear-gradient(180deg, #ffd77a, #d29922 85%);
+    transform: translateY(-8px);
+  }
+  .ball.bar-mode.shifting {
+    background: linear-gradient(180deg, #ffab91, #f4511e 85%);
+    transform: translateY(-12px);
+  }
+  .ball.bar-mode.key {
+    background: linear-gradient(180deg, #d9b3ff, #8e5fd6 85%);
+    transform: translateY(-40px);
+    box-shadow: 0 12px 20px rgba(0,0,0,.5), 0 0 0 3px var(--purple);
+    z-index: 5;
+  }
+  .ball.bar-mode.sorted {
+    background: linear-gradient(180deg, #7ee787, #2ea043 85%);
+  }
+  /* Student mode */
+  .ball.student-mode {
+    background: transparent; box-shadow: none;
+    flex-direction: column; justify-content: flex-end; align-items: center;
+    gap: 0; padding-bottom: 0; border: none; border-radius: 0;
+  }
+  .student-head {
+    width: 28px; height: 28px; border-radius: 50%; flex-shrink: 0;
+    background: radial-gradient(circle at 35% 30%, #ffe0b8, #e8a765 75%);
+    box-shadow: 0 2px 4px rgba(0,0,0,.35);
+    position: relative; margin-bottom: 3px; z-index: 1;
+    transition: box-shadow .3s;
+  }
+  .student-head::before {
+    content: ''; position: absolute; top: 13px; left: 7px;
+    width: 3px; height: 3px; border-radius: 50%;
+    background: #3a2a1a; box-shadow: 11px 0 0 #3a2a1a;
+  }
+  .student-head::after {
+    content: ''; position: absolute; top: 17px; left: 9px;
+    width: 10px; height: 5px; border-radius: 0 0 10px 10px;
+    border-bottom: 2px solid #3a2a1a; border-left: none; border-right: none;
+  }
+  .student-hair {
+    position: absolute; top: -7px; left: 50%; transform: translateX(-50%);
+    width: 26px; height: 17px;
+    border-radius: 50% 50% 4px 4px / 65% 65% 4px 4px;
+    background: #4a3222; z-index: 2;
+  }
+  .student-hair::before {
+    content: ''; position: absolute; bottom: -3px; left: -1px;
+    width: 6px; height: 8px; border-radius: 0 0 6px 6px; background: #4a3222;
+  }
+  .student-hair::after {
+    content: ''; position: absolute; bottom: -3px; right: -1px;
+    width: 6px; height: 8px; border-radius: 0 0 6px 6px; background: #4a3222;
+  }
+  .student-body {
+    width: 100%; flex: 1; min-height: 22px;
+    background: linear-gradient(180deg, #79b8ff, #1f6feb 88%);
+    clip-path: polygon(10% 0%, 90% 0%, 78% 100%, 22% 100%);
+    display: flex; align-items: flex-start; justify-content: center;
+    padding-top: 6px; transition: background .3s; position: relative;
+  }
+  .student-legs {
+    width: 62%; height: 14px; flex-shrink: 0;
+    background: linear-gradient(180deg, #1f6feb, #16468f);
+    -webkit-mask-image: linear-gradient(to right, #000 0 32%, transparent 32% 68%, #000 68% 100%);
+            mask-image: linear-gradient(to right, #000 0 32%, transparent 32% 68%, #000 68% 100%);
+    border-radius: 0 0 4px 4px; transition: background .3s;
+  }
+  .student-tag { font-size: 11px; font-weight: 800; color: #fff; text-shadow: 0 1px 2px rgba(0,0,0,.4); }
+  .ball.student-mode.comparing { transform: translateY(-8px); }
+  .ball.student-mode.comparing .student-head { box-shadow: 0 0 0 3px var(--yellow); }
+  .ball.student-mode.comparing .student-body { background: linear-gradient(180deg, #ffd77a, #d29922 88%); }
+  .ball.student-mode.comparing .student-legs { background: linear-gradient(180deg, #d29922, #a3720f); }
+  .ball.student-mode.shifting { transform: translateY(-12px); }
+  .ball.student-mode.shifting .student-head { box-shadow: 0 0 0 3px var(--accent2); }
+  .ball.student-mode.shifting .student-body { background: linear-gradient(180deg, #ffab91, #f4511e 88%); }
+  .ball.student-mode.shifting .student-legs { background: linear-gradient(180deg, #f4511e, #b8330c); }
+  .ball.student-mode.key {
+    transform: translateY(-40px) scale(1.08); z-index: 5;
+    filter: drop-shadow(0 8px 10px rgba(0,0,0,.5));
+  }
+  .ball.student-mode.key .student-head { box-shadow: 0 0 0 3px var(--purple), 0 0 14px rgba(210,179,255,.7); }
+  .ball.student-mode.key .student-body { background: linear-gradient(180deg, #d9b3ff, #8e5fd6 88%); }
+  .ball.student-mode.key .student-legs { background: linear-gradient(180deg, #8e5fd6, #5c3a90); }
+  .ball.student-mode.sorted .student-head { box-shadow: 0 0 0 3px var(--green); }
+  .ball.student-mode.sorted .student-body { background: linear-gradient(180deg, #7ee787, #2ea043 88%); }
+  .ball.student-mode.sorted .student-legs { background: linear-gradient(180deg, #2ea043, #1c6b2b); }
+  #teacher {
+    position: absolute; top: 10px; font-size: 32px; line-height: 1;
+    transition: left .6s cubic-bezier(.34,1.56,.64,1), opacity .3s;
+    opacity: 0; pointer-events: none; z-index: 6;
+    filter: drop-shadow(0 3px 5px rgba(0,0,0,.5));
+  }
+  #teacher::after {
+    content: '🃏 holding the key…'; position: absolute; top: -18px; left: 50%;
+    transform: translateX(-50%); font-size: 10px; white-space: nowrap;
+    color: var(--muted); font-weight: 600;
+  }
+  #floor {
+    position: absolute; bottom: 0; left: 0; right: 0; height: 26px;
+    background: linear-gradient(#21262d, #161b22);
+    border-top: 1px solid var(--border);
+  }
+  #passBadge {
+    position: absolute; top: 12px; left: 14px;
+    background: rgba(88,166,255,.12); color: var(--accent);
+    border: 1px solid rgba(88,166,255,.35);
+    padding: 4px 12px; border-radius: 20px; font-size: 13px; font-weight: 600;
+  }
+  #streakBadge {
+    position: absolute; top: 12px; right: 14px;
+    background: rgba(210,153,34,.12); color: var(--yellow);
+    border: 1px solid rgba(210,153,34,.35);
+    padding: 4px 12px; border-radius: 20px; font-size: 13px; font-weight: 600;
+    display: none;
+  }
+
+  /* Controls */
+  .controls { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-bottom: 14px; }
+  button {
+    background: var(--accent); color: #0d1117; border: none;
+    padding: 9px 18px; border-radius: 8px; font-size: 14px; font-weight: 700;
+    cursor: pointer; transition: filter .15s, transform .1s;
+  }
+  button:hover { filter: brightness(1.15); }
+  button:active { transform: scale(.96); }
+  button.secondary { background: var(--panel2); color: var(--text); border: 1px solid var(--border); }
+  button.on { background: var(--yellow); color: #0d1117; border-color: var(--yellow); }
+  button:disabled { opacity: .4; cursor: not-allowed; }
+  .speed { display: flex; align-items: center; gap: 8px; color: var(--muted); font-size: 13px; margin-left: auto; }
+  input[type=range] { accent-color: var(--accent); width: 120px; }
+  input[type=text] {
+    background: var(--panel2); border: 1px solid var(--border); color: var(--text);
+    padding: 9px 12px; border-radius: 8px; font-size: 14px; width: 220px;
+  }
+  select {
+    background: var(--panel2); border: 1px solid var(--border); color: var(--text);
+    padding: 8px 10px; border-radius: 8px; font-size: 14px;
+  }
+  .lab-label { font-size: 13px; color: var(--muted); font-weight: 600; }
+
+  .toolbar { display: flex; flex-direction: column; gap: 10px; margin-bottom: 14px; }
+  .tgroup {
+    display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+    padding: 10px 14px; background: var(--panel2);
+    border: 1px solid var(--border); border-radius: 10px;
+  }
+  .tlabel {
+    font-size: 12px; font-weight: 700; color: var(--muted);
+    text-transform: uppercase; letter-spacing: .4px; min-width: 96px; flex-shrink: 0;
+  }
+  .tbtns { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; flex: 1; }
+  .tbtns.nowrap { flex-wrap: nowrap; overflow-x: auto; padding-bottom: 2px; }
+  .tbtns.nowrap button, .tbtns.nowrap select { flex-shrink: 0; }
+
+  #narration {
+    background: var(--panel2); border-left: 4px solid var(--accent);
+    padding: 12px 16px; border-radius: 8px; font-size: 15px; min-height: 48px;
+  }
+  #narration button { margin: 6px 8px 0 0; padding: 7px 16px; }
+
+  .code {
+    font-family: 'Cascadia Code', 'Fira Code', Consolas, monospace;
+    font-size: 14px; line-height: 1.5;
+    background: var(--panel2); border-radius: 10px;
+    padding: 14px 0; overflow-x: auto; max-width: 100%;
+  }
+  .code .line { padding: 3px 12px; white-space: pre; color: var(--text); border-left: 3px solid transparent; }
+  .code .line.active { background: rgba(88,166,255,.14); border-left-color: var(--accent); }
+
+  .vars { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+  .var {
+    font-family: Consolas, monospace; font-size: 12.5px;
+    background: var(--panel2); border: 1px solid var(--border);
+    border-radius: 6px; padding: 4px 10px; color: var(--muted);
+  }
+  .var b { color: var(--accent); }
+  .var.hi { border-color: var(--yellow); color: var(--text); background: rgba(210,153,34,.1); }
+
+  #arrayView {
+    display: flex; flex-wrap: wrap; gap: 6px; align-items: center;
+    background: var(--panel2); border: 1px solid var(--border);
+    border-radius: 8px; padding: 10px 14px; margin-bottom: 14px;
+    font-family: Consolas, monospace; font-size: 14px;
+  }
+  #arrayView .lbl { color: var(--muted); margin-right: 4px; }
+  .cell {
+    min-width: 38px; text-align: center; padding: 6px 8px;
+    background: var(--bg); border: 1.5px solid var(--border);
+    border-radius: 6px; font-weight: 700; transition: all .3s;
+  }
+  .cell .idx { display: block; font-size: 10px; font-weight: 400; color: var(--muted); }
+  .cell.comparing { border-color: var(--yellow); background: rgba(210,153,34,.15); transform: translateY(-3px); }
+  .cell.shifting { border-color: var(--accent2); background: rgba(247,129,102,.18); transform: translateY(-3px); }
+  .cell.key { border-color: var(--purple); background: rgba(210,179,255,.2); transform: translateY(-5px) scale(1.05); box-shadow: 0 4px 10px rgba(142,95,214,.4); }
+  .cell.sorted { border-color: var(--green); background: rgba(63,185,80,.12); color: var(--green); }
+
+  #tourOverlay { position: fixed; inset: 0; background: rgba(0,0,0,.7); z-index: 100; display: none; }
+  .tour-target {
+    position: relative !important; z-index: 101 !important;
+    box-shadow: 0 0 0 4px var(--accent), 0 0 24px rgba(88,166,255,.5) !important;
+    border-radius: 8px;
+  }
+  #tourTip {
+    position: fixed; z-index: 102; max-width: 320px;
+    background: var(--panel); border: 1px solid var(--accent);
+    border-radius: 12px; padding: 16px 18px; display: none;
+    box-shadow: 0 12px 32px rgba(0,0,0,.6);
+  }
+  #tourTip h4 { font-size: 15px; margin-bottom: 6px; color: var(--accent); }
+  #tourTip p { font-size: 13.5px; line-height: 1.55; color: var(--text); margin-bottom: 12px; }
+  #tourTip .row { display: flex; gap: 8px; align-items: center; }
+  #tourTip .cnt { margin-left: auto; font-size: 12px; color: var(--muted); }
+
+  #aiOverlay { position: fixed; inset: 0; background: rgba(0,0,0,.65); z-index: 110; display: none; }
+  #aiPanel {
+    position: fixed; top: 6%; left: 50%; transform: translateX(-50%);
+    width: min(560px, 90vw); max-height: 84vh; overflow-y: auto;
+    background: var(--panel); border: 1px solid var(--accent);
+    border-radius: 14px; padding: 20px 22px; display: none;
+    box-shadow: 0 20px 50px rgba(0,0,0,.6); z-index: 111;
+  }
+  .ai-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px; }
+  .ai-header h4 { font-size: 17px; color: var(--accent); }
+  .ai-header button {
+    background: var(--panel2); color: var(--muted); border: 1px solid var(--border);
+    padding: 4px 10px; font-size: 13px; border-radius: 6px;
+  }
+  #aiNote { font-size: 11.5px; color: var(--muted); margin-bottom: 12px; padding-bottom: 10px; border-bottom: 1px dashed var(--border); }
+  #aiBody { font-size: 14.5px; line-height: 1.7; color: var(--text); }
+  #aiBody h5 { color: var(--accent); font-size: 14px; margin: 14px 0 4px; }
+  #aiBody code { font-family: Consolas, monospace; font-size: 13px; background: var(--panel2); padding: 1px 6px; border-radius: 4px; }
+  #aiBody .mistake-note {
+    background: rgba(210,153,34,.1); border-left: 3px solid var(--yellow);
+    padding: 8px 12px; border-radius: 6px; margin-top: 10px; font-size: 13.5px;
+  }
+  #aiChips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; }
+  .ai-chip {
+    background: var(--panel2); border: 1px solid var(--border); color: var(--text);
+    font-size: 12.5px; font-weight: 600; padding: 6px 12px; border-radius: 16px;
+  }
+  .ai-chip:hover { border-color: var(--accent); color: var(--accent); }
+
+  .tabs { display: flex; gap: 6px; margin-bottom: 10px; }
+  .tab {
+    background: var(--panel2); color: var(--muted); border: 1px solid var(--border);
+    padding: 6px 16px; border-radius: 8px 8px 0 0; font-size: 13px; font-weight: 700; cursor: pointer;
+  }
+  .tab.on { background: var(--accent); color: #0d1117; border-color: var(--accent); }
+  .codeWrap { display: none; }
+  .codeWrap.on { display: block; }
+  .kw { color: #ff7b72; } .fn { color: #d2a8ff; } .num { color: #79c0ff; } .cm { color: #6e7681; }
+
+  .stats { display: flex; gap: 14px; margin-top: 14px; }
+  .stat { flex: 1; background: var(--panel2); border: 1px solid var(--border); border-radius: 8px; padding: 10px; text-align: center; }
+  .stat .v { font-size: 22px; font-weight: 800; color: var(--accent); }
+  .stat .l { font-size: 12px; color: var(--muted); }
+
+  .learn { font-size: 14px; color: var(--muted); line-height: 1.6; }
+  .learn strong { color: var(--text); }
+  .complexity { display: flex; gap: 10px; margin-top: 10px; flex-wrap: wrap; }
+  .chip {
+    background: rgba(247,129,102,.12); color: var(--accent2); border: 1px solid rgba(247,129,102,.35);
+    padding: 3px 10px; border-radius: 14px; font-size: 12.5px; font-weight: 600;
+  }
+  .chip.g { background: rgba(63,185,80,.12); color: var(--green); border-color: rgba(63,185,80,.35); }
+  .chip.p { background: rgba(210,179,255,.12); color: var(--purple); border-color: rgba(210,179,255,.35); }
+
+  .quiz-opt {
+    display: block; width: 100%; text-align: left; margin-bottom: 8px;
+    background: var(--panel2); color: var(--text); border: 1px solid var(--border); font-weight: 500;
+  }
+  .quiz-opt.right { border-color: var(--green); background: rgba(63,185,80,.15); }
+  .quiz-opt.wrong { border-color: #f85149; background: rgba(248,81,73,.15); }
+  #quizFeedback { font-size: 13.5px; margin-top: 8px; color: var(--muted); min-height: 20px; }
+
+  .mistake { margin-bottom: 12px; font-size: 13.5px; line-height: 1.55; color: var(--muted); }
+  .mistake b { color: var(--accent2); }
+  .mistake code { font-family: Consolas, monospace; font-size: 12.5px; background: var(--panel2); padding: 1px 6px; border-radius: 4px; color: var(--text); }
+
+  .raceGrid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 12px; }
+  @media (max-width: 700px) { .raceGrid { grid-template-columns: 1fr; } }
+  .racer { background: var(--panel2); border: 1px solid var(--border); border-radius: 10px; padding: 14px; transition: border-color .3s, box-shadow .3s; }
+  .racer.finished { border-color: var(--green); box-shadow: 0 0 14px rgba(63,185,80,.25); }
+  .racerHead { display: flex; justify-content: space-between; margin-bottom: 6px; font-size: 14px; }
+  .racerSub { font-size: 12px; color: var(--muted); margin-bottom: 8px; }
+  .racerHead .ops { color: var(--muted); font-size: 13px; }
+  .bars { display: flex; align-items: flex-end; gap: 2px; height: 130px; }
+  .bar { flex: 1; border-radius: 2px 2px 0 0; background: var(--accent); transition: height .1s linear; }
+  .racer.ins .bar { background: var(--purple); }
+  .bar.hot { background: var(--accent2) !important; }
+  #raceResult {
+    margin-top: 14px; padding: 12px 16px; border-radius: 8px;
+    background: rgba(63,185,80,.1); border: 1px solid rgba(63,185,80,.3);
+    font-size: 14.5px; display: none;
+  }
+
+  /* ===== MOBILE / SMALL SCREENS ===== */
+  @media (max-width: 640px) {
+    header { padding: 12px 16px; }
+    .logo { font-size: 19px; }
+    .tagline { font-size: 12px; }
+    .container { padding: 14px 12px 40px; gap: 14px; }
+    .card { padding: 15px; border-radius: 10px; }
+    h1 { font-size: 20px; }
+    h3 { font-size: 14px; }
+    .subtitle { font-size: 13px; margin-bottom: 12px; }
+    .intro { padding: 18px 16px; }
+    .intro h2 { font-size: 17px; }
+    .intro p { font-size: 14px; line-height: 1.6; }
+    .intro .analogy { padding: 10px 12px; font-size: 13.5px; }
+    .steps3 { gap: 8px; }
+    .step3 { min-width: 100%; font-size: 13px; }
+    .badges { gap: 6px; }
+    .badge { font-size: 11.5px; padding: 5px 10px; }
+    #stage { height: 280px; }
+    .toolbar { gap: 8px; }
+    .tgroup { flex-direction: column; align-items: stretch; gap: 8px; padding: 10px; }
+    .tlabel { min-width: 0; }
+    .tbtns { width: 100%; }
+    .tbtns.nowrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    button { padding: 8px 14px; font-size: 13.5px; }
+    input[type=text] { width: 100%; }
+    select { width: 100%; }
+    .tbtns.nowrap select { width: auto; }
+    .speed { margin-left: 0; }
+    #narration { font-size: 14px; padding: 10px 12px; }
+    #arrayView { font-size: 12.5px; padding: 8px 10px; gap: 4px; }
+    .cell { min-width: 30px; padding: 5px 6px; }
+    .cell .idx { font-size: 9px; }
+    .stats { gap: 8px; }
+    .stat { padding: 8px 6px; }
+    .stat .v { font-size: 18px; }
+    .stat .l { font-size: 11px; }
+    .code { font-size: 11.5px; }
+    .code .line { padding: 2px 10px; }
+    .vars { gap: 6px; }
+    .var { font-size: 11.5px; padding: 3px 8px; }
+    .learn { font-size: 13.5px; }
+    .mistake { font-size: 13px; }
+    .raceGrid { grid-template-columns: 1fr; }
+    .bars { height: 100px; }
+    #aiPanel { top: 3%; width: 94vw; padding: 16px 15px; max-height: 90vh; }
+    #aiBody { font-size: 14px; }
+    .ai-chip { font-size: 12px; }
+    #tourTip { max-width: calc(100vw - 24px); padding: 14px 15px; }
+    #tourTip p { font-size: 13px; }
+  }
+
+  /* ===== CLASSROOM / PROJECTOR MODE ===== */
+  body.classroom .intro,
+  body.classroom .card.full,
+  body.classroom .sidebar { display: none !important; }
+  body.classroom .container { grid-template-columns: 1fr !important; max-width: 1500px; }
+  body.classroom #stage { height: 58vh !important; min-height: 340px; }
+  body.classroom h1 { font-size: 34px; }
+  body.classroom #narration { font-size: 22px; line-height: 1.5; padding: 18px 22px; }
+  body.classroom #arrayView { font-size: 19px; }
+  body.classroom #arrayView .cell { min-width: 52px; padding: 9px 11px; font-size: 19px; }
+  body.classroom #arrayView .cell .idx { font-size: 12px; }
+  body.classroom .stat .v { font-size: 32px; }
+  body.classroom .stat .l { font-size: 15px; }
+  body.classroom .tgroup { padding: 12px 16px; }
+  body.classroom button, body.classroom select { font-size: 16px; padding: 11px 20px; }
+  body.classroom .subtitle { font-size: 17px; }
+  body.classroom #passBadge, body.classroom #streakBadge { font-size: 17px; padding: 6px 16px; }
+  body.classroom .ball { font-weight: 800 !important; }
+  #classBtn.on { background: var(--yellow); color: #0d1117; border-color: var(--yellow); }
+</style>
+<script>if(location.protocol.startsWith("http")){var m=document.createElement("link");m.rel="manifest";m.href="manifest.json";document.head.appendChild(m);}</script>
+<meta name="theme-color" content="#0d1117">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+</head>
+<body>
+
+<header>
+  <a href="mindaicode-home.html" style="display:flex; align-items:center; text-decoration:none; color:inherit;">
+    <div class="logo">🧠 MindAI<span>Code</span></div>
+  </a>
+  <div class="tagline" style="display:flex; gap:14px; align-items:center; flex-wrap:wrap;"><a href="mindaicode-race-all.html" style="color:var(--purple); text-decoration:none; font-weight:600;">🏁 Race all six</a><a href="mindaicode-home.html" style="color:var(--muted); text-decoration:none;">🏠 All algorithms</a></div>
+</header>
+
+<div class="container">
+
+  <!-- INTRO -->
+  <div class="intro">
+    <h2>👋 New here? Start with this (30 seconds)</h2>
+    <p><strong>Insertion Sort</strong> works like sorting a hand of playing cards. You pick up the next card, and slide it left past any bigger cards already in your hand until it lands in the right spot.</p>
+    <div class="analogy">
+      🎓 <strong>Real-life example:</strong> A teacher already has a neat line of students sorted by height. A new student walks up. The teacher holds that student out of the line, and shifts the taller students in the line one step to the right — one at a time — until she finds the gap where the new student fits. Then she places them in that gap. The line stays sorted the whole time; only ONE person is ever "outside" it.
+    </div>
+    <div class="steps3">
+      <div class="step3"><b>1️⃣ Watch</b> Press ▶ Play. The purple, floating figure is the "held" key — everyone else just shifts right to make room.</div>
+      <div class="step3"><b>2️⃣ Predict</b> Turn on 🎯 Predict mode and guess if the key needs to keep moving left.</div>
+      <div class="step3"><b>3️⃣ Compare</b> Shuffle an already-sorted list and watch how FEW comparisons it takes — that's Insertion Sort's O(n) best case.</div>
+    </div>
+  </div>
+
+  <!-- BADGES -->
+  <div class="card full">
+    <div class="badges">
+      <strong style="margin-right: 6px;">🏆 Your badges:</strong>
+      <span class="badge" data-badge="sort">🏅 First Sort</span>
+      <span class="badge" data-badge="predict">🎯 Predictor ×5</span>
+      <span class="badge" data-badge="quiz">🧠 Quiz Master</span>
+      <span class="badge" data-badge="race">⚡ Race Watcher</span>
+      <span class="badge" data-badge="lab">🧪 Scientist</span>
+    </div>
+  </div>
+
+  <!-- MAIN VISUALIZER -->
+  <div class="card">
+    <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap;">
+      <h1 style="margin-bottom:0;">Insertion Sort 🃏</h1>
+      <div style="display:flex; gap:8px; flex-wrap:wrap;">
+        <button id="explainBtn" class="secondary">🤖 Explain step</button>
+        <button id="classBtn" class="secondary">🎥 Classroom</button>
+        <button id="tourBtn" class="secondary">❓ Take the tour</button>
+      </div>
+    </div>
+    <p class="subtitle" id="stageSubtitle">Hold the next value out, shift bigger values right, then slide it into its gap.</p>
+
+    <div id="stage">
+      <div id="passBadge">Pass 0</div>
+      <div id="streakBadge">🎯 Streak: 0</div>
+      <div id="teacher">🧑‍🏫</div>
+      <div id="floor"></div>
+    </div>
+
+    <div id="arrayView"></div>
+
+    <div class="toolbar">
+      <div class="tgroup">
+        <div class="tbtns nowrap">
+          <button id="playBtn">▶ Play</button>
+          <button id="stepBtn" class="secondary">⏭ Step</button>
+          <button id="predictBtn" class="secondary">🎯 Predict: Off</button>
+          <button id="shuffleBtn" class="secondary">🔀 Shuffle</button>
+          <button id="resetBtn" class="secondary">↺ Reset</button>
+          <select id="shapeSel" title="Visualization style">
+            <option value="circle">⚪ Balls</option>
+            <option value="bar">📊 Bars</option>
+            <option value="student">🧑‍🎓 Students</option>
+          </select>
+          <div class="speed" style="margin-left:0; flex-shrink:0;">
+            <span>🐢</span><input type="range" id="speed" min="1" max="10" value="5" style="width:80px;"><span>🐇</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="tgroup">
+        <span class="tlabel">🔊 Audio</span>
+        <div class="tbtns">
+          <button id="soundBtn" class="secondary">🔊 Sound: On</button>
+          <button id="voiceBtn" class="secondary">🗣 Voice: Off</button>
+          <select id="voiceSpeed" title="Voice speed">
+            <option value="0.65">🐢 Voice: Slow</option>
+            <option value="0.9" selected>🚶 Voice: Normal</option>
+            <option value="1.2">🐇 Voice: Fast</option>
+          </select>
+          <select id="langSel" title="Narration language">
+            <option value="en">🌐 English</option>
+            <option value="ta">🌐 தமிழ்</option>
+            <option value="hi">🌐 हिंदी</option>
+            <option value="te">🌐 తెలుగు</option>
+            <option value="kn">🌐 ಕನ್ನಡ</option>
+            <option value="bn">🌐 বাংলা</option>
+            <option value="mr">🌐 मराठी</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="tgroup">
+        <span class="tlabel">⌨️ Your data</span>
+        <div class="tbtns">
+          <input type="text" id="customInput" placeholder="e.g. 34, 7, 91, 12">
+          <button id="loadBtn" class="secondary">Load</button>
+        </div>
+      </div>
+
+      <div class="tgroup">
+        <span class="tlabel">🧪 Experiments</span>
+        <div class="tbtns">
+          <button id="expCorrect" class="secondary">✅ Correct code</button>
+          <button id="expNoshift" class="secondary">❌ Detect but never shift</button>
+          <button id="expOnepass" class="secondary">❌ Only insert one card</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="narration">Press <strong>Play</strong> to start, or <strong>Step</strong> to go one comparison at a time.</div>
+
+    <div class="stats">
+      <div class="stat"><div class="v" id="cmpCount">0</div><div class="l">Comparisons</div></div>
+      <div class="stat"><div class="v" id="swapCount">0</div><div class="l">Shifts</div></div>
+      <div class="stat"><div class="v" id="passCount">0</div><div class="l">Passes</div></div>
+    </div>
+  </div>
+
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+    <div class="card">
+      <h3>💻 The Code</h3>
+      <div class="tabs">
+        <button class="tab on" data-lang="py" type="button">Python</button>
+        <button class="tab" data-lang="java" type="button">Java</button>
+      </div>
+      <div class="codeWrap on" id="code-py">
+        <div class="code">
+          <div class="line" data-l="0"><span class="kw">def</span> <span class="fn">insertion_sort</span>(arr):</div>
+          <div class="line" data-l="1">    n = <span class="fn">len</span>(arr)</div>
+          <div class="line" data-l="2">    <span class="kw">for</span> i <span class="kw">in</span> <span class="fn">range</span>(<span class="num">1</span>, n):</div>
+          <div class="line" data-l="3">        key = arr[i]</div>
+          <div class="line" data-l="4">        j = i - <span class="num">1</span></div>
+          <div class="line" data-l="5">        <span class="kw">while</span> j &gt;= <span class="num">0</span> <span class="kw">and</span> arr[j] &gt; key:</div>
+          <div class="line" data-l="6">            arr[j + <span class="num">1</span>] = arr[j]</div>
+          <div class="line" data-l="7">            j -= <span class="num">1</span></div>
+          <div class="line" data-l="8">        arr[j + <span class="num">1</span>] = key</div>
+          <div class="line" data-l="9">    <span class="kw">return</span> arr</div>
+        </div>
+      </div>
+      <div class="codeWrap" id="code-java">
+        <div class="code">
+          <div class="line" data-l="0"><span class="kw">void</span> <span class="fn">insertionSort</span>(<span class="kw">int</span>[] arr) {</div>
+          <div class="line" data-l="1">    <span class="kw">int</span> n = arr.length;</div>
+          <div class="line" data-l="2">    <span class="kw">for</span> (<span class="kw">int</span> i = <span class="num">1</span>; i &lt; n; i++) {</div>
+          <div class="line" data-l="3">        <span class="kw">int</span> key = arr[i];</div>
+          <div class="line" data-l="4">        <span class="kw">int</span> j = i - <span class="num">1</span>;</div>
+          <div class="line" data-l="5">        <span class="kw">while</span> (j &gt;= <span class="num">0</span> &amp;&amp; arr[j] &gt; key) {</div>
+          <div class="line" data-l="6">            arr[j + <span class="num">1</span>] = arr[j];</div>
+          <div class="line" data-l="7">            j--;</div>
+          <div class="line" data-l="7">        }</div>
+          <div class="line" data-l="8">        arr[j + <span class="num">1</span>] = key;</div>
+          <div class="line" data-l="9">    }</div>
+        </div>
+      </div>
+      <div class="vars">
+        <span class="var" id="varN">n = <b>–</b></span>
+        <span class="var" id="varI">i = <b>–</b></span>
+        <span class="var" id="varJ">j = <b>–</b></span>
+        <span class="var" id="varKey">key = <b>–</b></span>
+        <span class="var" id="varAJ">arr[j] = <b>–</b></span>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top: 16px;">
+      <h3>📚 How it works</h3>
+      <div class="learn">
+        For each position <strong>i</strong>, hold onto <strong>key = arr[i]</strong>. Slide every value bigger than <strong>key</strong> one step right, opening a gap. Drop <strong>key</strong> into that gap. The sorted region (green) is always everything to the <strong>left</strong> of i, and it grows one element at a time.
+        <div class="complexity">
+          <span class="chip g">Best: O(n)</span>
+          <span class="chip">Average: O(n²)</span>
+          <span class="chip">Worst: O(n²)</span>
+          <span class="chip g">Stable: Yes</span>
+          <span class="chip g">Space: O(1)</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top: 16px;">
+      <h3>🧠 Quick check</h3>
+      <div id="quizQ" style="font-size: 14px; margin-bottom: 10px;"></div>
+      <div id="quizOpts"></div>
+      <div id="quizFeedback"></div>
+    </div>
+
+    <div class="card" style="margin-top: 16px;">
+      <h3>⚠️ Common mistakes</h3>
+      <div class="mistake"><b>Missing the <code>j &gt;= 0</code> check.</b> If you only check <code>arr[j] &gt; key</code>, once <code>j</code> goes negative you'll read <code>arr[-1]</code> — a crash in Java, silently wrong in Python (which wraps negative indices!).</div>
+      <div class="mistake"><b>Forgetting to decrement <code>j</code>.</b> Skip <code>j -= 1</code> and the while loop never ends — an infinite loop.</div>
+      <div class="mistake"><b>Forgetting the final placement.</b> <code>arr[j + 1] = key</code> after the loop is what actually drops the key into its gap — skip it and the key's value is lost.</div>
+      <div class="mistake"><b>Assuming it needs a scan like Selection Sort.</b> It doesn't — it only looks LEFT from position i until it finds a value ≤ key or hits the start. No global minimum search.</div>
+    </div>
+  </div>
+
+  <!-- RACE -->
+  <div class="card full">
+    <h3>⚡ The Race: Insertion Sort vs Selection Sort</h3>
+    <p class="subtitle" style="margin-bottom: 4px;">Same O(n²) family — but this data starts <strong>nearly sorted</strong>. Watch how much that helps Insertion Sort and does nothing for Selection Sort.</p>
+    <div class="controls" style="margin: 10px 0 0;">
+      <button id="raceBtn">🏁 Start Race</button>
+    </div>
+    <div class="raceGrid">
+      <div class="racer ins" id="racerI">
+        <div class="racerHead"><strong>🃏 Insertion Sort — O(n²), O(n) best case</strong><span class="ops">Comparisons: <b id="opsI">0</b></span></div>
+        <div class="racerSub">Shifts so far: <b id="writesI">0</b></div>
+        <div class="bars" id="barsI"></div>
+      </div>
+      <div class="racer sel" id="racerS">
+        <div class="racerHead"><strong>🔎 Selection Sort — always O(n²)</strong><span class="ops">Comparisons: <b id="opsS">0</b></span></div>
+        <div class="racerSub">Swaps so far: <b id="writesS">0</b></div>
+        <div class="bars" id="barsS"></div>
+      </div>
+    </div>
+    <div id="raceResult"></div>
+  </div>
+
+</div>
+
+<div id="aiOverlay"></div>
+<div id="aiPanel">
+  <div class="ai-header">
+    <h4>🤖 AI Explainer</h4>
+    <button id="aiClose">✕ Close</button>
+  </div>
+  <div id="aiNote">Playback is paused. This breaks down exactly what just happened — read it, then hit Close and Step to continue, or click a question below for more depth.</div>
+  <div id="aiBody"></div>
+  <div id="aiChips"></div>
+</div>
+
+<div id="tourOverlay"></div>
+<div id="tourTip">
+  <h4 id="tourTitle"></h4>
+  <p id="tourText"></p>
+  <div class="row">
+    <button id="tourNext">Next →</button>
+    <button id="tourSkip" class="secondary">Skip</button>
+    <span class="cnt" id="tourCnt"></span>
+  </div>
+</div>
+
+<script>
+/* ================= LANGUAGES ================= */
+const L = {
+  en: {
+    start: 'Press <strong>Play</strong> to start, or <strong>Step</strong> to go one comparison at a time.',
+    pass: (n, key) => `🔁 <strong>Pass ${n}</strong> begins — holding <strong>${key}</strong> out as the key, ready to insert it into the sorted part on its left.`,
+    cmpShift: (key, left) => `🔍 Comparing key <strong>${key}</strong> with <strong>${left}</strong> on its left — ${left} &gt; ${key}, so ${left} shifts right to make room.`,
+    cmpStop: (key, left) => `🔍 Comparing key <strong>${key}</strong> with <strong>${left}</strong> on its left — ${left} ≤ ${key}, this is the key's spot!`,
+    cmpStopStart: key => `🔍 Key <strong>${key}</strong> reached the very start of the array — this is its spot.`,
+    placed: (key, pos) => `✅ <strong>${key}</strong> is placed at position ${pos}. Everything left of here is sorted.`,
+    done: (c, s, p) => `🎉 <strong>Sorted!</strong> ${c} comparisons, ${s} shifts, across ${p} pass(es).`,
+    doneNoshift: '😅 <strong>Nothing got sorted!</strong> We noticed bigger values on the left, but never actually shifted them — the key always landed right back where it started.',
+    doneOnepass: '🤔 <strong>Only the second card</strong> got inserted correctly. Every other position still needs its own pass to be placed.',
+    predictQ: (key, left) => `🎯 Is <strong>${left}</strong> (on the left) bigger than the key <strong>${key}</strong>? (Should it shift right?)`,
+    yes: 'Yes, shift it!', no: 'No, stop here',
+    right: '✅ Correct prediction! ', wrong: '❌ Wrong — watch: ',
+    minNums: '⚠️ Enter at least 2 numbers separated by commas.',
+  },
+  ta: {
+    start: 'தொடங்க <strong>Play</strong> அழுத்தவும், ஒவ்வொரு ஒப்பீடாக பார்க்க <strong>Step</strong> அழுத்தவும்.',
+    pass: (n, key) => `🔁 <strong>சுற்று ${n}</strong> தொடங்குகிறது — <strong>${key}</strong>-ஐ கையில் வைத்திருக்கிறோம்.`,
+    cmpShift: (key, left) => `🔍 <strong>${key}</strong>-ஐ இடதுபுறம் உள்ள <strong>${left}</strong>-உடன் ஒப்பிடுகிறோம் — ${left} பெரியது, வலப்புறம் நகரும்.`,
+    cmpStop: (key, left) => `🔍 <strong>${key}</strong>-ஐ <strong>${left}</strong>-உடன் ஒப்பிடுகிறோம் — இதுவே இடம்!`,
+    cmpStopStart: key => `🔍 <strong>${key}</strong> தொடக்கத்தை அடைந்தது — இதுவே இடம்.`,
+    placed: (key, pos) => `✅ <strong>${key}</strong> இடம் ${pos}-இல் வைக்கப்பட்டது.`,
+    done: (c, s, p) => `🎉 <strong>வரிசையானது!</strong> ${c} ஒப்பீடுகள், ${s} நகர்வுகள், ${p} சுற்றுகள்.`,
+    doneNoshift: '😅 <strong>எதுவும் வரிசையாகவில்லை!</strong> பெரியதைக் கண்டோம், ஆனால் நகர்த்தவில்லை.',
+    doneOnepass: '🤔 <strong>இரண்டாவது அட்டை மட்டுமே</strong> சரியாக வைக்கப்பட்டது.',
+    predictQ: (key, left) => `🎯 <strong>${left}</strong> (இடது), <strong>${key}</strong>-ஐ விட பெரியதா?`,
+    yes: 'ஆம், நகரும்!', no: 'இல்லை, இங்கே நிற்கும்',
+    right: '✅ சரியான கணிப்பு! ', wrong: '❌ தவறு — பாருங்கள்: ',
+    minNums: '⚠️ குறைந்தது 2 எண்களை கமாவால் பிரித்து உள்ளிடவும்.',
+  },
+  hi: {
+    start: 'शुरू करने के लिए <strong>Play</strong> दबाएँ, या <strong>Step</strong> दबाएँ।',
+    pass: (n, key) => `🔁 <strong>चक्कर ${n}</strong> शुरू — <strong>${key}</strong> को हाथ में पकड़े हैं।`,
+    cmpShift: (key, left) => `🔍 कुंजी <strong>${key}</strong> की तुलना बाईं ओर <strong>${left}</strong> से — ${left} बड़ा है, दाईं ओर खिसकेगा।`,
+    cmpStop: (key, left) => `🔍 <strong>${key}</strong> की तुलना <strong>${left}</strong> से — यही जगह है!`,
+    cmpStopStart: key => `🔍 <strong>${key}</strong> शुरुआत तक पहुँच गया — यही जगह है।`,
+    placed: (key, pos) => `✅ <strong>${key}</strong> स्थान ${pos} पर रखा गया।`,
+    done: (c, s, p) => `🎉 <strong>क्रमबद्ध!</strong> ${c} तुलनाएँ, ${s} शिफ्ट, ${p} चक्कर।`,
+    doneNoshift: '😅 <strong>कुछ भी क्रमबद्ध नहीं हुआ!</strong> बड़ा मान देखा पर खिसकाया नहीं।',
+    doneOnepass: '🤔 <strong>सिर्फ़ दूसरा कार्ड</strong> सही जगह पहुँचा।',
+    predictQ: (key, left) => `🎯 क्या <strong>${left}</strong> (बाईं ओर), कुंजी <strong>${key}</strong> से बड़ा है?`,
+    yes: 'हाँ, खिसकेगा!', no: 'नहीं, यहीं रुकेगा',
+    right: '✅ सही अनुमान! ', wrong: '❌ ग़लत — देखिए: ',
+    minNums: '⚠️ कम से कम 2 संख्याएँ कॉमा से अलग करके लिखें।',
+  },
+  te: {
+    start: 'ప్రారంభించడానికి <strong>Play</strong> నొక్కండి, లేదా <strong>Step</strong> నొక్కండి.',
+    pass: (n, key) => `🔁 <strong>రౌండ్ ${n}</strong> ప్రారంభం — <strong>${key}</strong> ను చేతిలో పట్టుకున్నాం.`,
+    cmpShift: (key, left) => `🔍 కీ <strong>${key}</strong> ను ఎడమవైపు <strong>${left}</strong> తో పోలిక — ${left} పెద్దది, కుడివైపు జరుగుతుంది.`,
+    cmpStop: (key, left) => `🔍 <strong>${key}</strong> ను <strong>${left}</strong> తో పోలిక — ఇదే సరైన స్థానం!`,
+    cmpStopStart: key => `🔍 <strong>${key}</strong> మొదటికి చేరింది — ఇదే దాని స్థానం.`,
+    placed: (key, pos) => `✅ <strong>${key}</strong> ${pos} స్థానంలో ఉంచబడింది.`,
+    done: (c, s, p) => `🎉 <strong>క్రమబద్ధం అయ్యింది!</strong> ${c} పోలికలు, ${s} జరుగుదలలు, ${p} రౌండ్లు.`,
+    doneNoshift: '😅 <strong>ఏదీ క్రమబద్ధం కాలేదు!</strong> పెద్ద విలువ కనిపించింది కానీ జరపలేదు.',
+    doneOnepass: '🤔 <strong>రెండవ కార్డు మాత్రమే</strong> సరైన స్థానానికి చేరింది.',
+    predictQ: (key, left) => `🎯 ఎడమవైపు ఉన్న <strong>${left}</strong>, కీ <strong>${key}</strong> కంటే పెద్దదా?`,
+    yes: 'అవును, జరుగుతుంది!', no: 'కాదు, ఇక్కడే ఆగుతుంది',
+    right: '✅ సరైన అంచనా! ', wrong: '❌ తప్పు — చూడండి: ',
+    minNums: '⚠️ కనీసం 2 సంఖ్యలను కామాతో వేరు చేసి ఇవ్వండి.',
+  },
+  kn: {
+    start: 'ಪ್ರಾರಂಭಿಸಲು <strong>Play</strong> ಒತ್ತಿರಿ, ಅಥವಾ <strong>Step</strong> ಒತ್ತಿರಿ.',
+    pass: (n, key) => `🔁 <strong>ಸುತ್ತು ${n}</strong> ಪ್ರಾರಂಭ — <strong>${key}</strong> ಅನ್ನು ಕೈಯಲ್ಲಿ ಹಿಡಿದಿದ್ದೇವೆ.`,
+    cmpShift: (key, left) => `🔍 ಕೀ <strong>${key}</strong> ಅನ್ನು ಎಡಗಡೆಯ <strong>${left}</strong> ಜೊತೆ ಹೋಲಿಕೆ — ${left} ದೊಡ್ಡದು, ಬಲಕ್ಕೆ ಸರಿಯುತ್ತದೆ.`,
+    cmpStop: (key, left) => `🔍 <strong>${key}</strong> ಅನ್ನು <strong>${left}</strong> ಜೊತೆ ಹೋಲಿಕೆ — ಇದೇ ಸರಿಯಾದ ಸ್ಥಾನ!`,
+    cmpStopStart: key => `🔍 <strong>${key}</strong> ಆರಂಭಕ್ಕೆ ತಲುಪಿತು — ಇದೇ ಅದರ ಸ್ಥಾನ.`,
+    placed: (key, pos) => `✅ <strong>${key}</strong> ${pos} ಸ್ಥಾನದಲ್ಲಿ ಇರಿಸಲಾಯಿತು.`,
+    done: (c, s, p) => `🎉 <strong>ವಿಂಗಡಿಸಲಾಗಿದೆ!</strong> ${c} ಹೋಲಿಕೆಗಳು, ${s} ಸರಿತಗಳು, ${p} ಸುತ್ತುಗಳು.`,
+    doneNoshift: '😅 <strong>ಏನೂ ವಿಂಗಡಣೆಯಾಗಲಿಲ್ಲ!</strong> ದೊಡ್ಡ ಮೌಲ್ಯ ಕಂಡಿತು ಆದರೆ ಸರಿಸಲಿಲ್ಲ.',
+    doneOnepass: '🤔 <strong>ಎರಡನೇ ಕಾರ್ಡ್ ಮಾತ್ರ</strong> ಸರಿಯಾದ ಸ್ಥಾನ ತಲುಪಿತು.',
+    predictQ: (key, left) => `🎯 ಎಡಗಡೆಯ <strong>${left}</strong>, ಕೀ <strong>${key}</strong> ಗಿಂತ ದೊಡ್ಡದೇ?`,
+    yes: 'ಹೌದು, ಸರಿಯುತ್ತದೆ!', no: 'ಇಲ್ಲ, ಇಲ್ಲಿಯೇ ನಿಲ್ಲುತ್ತದೆ',
+    right: '✅ ಸರಿಯಾದ ಊಹೆ! ', wrong: '❌ ತಪ್ಪು — ನೋಡಿ: ',
+    minNums: '⚠️ ಕನಿಷ್ಠ 2 ಸಂಖ್ಯೆಗಳನ್ನು ಅಲ್ಪವಿರಾಮದಿಂದ ಬೇರ್ಪಡಿಸಿ ಬರೆಯಿರಿ.',
+  },
+  bn: {
+    start: 'শুরু করতে <strong>Play</strong> চাপুন, বা <strong>Step</strong> চাপুন।',
+    pass: (n, key) => `🔁 <strong>রাউন্ড ${n}</strong> শুরু — <strong>${key}</strong> হাতে ধরে আছি।`,
+    cmpShift: (key, left) => `🔍 কী <strong>${key}</strong> এর সাথে বাঁদিকের <strong>${left}</strong> তুলনা — ${left} বড়, ডানদিকে সরবে।`,
+    cmpStop: (key, left) => `🔍 <strong>${key}</strong> এর সাথে <strong>${left}</strong> তুলনা — এটাই সঠিক জায়গা!`,
+    cmpStopStart: key => `🔍 <strong>${key}</strong> একদম শুরুতে পৌঁছেছে — এটাই এর জায়গা।`,
+    placed: (key, pos) => `✅ <strong>${key}</strong> ${pos} স্থানে রাখা হল।`,
+    done: (c, s, p) => `🎉 <strong>সাজানো হয়ে গেছে!</strong> ${c} তুলনা, ${s} সরানো, ${p} রাউন্ড।`,
+    doneNoshift: '😅 <strong>কিছুই সাজানো হয়নি!</strong> বড় মান দেখেছি কিন্তু সরাইনি।',
+    doneOnepass: '🤔 <strong>শুধু দ্বিতীয় কার্ডটি</strong> সঠিক জায়গায় পৌঁছেছে।',
+    predictQ: (key, left) => `🎯 বাঁদিকের <strong>${left}</strong> কি কী <strong>${key}</strong> থেকে বড়?`,
+    yes: 'হ্যাঁ, সরবে!', no: 'না, এখানেই থামবে',
+    right: '✅ সঠিক অনুমান! ', wrong: '❌ ভুল — দেখুন: ',
+    minNums: '⚠️ অন্তত ২টি সংখ্যা কমা দিয়ে আলাদা করে লিখুন।',
+  },
+  mr: {
+    start: 'सुरू करण्यासाठी <strong>Play</strong> दाबा, किंवा <strong>Step</strong> दाबा.',
+    pass: (n, key) => `🔁 <strong>फेरी ${n}</strong> सुरू — <strong>${key}</strong> हातात धरला आहे.`,
+    cmpShift: (key, left) => `🔍 की <strong>${key}</strong> ची डावीकडील <strong>${left}</strong> शी तुलना — ${left} मोठा आहे, उजवीकडे सरकेल.`,
+    cmpStop: (key, left) => `🔍 <strong>${key}</strong> ची <strong>${left}</strong> शी तुलना — हीच योग्य जागा!`,
+    cmpStopStart: key => `🔍 <strong>${key}</strong> सुरुवातीपर्यंत पोहोचला — हीच त्याची जागा.`,
+    placed: (key, pos) => `✅ <strong>${key}</strong> ${pos} स्थानी ठेवला.`,
+    done: (c, s, p) => `🎉 <strong>क्रमवारी पूर्ण!</strong> ${c} तुलना, ${s} सरकवणे, ${p} फेऱ्या.`,
+    doneNoshift: '😅 <strong>काहीच क्रमात आले नाही!</strong> मोठे मूल्य दिसले पण सरकवले नाही.',
+    doneOnepass: '🤔 <strong>फक्त दुसरे कार्ड</strong> योग्य जागी पोहोचले.',
+    predictQ: (key, left) => `🎯 डावीकडील <strong>${left}</strong> हा की <strong>${key}</strong> पेक्षा मोठा आहे का?`,
+    yes: 'होय, सरकेल!', no: 'नाही, इथेच थांबेल',
+    right: '✅ बरोबर अंदाज! ', wrong: '❌ चूक — पाहा: ',
+    minNums: '⚠️ किमान 2 संख्या स्वल्पविरामाने वेगळ्या करून लिहा.',
+  },
+};
+let lang = 'en';
+const voiceLang = { en: 'en-US', ta: 'ta-IN', hi: 'hi-IN', te: 'te-IN', kn: 'kn-IN', bn: 'bn-IN', mr: 'mr-IN' };
+function T() { return L[lang]; }
+document.getElementById('langSel').onchange = function () { lang = this.value; };
+
+/* ================= BADGES ================= */
+function award(id) {
+  const el = document.querySelector(`.badge[data-badge="${id}"]`);
+  if (!el || el.classList.contains('earned')) return;
+  el.classList.add('earned');
+  try { localStorage.setItem('mins_badge_' + id, '1'); } catch (e) {}
+  tone(880, .2, 'triangle', .12); setTimeout(() => tone(1320, .3, 'triangle', .12), 180);
+}
+try {
+  ['sort','predict','quiz','race','lab'].forEach(id => {
+    if (localStorage.getItem('mins_badge_' + id))
+      document.querySelector(`.badge[data-badge="${id}"]`).classList.add('earned');
+  });
+} catch (e) {}
+
+/* ================= AUDIO ================= */
+let soundOn = true, voiceOn = false, actx = null;
+function ctx() {
+  if (!actx) actx = new (window.AudioContext || window.webkitAudioContext)();
+  if (actx.state === 'suspended') actx.resume();
+  return actx;
+}
+function tone(freq, dur, type, vol) {
+  if (!soundOn) return;
+  try {
+    const c = ctx(), o = c.createOscillator(), g = c.createGain();
+    o.type = type || 'sine'; o.frequency.value = freq;
+    g.gain.setValueAtTime(vol || 0.15, c.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.001, c.currentTime + dur);
+    o.connect(g); g.connect(c.destination);
+    o.start(); o.stop(c.currentTime + dur);
+  } catch (e) {}
+}
+function sfxCompare(a, b) { tone(300 + a * 4, .18, 'sine'); setTimeout(() => tone(300 + b * 4, .18, 'sine'), 200); }
+function sfxShift() { tone(220, .12, 'square', .1); setTimeout(() => tone(440, .15, 'square', .1), 110); }
+function sfxPlace() { tone(660, .25, 'triangle', .12); }
+function sfxPickKey() { tone(950, .12, 'triangle', .1); }
+function sfxDone() { [523, 659, 784, 1047].forEach((f, i) => setTimeout(() => tone(f, .3, 'triangle', .14), i * 160)); }
+let lastSpeechPromise = null;
+function speak(text) {
+  lastSpeechPromise = null;
+  if (!voiceOn || !window.speechSynthesis) return null;
+  speechSynthesis.cancel();
+  const clean = text.replace(/[🔁🔍🔄✅⚡🎉⚠️🎯😅🤔🃏]/g, '');
+  const u = new SpeechSynthesisUtterance(clean);
+  const rate = parseFloat(document.getElementById('voiceSpeed').value);
+  u.rate = rate; u.lang = voiceLang[lang];
+  const p = new Promise(resolve => {
+    let done = false;
+    const finish = () => { if (!done) { done = true; resolve(); } };
+    u.onend = finish;
+    u.onerror = finish;
+    const estMs = Math.max(1000, (clean.length * 65) / rate) + 700;
+    setTimeout(finish, estMs);
+  });
+  lastSpeechPromise = p;
+  speechSynthesis.speak(u);
+  return p;
+}
+document.getElementById('soundBtn').onclick = function () {
+  soundOn = !soundOn;
+  this.textContent = soundOn ? '🔊 Sound: On' : '🔇 Sound: Off';
+};
+document.getElementById('voiceBtn').onclick = function () {
+  voiceOn = !voiceOn;
+  this.textContent = voiceOn ? '🗣 Voice: On' : '🗣 Voice: Off';
+  if (!voiceOn) speechSynthesis.cancel();
+};
+
+/* ================= MAIN VISUALIZER ================= */
+const stage = document.getElementById('stage');
+const narration = document.getElementById('narration');
+const passBadge = document.getElementById('passBadge');
+const streakBadge = document.getElementById('streakBadge');
+const playBtn = document.getElementById('playBtn');
+
+let values = [34, 7, 91, 12, 55, 28, 76, 3];
+let balls = [], steps = [], stepIdx = 0;
+let playing = false, timer = null;
+let stats = { cmp: 0, swap: 0, pass: 0 };
+let variant = 'correct';
+let predictOn = false, waitingPredict = false, streak = 0;
+let cur = [];
+// keyIdx = the slot currently "held" (floating) — its cur[] value is stale
+// once a shift has moved past it, so display uses heldKeyValue instead.
+// lockedUpTo = how many positions from the LEFT are already sorted.
+let keyIdx = null, heldKeyValue = null, curJ = null, cmpMode = null, lockedUpTo = 0;
+// The key ball is detached from balls[] entirely while it's "held" — it's
+// tracked separately here and hovers above whichever slot is currently the
+// gap (keyIdx), instead of sitting in the balls[] array at a stale index.
+let heldBall = null;
+let shapeMode = 'circle';
+
+const stageSubtitle = document.getElementById('stageSubtitle');
+const subtitles = {
+  circle: 'Hold the next value out, shift bigger values right, then slide it into its gap.',
+  bar: 'The floating purple bar is the held key — everyone bigger shifts right to make room for it.',
+  student: 'The teacher holds the new student aside while taller students shift over, then places them in the gap.',
+};
+document.getElementById('shapeSel').onchange = function () {
+  shapeMode = this.value;
+  stageSubtitle.textContent = subtitles[shapeMode];
+  buildBalls();
+  applyBallStates();
+  updateTeacher();
+};
+
+function displayValueAt(i) {
+  return (i === keyIdx && keyIdx !== null) ? heldKeyValue : cur[i];
+}
+function classForIndex(i) {
+  if (i === keyIdx) return 'key';
+  if (i < lockedUpTo) return 'sorted';
+  if (curJ === i) return cmpMode || 'comparing';
+  return '';
+}
+
+function applyBallStates() {
+  balls.forEach((b, i) => {
+    if (!b) return;
+    b.classList.remove('comparing', 'shifting', 'key', 'sorted');
+    const cls = classForIndex(i);
+    if (cls) b.classList.add(cls);
+  });
+  if (heldBall) {
+    heldBall.classList.remove('comparing', 'shifting', 'sorted');
+    heldBall.classList.add('key');
+    if (keyIdx !== null) placeBallLeft(heldBall, keyIdx, ballSize());
+  }
+}
+
+const teacherEl = document.getElementById('teacher');
+function updateTeacher() {
+  if (shapeMode !== 'student') { teacherEl.style.opacity = '0'; return; }
+  const idx = curJ !== null ? curJ : keyIdx;
+  if (idx === null || !balls[idx]) { teacherEl.style.opacity = '0'; return; }
+  const b = balls[idx];
+  const mid = parseFloat(b.style.left) + parseFloat(b.style.width) / 2;
+  teacherEl.style.left = (mid - 17) + 'px';
+  teacherEl.style.opacity = '1';
+}
+
+function renderArray() {
+  const box = document.getElementById('arrayView');
+  box.innerHTML = '<span class="lbl">arr =</span>';
+  for (let i = 0; i < cur.length; i++) {
+    const c = document.createElement('span');
+    c.className = 'cell';
+    const cls = classForIndex(i);
+    if (cls) c.classList.add(cls);
+    c.innerHTML = `${displayValueAt(i)}<span class="idx">[${i}]</span>`;
+    box.appendChild(c);
+  }
+}
+function renderVars() {
+  document.getElementById('varN').innerHTML = 'n = <b>' + cur.length + '</b>';
+  document.getElementById('varI').innerHTML = 'i = <b>' + (keyIdx === null ? '–' : (curStartI === null ? keyIdx : curStartI)) + '</b>';
+  document.getElementById('varJ').innerHTML = 'j = <b>' + (curJ === null ? '–' : curJ) + '</b>';
+  document.getElementById('varKey').innerHTML = 'key = <b>' + (heldKeyValue === null ? '–' : heldKeyValue) + '</b>';
+  document.getElementById('varAJ').innerHTML = 'arr[j] = <b>' + (curJ === null ? '–' : cur[curJ]) + '</b>';
+  document.getElementById('varKey').classList.toggle('hi', heldKeyValue !== null);
+  document.getElementById('varAJ').classList.toggle('hi', curJ !== null);
+}
+let curStartI = null;
+
+function ballSize() {
+  const w = stage.clientWidth;
+  return Math.min(64, Math.max(38, Math.floor((w - 40) / values.length) - 12));
+}
+function xFor(i, size) {
+  const w = stage.clientWidth;
+  const gap = (w - values.length * size) / (values.length + 1);
+  return gap + i * (size + gap);
+}
+function placeBallLeft(b, idx, size) {
+  const w = parseFloat(b.style.width);
+  b.style.left = xFor(idx, size) + (size - w) / 2 + 'px';
+}
+function buildBalls() {
+  balls.forEach(b => { if (b) b.remove(); });
+  balls = [];
+  const size = ballSize();
+  const maxV = Math.max(...values);
+  const stageH = stage.clientHeight;
+  const maxBarH = stageH - 70;
+  values.forEach((v, i) => {
+    const b = document.createElement('div');
+    if (shapeMode === 'bar') {
+      b.textContent = v;
+      b.className = 'ball bar-mode';
+      const h = Math.max(28, Math.round(maxBarH * (v / maxV)));
+      const w = Math.max(30, size * 0.72);
+      b.style.width = w + 'px'; b.style.height = h + 'px';
+      b.style.fontSize = Math.max(11, Math.round(size * 0.26)) + 'px';
+      b.style.left = xFor(i, size) + (size - w) / 2 + 'px';
+    } else if (shapeMode === 'student') {
+      b.className = 'ball student-mode';
+      const HEAD = 28, LEGS = 14;
+      const torsoH = Math.max(20, Math.round(maxBarH * 0.66 * (v / maxV)));
+      const h = HEAD + 3 + torsoH + LEGS;
+      const w = Math.max(34, size * 0.68);
+      b.style.width = w + 'px'; b.style.height = h + 'px';
+      b.style.left = xFor(i, size) + (size - w) / 2 + 'px';
+      b.innerHTML = `<div class="student-head"></div><div class="student-body"><span class="student-tag">${v}</span></div><div class="student-legs"></div>`;
+    } else {
+      b.textContent = v;
+      b.className = 'ball';
+      const s = Math.round(size * (0.72 + 0.28 * (v / maxV)));
+      b.style.width = s + 'px'; b.style.height = s + 'px';
+      b.style.fontSize = Math.max(12, Math.round(s * 0.32)) + 'px';
+      b.style.left = xFor(i, size) + (size - s) / 2 + 'px';
+    }
+    stage.appendChild(b);
+    balls.push(b);
+  });
+}
+
+function computeSteps() {
+  steps = [];
+  const a = [...values];
+  const n = a.length;
+  const passes = variant === 'onepass' ? Math.min(2, n) : n;
+  for (let i = 1; i < passes; i++) {
+    const key = a[i];
+    steps.push({ t: 'pass', num: i, i, key });
+    let j = i - 1;
+    while (j >= 0) {
+      steps.push({ t: 'compare', j, key, leftVal: a[j] });
+      if (a[j] > key) {
+        if (variant === 'noshift') break;
+        steps.push({ t: 'shift', j, val: a[j] });
+        a[j + 1] = a[j];
+        j--;
+      } else break;
+    }
+    if (variant === 'noshift') {
+      steps.push({ t: 'placed', idx: i, key });
+    } else {
+      a[j + 1] = key;
+      steps.push({ t: 'placed', idx: j + 1, key });
+    }
+    steps.push({ t: 'lock', idx: i });
+  }
+  steps.push({ t: 'done', variant });
+}
+
+function highlight(lines) {
+  document.querySelectorAll('.codeWrap .line').forEach(el =>
+    el.classList.toggle('active', lines.includes(+el.dataset.l)));
+}
+document.querySelectorAll('.tab').forEach(tab => {
+  tab.onclick = () => {
+    document.querySelectorAll('.tab').forEach(t => t.classList.toggle('on', t === tab));
+    document.querySelectorAll('.codeWrap').forEach(w =>
+      w.classList.toggle('on', w.id === 'code-' + tab.dataset.lang));
+  };
+});
+function updateStats() {
+  document.getElementById('cmpCount').textContent = stats.cmp;
+  document.getElementById('swapCount').textContent = stats.swap;
+  document.getElementById('passCount').textContent = stats.pass;
+}
+function delay() { return 4000 - document.getElementById('speed').value * 300; }
+
+function execStep(prefix) {
+  if (stepIdx >= steps.length) return false;
+  const s = steps[stepIdx++];
+  if (s.t === 'pass') {
+    stats.pass = s.num;
+    curStartI = s.i;
+    // Detach the key ball from the slot array entirely — it's held "outside"
+    // the row until it's reinserted at the 'placed' step.
+    heldBall = balls[s.i];
+    balls[s.i] = null;
+    keyIdx = s.i; heldKeyValue = s.key; curJ = null; cmpMode = null;
+    passBadge.textContent = 'Pass ' + s.num;
+    narration.innerHTML = T().pass(s.num, s.key);
+    highlight([2, 3, 4]);
+    sfxPickKey();
+  } else if (s.t === 'compare') {
+    stats.cmp++;
+    curJ = s.j; cmpMode = 'comparing';
+    const stop = s.leftVal <= s.key;
+    narration.innerHTML = (prefix || '') + (stop
+      ? (s.j < 0 ? T().cmpStopStart(s.key) : T().cmpStop(s.key, s.leftVal))
+      : T().cmpShift(s.key, s.leftVal));
+    highlight([5]);
+    sfxCompare(s.key, s.leftVal);
+  } else if (s.t === 'shift') {
+    stats.swap++;
+    curJ = s.j; cmpMode = 'shifting';
+    cur[s.j + 1] = cur[s.j];
+    const moving = balls[s.j];
+    const size = ballSize();
+    placeBallLeft(moving, s.j + 1, size);
+    balls[s.j + 1] = moving;
+    balls[s.j] = null;
+    keyIdx = s.j;
+    highlight([6, 7]);
+    sfxShift();
+  } else if (s.t === 'placed') {
+    cur[s.idx] = s.key;
+    keyIdx = s.idx; curJ = null; cmpMode = null;
+    // Reinsert the held ball back into the slot array at its final resting spot.
+    balls[s.idx] = heldBall;
+    narration.innerHTML = T().placed(s.key, s.idx);
+    highlight([8]);
+    sfxPlace();
+  } else if (s.t === 'lock') {
+    lockedUpTo = s.idx + 1; keyIdx = null; heldKeyValue = null; curJ = null; cmpMode = null;
+    heldBall = null;
+    highlight([2]);
+  } else if (s.t === 'done') {
+    keyIdx = null; heldKeyValue = null; curJ = null; cmpMode = null;
+    heldBall = null;
+    if (s.variant === 'correct') {
+      lockedUpTo = cur.length;
+      narration.innerHTML = T().done(stats.cmp, stats.swap, stats.pass);
+      sfxDone();
+      award('sort');
+    } else if (s.variant === 'noshift') {
+      narration.innerHTML = T().doneNoshift;
+    } else if (s.variant === 'onepass') {
+      narration.innerHTML = T().doneOnepass;
+    }
+    highlight([9]);
+    stopPlay();
+  }
+  applyBallStates();
+  renderArray();
+  renderVars();
+  updateTeacher();
+  speak(narration.textContent);
+  updateStats();
+  return stepIdx < steps.length;
+}
+
+function doStep() {
+  if (stepIdx >= steps.length) return false;
+  const s = steps[stepIdx];
+  if (predictOn && s.t === 'compare' && s.j >= 0 && !waitingPredict) {
+    waitingPredict = true;
+    curJ = s.j; cmpMode = 'comparing';
+    applyBallStates();
+    updateTeacher();
+    narration.innerHTML = T().predictQ(s.key, s.leftVal) +
+      `<br><button id="pYes">${T().yes}</button><button id="pNo" class="secondary">${T().no}</button>`;
+    speak(narration.textContent);
+    document.getElementById('pYes').onclick = () => answerPredict(true, s);
+    document.getElementById('pNo').onclick = () => answerPredict(false, s);
+    return true;
+  }
+  return execStep();
+}
+function answerPredict(saidShift, s) {
+  waitingPredict = false;
+  const correct = (s.leftVal > s.key) === saidShift;
+  if (correct) { streak++; tone(780, .15, 'triangle', .12); }
+  else { streak = 0; tone(180, .25, 'sawtooth', .08); }
+  streakBadge.textContent = '🎯 Streak: ' + streak;
+  if (streak >= 5) award('predict');
+  const more = execStep(correct ? T().right : T().wrong);
+  if (playing) scheduleNext(more);
+}
+
+function scheduleNext(more) {
+  if (!more) { stopPlay(); return; }
+  const baseDelay = delay();
+  const speechP = lastSpeechPromise;
+  const start = Date.now();
+  if (voiceOn && speechP) {
+    speechP.then(() => {
+      if (!playing) return;
+      const remaining = Math.max(0, baseDelay - (Date.now() - start));
+      timer = setTimeout(playLoop, remaining);
+    });
+  } else {
+    timer = setTimeout(playLoop, baseDelay);
+  }
+}
+
+function playLoop() {
+  if (!playing) return;
+  const more = doStep();
+  if (waitingPredict) return;
+  scheduleNext(more);
+}
+function stopPlay() {
+  playing = false;
+  clearTimeout(timer);
+  playBtn.textContent = '▶ Play';
+}
+playBtn.onclick = () => {
+  if (playing) { stopPlay(); return; }
+  if (stepIdx >= steps.length) reset(false);
+  playing = true;
+  playBtn.textContent = '⏸ Pause';
+  playLoop();
+};
+document.getElementById('stepBtn').onclick = () => { if (!waitingPredict) { stopPlay(); doStep(); } };
+document.getElementById('predictBtn').onclick = function () {
+  predictOn = !predictOn;
+  this.textContent = '🎯 Predict: ' + (predictOn ? 'On' : 'Off');
+  this.classList.toggle('on', predictOn);
+  streakBadge.style.display = predictOn ? 'block' : 'none';
+};
+
+function reset(newOrder) {
+  stopPlay();
+  waitingPredict = false;
+  if (newOrder) values = values.map(() => Math.floor(Math.random() * 97) + 3);
+  stepIdx = 0;
+  stats = { cmp: 0, swap: 0, pass: 0 };
+  cur = [...values]; keyIdx = null; heldKeyValue = null; curJ = null; cmpMode = null; curStartI = null;
+  heldBall = null;
+  lockedUpTo = 1; // position 0 alone is trivially "sorted"
+  updateStats();
+  passBadge.textContent = 'Pass 0';
+  narration.innerHTML = T().start;
+  highlight([]);
+  buildBalls();
+  computeSteps();
+  applyBallStates();
+  renderArray();
+  renderVars();
+  updateTeacher();
+}
+document.getElementById('shuffleBtn').onclick = () => { variant = 'correct'; reset(true); };
+document.getElementById('resetBtn').onclick = () => { variant = 'correct'; reset(false); };
+document.getElementById('loadBtn').onclick = () => {
+  const nums = document.getElementById('customInput').value
+    .split(/[\s,]+/).map(Number).filter(v => !isNaN(v)).slice(0, 12);
+  if (nums.length >= 2) { values = nums; variant = 'correct'; reset(false); }
+  else narration.innerHTML = T().minNums;
+};
+
+/* Experiments */
+function runExperiment(v) {
+  variant = v;
+  reset(false);
+  if (v !== 'correct') award('lab');
+  playing = true;
+  playBtn.textContent = '⏸ Pause';
+  playLoop();
+}
+document.getElementById('expCorrect').onclick = () => runExperiment('correct');
+document.getElementById('expNoshift').onclick = () => runExperiment('noshift');
+document.getElementById('expOnepass').onclick = () => runExperiment('onepass');
+
+window.addEventListener('resize', () => {
+  const size = ballSize();
+  balls.forEach((b, i) => { if (b) placeBallLeft(b, i, size); });
+  if (heldBall && keyIdx !== null) placeBallLeft(heldBall, keyIdx, size);
+});
+
+reset(false);
+
+/* ================= QUIZ ================= */
+const quiz = [
+  { q: 'What happens to the "key" element while Insertion Sort searches for its spot?',
+    opts: ['It stays in the array and gets swapped repeatedly', 'It\'s held aside while other values shift right to make room', 'It\'s deleted and re-inserted at the end'],
+    ans: 1, why: 'The key is conceptually lifted out. Bigger values shift right one at a time; nothing is swapped pairwise.' },
+  { q: "When is Insertion Sort's best case O(n)?",
+    opts: ['When the array is already sorted', 'When the array is in reverse order', 'It never has a best case better than O(n²)'],
+    ans: 0, why: 'On a sorted array, every "while" check fails immediately (arr[j] is never > key), so each key needs just one comparison and zero shifts.' },
+  { q: 'Is standard Insertion Sort stable?',
+    opts: ['Yes', 'No'],
+    ans: 0, why: 'It only shifts values strictly greater than the key (using >, not >=), so equal values never swap past each other — their original order is preserved.' },
+];
+let qi = 0, quizCorrect = 0;
+function showQuiz() {
+  const item = quiz[qi];
+  document.getElementById('quizQ').innerHTML = `<strong>Q${qi + 1}/${quiz.length}:</strong> ${item.q}`;
+  const box = document.getElementById('quizOpts');
+  box.innerHTML = '';
+  document.getElementById('quizFeedback').textContent = '';
+  item.opts.forEach((o, i) => {
+    const b = document.createElement('button');
+    b.className = 'quiz-opt'; b.textContent = o;
+    b.onclick = () => {
+      box.querySelectorAll('button').forEach(x => x.disabled = true);
+      const ok = i === item.ans;
+      if (ok) quizCorrect++;
+      b.classList.add(ok ? 'right' : 'wrong');
+      if (!ok) box.children[item.ans].classList.add('right');
+      let tail;
+      if (qi < quiz.length - 1) tail = ' <a href="#" id="nextQ" style="color:var(--accent)">Next →</a>';
+      else {
+        tail = ` 🎉 Quiz done — ${quizCorrect}/${quiz.length} correct!`;
+        if (quizCorrect === quiz.length) award('quiz');
+        else tail += ' <a href="#" id="retryQ" style="color:var(--accent)">Try again</a>';
+      }
+      document.getElementById('quizFeedback').innerHTML =
+        (ok ? '✅ Correct! ' : '❌ Not quite. ') + item.why + tail;
+      const n = document.getElementById('nextQ');
+      if (n) n.onclick = e => { e.preventDefault(); qi++; showQuiz(); };
+      const r = document.getElementById('retryQ');
+      if (r) r.onclick = e => { e.preventDefault(); qi = 0; quizCorrect = 0; showQuiz(); };
+    };
+    box.appendChild(b);
+  });
+}
+showQuiz();
+
+/* ================= RACE ================= */
+const RN = 30;
+let raceTimer = null;
+function buildRaceBars(id, vals) {
+  const box = document.getElementById(id);
+  box.innerHTML = '';
+  vals.forEach(v => {
+    const b = document.createElement('div');
+    b.className = 'bar';
+    b.style.height = v + '%';
+    box.appendChild(b);
+  });
+  return [...box.children];
+}
+function insertionOps(vals) {
+  const a = [...vals], ops = [];
+  for (let i = 1; i < a.length; i++) {
+    const key = a[i];
+    let j = i - 1;
+    while (j >= 0) {
+      ops.push({ t: 'c', i: j });
+      if (a[j] > key) { a[j + 1] = a[j]; ops.push({ t: 'w', i: j + 1, v: a[j + 1] }); j--; }
+      else break;
+    }
+    a[j + 1] = key;
+    ops.push({ t: 'w', i: j + 1, v: key });
+  }
+  return ops;
+}
+function selectionOps(vals) {
+  const a = [...vals], ops = [];
+  const n = a.length;
+  for (let i = 0; i < n; i++) {
+    let minIdx = i;
+    for (let j = i + 1; j < n; j++) {
+      ops.push({ t: 'c', i: j });
+      if (a[j] < a[minIdx]) minIdx = j;
+    }
+    if (minIdx !== i) {
+      [a[i], a[minIdx]] = [a[minIdx], a[i]];
+      ops.push({ t: 'w', i, v: a[i] }, { t: 'w', i: minIdx, v: a[minIdx] });
+    }
+  }
+  return ops;
+}
+function nearlySorted(n) {
+  const a = Array.from({ length: n }, (_, i) => Math.round(8 + (i * 90) / (n - 1)));
+  for (let k = 0; k < 4; k++) {
+    const x = Math.floor(Math.random() * n), y = Math.floor(Math.random() * n);
+    [a[x], a[y]] = [a[y], a[x]];
+  }
+  return a;
+}
+document.getElementById('raceBtn').onclick = () => {
+  clearInterval(raceTimer);
+  document.getElementById('raceResult').style.display = 'none';
+  document.getElementById('racerI').classList.remove('finished');
+  document.getElementById('racerS').classList.remove('finished');
+  const vals = nearlySorted(RN);
+  const barsI = buildRaceBars('barsI', vals);
+  const barsS = buildRaceBars('barsS', vals);
+  const opsI = insertionOps(vals), opsS = selectionOps(vals);
+  let ii = 0, si = 0, writesI = 0, writesS = 0;
+  const apply = (ops, idx, bars) => {
+    const op = ops[idx];
+    bars.forEach(b => b.classList.remove('hot'));
+    if (op.t === 'w') bars[op.i].style.height = op.v + '%';
+    if (bars[op.i]) bars[op.i].classList.add('hot');
+    return op.t === 'w';
+  };
+  raceTimer = setInterval(() => {
+    if (ii < opsI.length) {
+      if (apply(opsI, ii, barsI)) writesI++;
+      ii++;
+      document.getElementById('opsI').textContent = ii;
+      document.getElementById('writesI').textContent = writesI;
+      if (ii >= opsI.length) {
+        document.getElementById('racerI').classList.add('finished');
+        barsI.forEach(b => b.classList.remove('hot'));
+      }
+    }
+    if (si < opsS.length) {
+      if (apply(opsS, si, barsS)) writesS++;
+      si++;
+      document.getElementById('opsS').textContent = si;
+      document.getElementById('writesS').textContent = writesS;
+      if (si >= opsS.length) {
+        document.getElementById('racerS').classList.add('finished');
+        barsS.forEach(b => b.classList.remove('hot'));
+        sfxPlace();
+      }
+    }
+    if (ii >= opsI.length && si >= opsS.length) {
+      clearInterval(raceTimer);
+      const r = document.getElementById('raceResult');
+      r.style.display = 'block';
+      r.innerHTML = `🏆 <strong>Insertion Sort needed far fewer comparisons</strong> on this nearly-sorted data: <strong>${ii}</strong> total steps vs Selection Sort's <strong>${si}</strong>. Selection Sort did the exact same amount of work it always does — it can't tell the data was almost sorted. Insertion Sort's while-loop exits early whenever it finds the right spot, so nearly-sorted (or fully sorted) input is its best case, O(n).`;
+      sfxDone();
+      award('race');
+    }
+  }, 14);
+};
+
+/* ================= GUIDED TOUR ================= */
+const tourSteps = [
+  { sel: '#playBtn', title: '▶ Play / Pause', text: 'Starts the animation automatically. Press again to pause any time.' },
+  { sel: '#stepBtn', title: '⏭ Step', text: 'Moves one comparison at a time — the clearest way to see the "hold, shift, insert" pattern.' },
+  { sel: '#predictBtn', title: '🎯 Predict mode', text: 'Guess whether the left neighbour needs to shift before it happens. 5 in a row earns a badge!' },
+  { sel: '#speed', title: '🐢 Animation speed', text: 'Drag left for slow, right for fast.' },
+  { sel: '#soundBtn', title: '🔊 Sound effects', text: 'A distinct chime plays whenever a new key is picked up.' },
+  { sel: '#voiceBtn', title: '🗣 Voice narration', text: 'Reads every explanation aloud, with a speed dropdown next to it.' },
+  { sel: '#langSel', title: '🌐 Language', text: 'Switch narration to Tamil or Hindi.' },
+  { sel: '#customInput', title: '⌨️ Your own numbers', text: 'Sort your own list, or try an already-sorted list to see the O(n) best case in action.' },
+  { sel: '#expNoshift', title: '🧪 Experiments', text: 'Run a broken version where bigger values are detected but never actually shifted — the array stays completely untouched.' },
+  { sel: '#explainBtn', title: '🤖 AI Explainer', text: 'Pause any time for a deep explanation of exactly what just happened, using this run\'s real values.' },
+  { sel: '#arrayView', title: '🔢 Live array', text: 'Purple = the held key (its slot shows the key\'s value, floating conceptually). Orange = a value shifting right. Green = the sorted prefix.' },
+  { sel: '#code-py', title: '💻 Live code', text: 'The exact running line lights up, with live values of n, i, j, and key below. Switch tabs for Python or Java.' },
+  { sel: '#quizOpts', title: '🧠 Quiz', text: 'Test yourself on what makes Insertion Sort different — especially its best-case behaviour.' },
+  { sel: '#raceBtn', title: '⚡ The Race', text: 'Insertion Sort vs Selection Sort on NEARLY-SORTED data — watch adaptivity in action.' },
+];
+let tourIdx = -1, tourEl = null;
+const tourOverlay = document.getElementById('tourOverlay');
+const tourTip = document.getElementById('tourTip');
+function tourShow(i) {
+  if (tourEl) tourEl.classList.remove('tour-target');
+  if (i >= tourSteps.length) { tourEnd(); return; }
+  tourIdx = i;
+  const st = tourSteps[i];
+  tourEl = document.querySelector(st.sel);
+  if (!tourEl) { tourShow(i + 1); return; }
+  tourOverlay.style.display = 'block';
+  tourEl.classList.add('tour-target');
+  tourEl.scrollIntoView({ block: 'center', behavior: 'instant' });
+  document.getElementById('tourTitle').textContent = st.title;
+  document.getElementById('tourText').textContent = st.text;
+  document.getElementById('tourCnt').textContent = (i + 1) + '/' + tourSteps.length;
+  document.getElementById('tourNext').textContent = i === tourSteps.length - 1 ? 'Finish ✓' : 'Next →';
+  const r = tourEl.getBoundingClientRect();
+  tourTip.style.display = 'block';
+  const tw = 320, th = tourTip.offsetHeight || 140;
+  let top = r.bottom + 12;
+  if (top + th > window.innerHeight - 10) top = Math.max(10, r.top - th - 12);
+  let left = Math.min(Math.max(10, r.left), window.innerWidth - tw - 10);
+  tourTip.style.top = top + 'px';
+  tourTip.style.left = left + 'px';
+}
+function tourEnd() {
+  if (tourEl) tourEl.classList.remove('tour-target');
+  tourEl = null; tourIdx = -1;
+  tourOverlay.style.display = 'none';
+  tourTip.style.display = 'none';
+  try { localStorage.setItem('mins_toured', '1'); } catch (e) {}
+}
+document.getElementById('tourBtn').onclick = () => tourShow(0);
+document.getElementById('tourNext').onclick = () => tourShow(tourIdx + 1);
+document.getElementById('tourSkip').onclick = tourEnd;
+tourOverlay.onclick = tourEnd;
+try { if (!localStorage.getItem('mins_toured')) setTimeout(() => tourShow(0), 800); } catch (e) {}
+
+/* ================= AI EXPLAINER ================= */
+const aiOverlay = document.getElementById('aiOverlay');
+const aiPanel = document.getElementById('aiPanel');
+const aiBody = document.getElementById('aiBody');
+const aiChips = document.getElementById('aiChips');
+
+function currentCodeLang() {
+  return document.querySelector('.tab.on')?.dataset.lang === 'java' ? 'java' : 'py';
+}
+
+function explainForStep() {
+  const s = steps[stepIdx - 1];
+  const codeLang = currentCodeLang();
+  if (!s) return `<p>Nothing has run yet. Press <strong>Step</strong> or <strong>Play</strong> once, then click this button again.</p>`;
+  let html = '';
+  if (s.t === 'pass') {
+    html = `
+      <p>We just picked up <code>arr[${s.i}] = ${s.key}</code> as the <strong>key</strong> (<code>i = ${s.i}</code>). Everything to its left, positions 0 to ${s.i - 1}, is already sorted.</p>
+      <h5>What happens next</h5>
+      <p>We'll walk leftward from position ${s.i - 1}, comparing the key against each value, shifting anything bigger one step right, until we find where the key belongs.</p>`;
+  } else if (s.t === 'compare') {
+    const stop = s.leftVal <= s.key;
+    html = `
+      <p>Comparing key <code>${s.key}</code> with <code>arr[${s.j}] = ${s.leftVal}</code> (or the start of the array, if <code>j &lt; 0</code>).</p>
+      <h5>The condition</h5>
+      <p>The while loop checks <code>j &gt;= 0 and arr[j] &gt; key</code>. ${s.j < 0 ? 'j has gone below 0, so the loop stops immediately — the key belongs at position 0.' : `Right now that's <code>${s.leftVal} &gt; ${s.key}</code>, which is <strong>${!stop ? 'TRUE' : 'FALSE'}</strong>.`}</p>
+      <p>${!stop && s.j >= 0
+        ? `Since ${s.leftVal} is bigger than the key, it needs to shift right to make room.`
+        : `Since this value isn't bigger than the key, we've found the key's spot — the loop stops here.`}</p>`;
+  } else if (s.t === 'shift') {
+    html = `
+      <p><code>arr[${s.j}] = ${s.val}</code> just shifted right into position ${s.j + 1}. Notice: this is a plain assignment, <code>arr[j+1] = arr[j]</code> — not a swap. No temp variable, because the key's original value was already saved separately before this loop started.</p>
+      <p><code>j</code> now decreases to ${s.j - 1}, so the next comparison checks one position further left.</p>`;
+  } else if (s.t === 'placed') {
+    html = `
+      <p>The key <code>${s.key}</code> is dropped into the gap at position <strong>${s.idx}</strong> with <code>arr[j + 1] = key</code>.</p>
+      <div class="mistake-note">⚠️ This line is easy to forget — without it, the key's value never actually gets written back into the array after being "held" out.</div>`;
+  } else if (s.t === 'lock') {
+    html = `<p>Positions 0 through ${s.idx} are now confirmed sorted. Next pass will pick up <code>arr[${s.idx + 1}]</code> as the new key.</p>`;
+  } else if (s.t === 'done') {
+    if (s.variant === 'correct') {
+      html = `
+        <p>🎉 Sorted: <strong>${stats.cmp}</strong> comparisons, <strong>${stats.swap}</strong> shifts, across <strong>${stats.pass}</strong> pass(es).</p>
+        <h5>Adaptivity</h5>
+        <p>If this array had started already sorted, every comparison would have immediately stopped the while loop (arr[j] is never bigger than key), giving O(n) total work — Insertion Sort's best case. That's something Selection Sort can never do.</p>`;
+    } else if (s.variant === 'noshift') {
+      html = `<p>This was the <strong>"Detect but never shift"</strong> experiment. We noticed <code>arr[j] &gt; key</code> plenty of times, but skipped the actual shift — so the key always got placed right back where it started, and the array never changed.</p>`;
+    } else if (s.variant === 'onepass') {
+      html = `<p>This was the <strong>"Only insert one card"</strong> experiment — only <code>i = 1</code> ran. Every other position from index 2 onward is still in its original, unsorted spot.</p>`;
+    }
+  }
+  return html || `<p>Step through the animation and I'll explain exactly what happened.</p>`;
+}
+
+const AI_FAQ = {
+  bestcase: {
+    label: "Why is Insertion Sort's best case O(n) but Selection Sort's isn't?",
+    body: `<h5>Early exit built in</h5>
+      <p>Insertion Sort's <code>while</code> loop stops the moment it finds a value ≤ key. On an already-sorted array, that happens on the FIRST check every single time — one comparison per element, O(n) total. Selection Sort has no equivalent: it always scans the entire remaining range to find the true minimum, regardless of how the data looks.</p>`,
+  },
+  stable: {
+    label: 'Why is Insertion Sort stable but Selection Sort is not?',
+    body: `<h5>Strict inequality preserves order</h5>
+      <p>Insertion Sort only shifts a value if it's STRICTLY greater than the key (<code>&gt;</code>, not <code>&gt;=</code>) — equal values are never shifted past each other, so their original relative order survives. Selection Sort's swap can jump the found minimum across several equal-valued elements at once, scrambling their original order.</p>`,
+  },
+  noswap: {
+    label: 'Why no temp variable, unlike Bubble/Selection Sort?',
+    body: `<h5>The key is already saved</h5>
+      <p><code>key = arr[i]</code> saves the value BEFORE any shifting starts. Every shift afterward is a simple one-directional copy, <code>arr[j+1] = arr[j]</code> — nothing is being traded between two live array slots, so there's no risk of losing a value, and no temp variable is needed.</p>`,
+  },
+  realworld: {
+    label: 'Is Insertion Sort actually used anywhere real?',
+    body: `<h5>Yes — inside hybrid sorts</h5>
+      <p>Python's Timsort and many Java sort implementations switch to Insertion Sort for small sub-arrays (typically under ~32-64 elements) because its low overhead and strong performance on nearly-sorted data beats the overhead of recursive divide-and-conquer sorts at small sizes.</p>`,
+  },
+};
+
+function renderAiChips() {
+  aiChips.innerHTML = '';
+  Object.entries(AI_FAQ).forEach(([key, item]) => {
+    const chip = document.createElement('button');
+    chip.className = 'ai-chip';
+    chip.textContent = '❓ ' + item.label;
+    chip.onclick = () => {
+      aiBody.innerHTML += `<hr style="border-color:var(--border); margin:16px 0;">` + item.body;
+      aiPanel.scrollTop = aiPanel.scrollHeight;
+    };
+    aiChips.appendChild(chip);
+  });
+}
+
+function openAiExplainer() {
+  stopPlay();
+  aiBody.innerHTML = explainForStep();
+  renderAiChips();
+  aiOverlay.style.display = 'block';
+  aiPanel.style.display = 'block';
+}
+function closeAiExplainer() {
+  aiOverlay.style.display = 'none';
+  aiPanel.style.display = 'none';
+}
+document.getElementById('explainBtn').onclick = openAiExplainer;
+document.getElementById('aiClose').onclick = closeAiExplainer;
+aiOverlay.onclick = closeAiExplainer;
+
+/* ===== Classroom mode: hide everything except the animation ===== */
+(function () {
+  var btn = document.getElementById('classBtn');
+  if (!btn) return;
+  function apply(on) {
+    document.body.classList.toggle('classroom', on);
+    btn.classList.toggle('on', on);
+    btn.textContent = on ? '\u2715 Exit classroom' : '\U0001F3A5 Classroom';
+    try { localStorage.setItem('mac_classroom', on ? '1' : '0'); } catch (e) {}
+    window.dispatchEvent(new Event('resize'));
+  }
+  btn.onclick = function () { apply(!document.body.classList.contains('classroom')); };
+  var want = false;
+  try {
+    want = localStorage.getItem('mac_classroom') === '1' ||
+           /[?&]classroom=1/.test(location.search);
+  } catch (e) { want = /[?&]classroom=1/.test(location.search); }
+  if (want) apply(true);
+})();
+</script>
+<script>
+/* ===== Offline support (works when served over http/https) ===== */
+if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
+  window.addEventListener('load', function () {
+    navigator.serviceWorker.register('sw.js').catch(function () { /* offline mode simply unavailable */ });
+  });
+}
+</script>
+<script src="firebase-config.js"></script>
+<script src="mindaicode-auth.js"></script>
+</body>
+</html>

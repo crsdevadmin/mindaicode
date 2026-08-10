@@ -1,0 +1,718 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MindAICode - Programming Basics</title>
+<style>
+  :root {
+    --bg:#0d1117; --panel:#161b22; --panel2:#1c2333; --accent:#58a6ff; --accent2:#f78166;
+    --purple:#d2a8ff; --green:#3fb950; --yellow:#d29922; --red:#f85149;
+    --text:#e6edf3; --muted:#8b949e; --border:#30363d;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family:'Segoe UI', system-ui, sans-serif; background:var(--bg); color:var(--text); min-height:100vh; }
+  header {
+    display:flex; align-items:center; justify-content:space-between;
+    padding:14px 28px; background:var(--panel); border-bottom:1px solid var(--border); flex-wrap:wrap; gap:8px;
+  }
+  .logo { font-size:22px; font-weight:800; }
+  .logo span { color:var(--accent); }
+  .tagline { display:flex; gap:14px; align-items:center; flex-wrap:wrap; font-size:13px; }
+  .tagline a { text-decoration:none; color:var(--muted); }
+  .container { max-width:860px; margin:0 auto; padding:22px 20px 60px; }
+
+  /* ---------- progress rail ---------- */
+  .rail { display:flex; align-items:center; gap:6px; margin-bottom:8px; }
+  .railStep { flex:1; display:flex; flex-direction:column; align-items:center; gap:5px; cursor:pointer; }
+  .railDot {
+    width:30px; height:30px; border-radius:50%; background:var(--panel2); border:2px solid var(--border);
+    display:flex; align-items:center; justify-content:center; font-size:13px; font-weight:800;
+    transition:all .25s; color:var(--muted);
+  }
+  .railStep.done .railDot { background:rgba(63,185,80,.2); border-color:var(--green); color:var(--green); }
+  .railStep.current .railDot { background:rgba(88,166,255,.2); border-color:var(--accent); color:var(--accent); transform:scale(1.15); }
+  .railStep.locked { cursor:not-allowed; opacity:.5; }
+  .railLbl { font-size:10.5px; color:var(--muted); text-align:center; line-height:1.25; }
+  .railStep.current .railLbl { color:var(--text); font-weight:700; }
+  .xpBar { display:flex; justify-content:space-between; align-items:center; font-size:12.5px; color:var(--muted); margin-bottom:18px; }
+  .xpBar b { color:var(--yellow); font-size:14px; }
+
+  /* ---------- step card ---------- */
+  .step { display:none; }
+  .step.on { display:block; animation:fadeIn .25s ease; }
+  @keyframes fadeIn { from { opacity:0; transform:translateY(6px); } to { opacity:1; transform:none; } }
+  .card { background:var(--panel); border:1px solid var(--border); border-radius:14px; padding:22px; margin-bottom:16px; }
+  .kicker { font-size:11.5px; font-weight:800; letter-spacing:.6px; text-transform:uppercase; color:var(--accent); margin-bottom:6px; }
+  h1 { font-size:25px; margin-bottom:6px; line-height:1.25; }
+  .techName { font-size:13px; color:var(--muted); margin-bottom:16px; }
+  .techName code { background:var(--panel2); padding:2px 8px; border-radius:6px; color:var(--purple); font-weight:700; }
+
+  .analogy {
+    background:var(--panel2); border-left:4px solid var(--green); padding:13px 16px;
+    border-radius:8px; margin:0 0 16px; font-size:14.5px; line-height:1.65;
+  }
+
+  .gameBox { background:var(--bg); border:1px dashed var(--border); border-radius:12px; padding:18px; margin-bottom:14px; }
+  .gameTitle { font-size:14px; font-weight:800; margin-bottom:4px; }
+  .gameSub { font-size:13px; color:var(--muted); margin-bottom:14px; line-height:1.55; }
+
+  button {
+    background:var(--accent); color:#0d1117; border:none; padding:9px 17px;
+    border-radius:8px; font-size:13.5px; font-weight:700; cursor:pointer; font-family:inherit;
+    transition:filter .15s, transform .1s;
+  }
+  button:hover { filter:brightness(1.14); }
+  button:active { transform:scale(.97); }
+  button.secondary { background:var(--panel2); color:var(--text); border:1px solid var(--border); }
+  button.ghost { background:transparent; color:var(--muted); border:1px solid var(--border); }
+  button:disabled { opacity:.4; cursor:not-allowed; }
+  .controls { display:flex; flex-wrap:wrap; gap:9px; align-items:center; margin-bottom:12px; }
+
+  /* jars for the swap game */
+  .jarRow { display:flex; gap:22px; justify-content:center; margin-bottom:16px; flex-wrap:wrap; position:relative; }
+
+  /* a value physically travelling between jars */
+  .flyToken {
+    position:absolute; z-index:20; pointer-events:none;
+    background:var(--accent); color:#0d1117; font-family:Consolas, monospace; font-weight:800;
+    font-size:20px; padding:6px 14px; border-radius:10px;
+    box-shadow:0 0 0 3px rgba(88,166,255,.28), 0 6px 18px rgba(0,0,0,.55);
+    transition:left .72s cubic-bezier(.34,.9,.35,1), top .72s cubic-bezier(.34,1.5,.4,1),
+               transform .3s ease, opacity .3s ease;
+  }
+  .flyToken.landing { transform:scale(1.35); opacity:0; }
+  .jarBody.pop { animation:jarPop .42s ease; }
+  @keyframes jarPop {
+    0%   { transform:scale(1); }
+    45%  { transform:scale(1.13); }
+    100% { transform:scale(1); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .flyToken { transition:opacity .3s ease; }
+    .jarBody.pop { animation:none; }
+  }
+  .ghostToken {
+    position:absolute; z-index:6; pointer-events:none;
+    color:var(--red); font-family:Consolas, monospace; font-weight:800; font-size:18px;
+    animation:ghostAway 1.15s ease-out forwards;
+  }
+  @keyframes ghostAway {
+    0%   { opacity:1; transform:translateY(0) scale(1); }
+    100% { opacity:0; transform:translateY(-46px) scale(.7) rotate(-12deg); }
+  }
+  .copyHint {
+    text-align:center; font-family:Consolas, monospace; font-size:13.5px; color:var(--muted);
+    min-height:20px; margin-bottom:10px;
+  }
+  .copyHint b { color:var(--accent); }
+  .copyHint .gone { color:var(--red); }
+  .jar { text-align:center; }
+  .jarBody { width:84px; transition:transform .3s; }
+  .jarBody svg { width:100%; height:auto; display:block; overflow:visible; }
+  .jarLid   { fill:#8b949e; }
+  .jarNeck  { fill:#6e7681; }
+  .jarGlass { fill:rgba(255,255,255,.05); stroke:var(--border); stroke-width:2; }
+  .jarShine { fill:rgba(255,255,255,.10); }
+  .jarFill  { fill:rgba(88,166,255,.28); stroke:var(--accent); stroke-width:1.5; }
+  .jarVal   { fill:var(--text); font-size:23px; font-weight:800; text-anchor:middle; font-family:Consolas, monospace; }
+  .jarEmptyTxt { fill:var(--muted); font-size:12px; text-anchor:middle; font-style:italic; }
+  .jarBody.changed { transform:translateY(-5px); }
+  .jarBody.changed .jarFill { fill:rgba(210,153,34,.32); stroke:var(--yellow); }
+  .jarBody.lost .jarGlass { stroke:var(--red); }
+  .jarBody.lost .jarFill { fill:rgba(248,81,73,.25); stroke:var(--red); }
+  .jarBody.lost .jarVal { fill:var(--red); }
+  .jarBody.win .jarGlass { stroke:var(--green); }
+  .jarBody.win .jarFill { fill:rgba(63,185,80,.3); stroke:var(--green); }
+  .jarBody.win .jarVal { fill:var(--green); }
+  .jarLbl { font-size:13px; color:var(--muted); margin-top:5px; font-family:Consolas, monospace; font-weight:700; }
+
+  .cardPool { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:12px; }
+  .instrCard {
+    background:var(--panel2); border:1.5px solid var(--border); border-radius:8px; padding:9px 14px;
+    font-family:Consolas, monospace; font-size:13.5px; cursor:pointer; transition:all .15s; user-select:none;
+  }
+  .instrCard:hover { border-color:var(--accent); }
+  .instrCard.reusable { border-style:dashed; border-color:rgba(210,168,255,.55); color:var(--purple); }
+  .instrCard.reusable:hover { border-color:var(--purple); }
+  .instrCard.used { opacity:.3; cursor:not-allowed; }
+  .program { background:var(--panel2); border-radius:8px; padding:10px; min-height:108px; margin-bottom:12px; }
+  .progLine {
+    font-family:Consolas, monospace; font-size:13.5px; padding:6px 10px; border-radius:6px;
+    background:var(--bg); margin-bottom:5px; display:flex; justify-content:space-between; align-items:center;
+  }
+  .progLine.running { background:rgba(88,166,255,.16); }
+  .progLine .num { color:var(--muted); font-size:11px; margin-right:8px; }
+  .progEmpty { color:var(--muted); font-size:12.5px; font-style:italic; padding:8px 10px; }
+  .rmBtn { background:none; border:none; color:var(--muted); cursor:pointer; font-size:14px; padding:0 4px; }
+
+  /* post boxes for locker / loop games */
+  .boxRow { display:flex; flex-wrap:wrap; gap:9px; justify-content:center; margin-bottom:12px; }
+  .boxCol { display:flex; flex-direction:column; align-items:center; gap:4px; }
+  .box { width:60px; cursor:pointer; transition:transform .18s; }
+  .box svg { width:100%; height:auto; display:block; overflow:visible; }
+  /* postal red body with a brass slot lip and keyhole, so it reads as a real post box */
+  .boxShell { fill:#a8352c; stroke:#c9483c; stroke-width:2; transition:all .18s; }
+  .boxDoor  { fill:rgba(0,0,0,.16); stroke:rgba(255,255,255,.14); stroke-width:1; }
+  .boxSlot  { fill:#160a09; }
+  .boxLip   { fill:#d9a441; }
+  .boxKey   { fill:#d9a441; }
+  .boxLeg   { fill:#6b7280; }
+  .boxFoot  { fill:#4b5563; }
+  .boxVal   { fill:#fff5f3; font-size:17px; font-weight:800; text-anchor:middle; font-family:Consolas, monospace; }
+  .box:hover { transform:translateY(-3px); }
+  .box:hover .boxShell { stroke:var(--accent); }
+  .box.correct .boxShell { fill:#1f7a37; stroke:var(--green); }
+  .box.correct .boxVal { fill:#eaffef; }
+  .box.wrong .boxShell { fill:#5c1b1b; stroke:var(--red); }
+  .box.wrong .boxVal { fill:#ffd9d6; }
+  .box.hi { transform:translateY(-4px); }
+  .box.hi .boxShell { fill:#8a6a16; stroke:var(--yellow); }
+  .box.done .boxShell { fill:#2c5c39; stroke:rgba(63,185,80,.75); }
+  .box.noclick { cursor:default; }
+  .box.noclick:hover { transform:none; }
+  .box.noclick:hover .boxShell { stroke:var(--border); }
+  .box.noclick.hi:hover { transform:translateY(-4px); }
+  .idxLbl { font-size:11.5px; color:var(--muted); font-family:Consolas, monospace; }
+  .idxLbl.big { font-size:13px; color:var(--accent); font-weight:800; }
+
+  .scoreRow { display:flex; gap:10px; align-items:center; flex-wrap:wrap; font-size:13px; margin-bottom:12px; }
+  .scorePill { background:var(--panel2); border:1px solid var(--border); border-radius:20px; padding:4px 13px; font-weight:700; }
+  .scorePill.good { border-color:var(--green); color:var(--green); }
+  .lives { letter-spacing:2px; font-size:15px; }
+
+  .optRow { display:flex; flex-wrap:wrap; gap:9px; margin-bottom:12px; }
+  .optBtn {
+    background:var(--panel2); border:1.5px solid var(--border); color:var(--text);
+    border-radius:9px; padding:11px 20px; font-family:Consolas, monospace; font-size:15px; font-weight:800;
+    cursor:pointer; transition:all .15s;
+  }
+  .optBtn:hover { border-color:var(--accent); }
+  .optBtn.correct { border-color:var(--green); background:rgba(63,185,80,.2); color:var(--green); }
+  .optBtn.wrong { border-color:var(--red); background:rgba(248,81,73,.18); color:var(--red); }
+  .optBtn:disabled { cursor:default; }
+
+  .feedback { font-size:14px; line-height:1.65; min-height:24px; padding:11px 14px; border-radius:9px; margin-bottom:6px; display:none; }
+  .feedback.on { display:block; }
+  .feedback.good { background:rgba(63,185,80,.1); border:1px solid rgba(63,185,80,.3); }
+  .feedback.bad { background:rgba(248,81,73,.09); border:1px solid rgba(248,81,73,.3); }
+  .feedback.neutral { background:var(--panel2); border:1px solid var(--border); }
+  .feedback b { color:var(--text); }
+
+  /* cinema recursion */
+  .cinemaRow { display:flex; gap:8px; align-items:flex-end; justify-content:center; flex-wrap:wrap; margin-bottom:14px; }
+  .screenBar {
+    max-width:420px; margin:0 auto 16px; text-align:center; font-size:10.5px; letter-spacing:3px;
+    color:var(--muted); background:linear-gradient(180deg, rgba(88,166,255,.18), transparent);
+    border-top:2px solid rgba(88,166,255,.5); border-radius:2px; padding:5px 0 12px;
+  }
+  .seat { text-align:center; }
+  .seatBody { width:56px; transition:transform .25s; }
+  .seatBody svg { width:100%; height:auto; display:block; overflow:visible; }
+  .seatBack { fill:var(--panel2); stroke:var(--border); stroke-width:2; transition:all .25s; }
+  .seatArm  { fill:var(--border); transition:all .25s; }
+  .seatHead { fill:#8b949e; transition:all .25s; }
+  .seatBody.asking { transform:translateY(-6px); }
+  .seatBody.asking .seatBack { stroke:var(--yellow); fill:rgba(210,153,34,.2); }
+  .seatBody.asking .seatHead { fill:var(--yellow); }
+  .seatBody.answered .seatBack { stroke:var(--green); fill:rgba(63,185,80,.2); }
+  .seatBody.answered .seatHead { fill:var(--green); }
+  .seatBody.base .seatBack { stroke:var(--accent); fill:rgba(88,166,255,.18); }
+  .seatBody.base .seatHead { fill:var(--accent); }
+  .seatBody.you .seatHead { fill:var(--purple); }
+  .seatLbl { font-size:11px; color:var(--muted); margin-top:5px; font-family:Consolas, monospace; }
+  .seatLbl b { color:var(--green); }
+  .youTag { font-size:9.5px; color:var(--purple); font-weight:800; letter-spacing:.5px; }
+
+  .stackWrap { display:flex; flex-direction:column-reverse; gap:5px; align-items:center; min-height:120px;
+    padding:12px; background:var(--panel2); border-radius:9px; margin-bottom:12px; }
+  .frame {
+    width:220px; padding:7px; border-radius:7px; background:var(--bg); border:1.5px solid var(--border);
+    text-align:center; font-family:Consolas, monospace; font-size:12.5px; transition:all .2s;
+  }
+  .frame.top { border-color:var(--yellow); }
+  .stackEmpty { color:var(--muted); font-size:12.5px; font-style:italic; }
+  .outRow { display:flex; flex-wrap:wrap; gap:6px; margin-top:6px; }
+  .outChip { background:var(--panel2); border:1px solid var(--green); color:var(--green);
+    border-radius:6px; padding:3px 11px; font-family:Consolas, monospace; font-size:12.5px; }
+
+  /* dumb questions */
+  .dq { background:rgba(210,168,255,.07); border:1px solid rgba(210,168,255,.3); border-radius:11px; padding:16px 18px; margin-bottom:16px; }
+  .dqHead { font-size:13px; font-weight:800; color:var(--purple); margin-bottom:10px; letter-spacing:.3px; }
+  .dqQ { font-size:13.5px; font-weight:700; margin-bottom:4px; }
+  .dqQ::before { content:'Q: '; color:var(--purple); }
+  .dqA { font-size:13.5px; color:var(--muted); line-height:1.6; margin-bottom:12px; }
+  .dqA::before { content:'A: '; color:var(--green); font-weight:700; }
+  .dqA:last-child { margin-bottom:0; }
+
+  /* code peek */
+  .peekBtn {
+    background:none; border:1px dashed var(--border); color:var(--muted); width:100%;
+    padding:9px; border-radius:9px; font-size:13px; font-weight:700; cursor:pointer; font-family:inherit;
+  }
+  .peekBtn:hover { color:var(--text); border-color:var(--muted); }
+  .peekBody { display:none; margin-top:9px; }
+  .peekBody.on { display:block; }
+  .code { font-family:'Cascadia Code', Consolas, monospace; font-size:12.5px; line-height:1.6;
+    background:var(--panel2); border-radius:9px; padding:13px 0; overflow-x:auto; }
+  .code .line { padding:2px 15px; white-space:pre; }
+  .kw { color:#ff7b72; } .fn { color:#d2a8ff; } .num2 { color:#79c0ff; } .cm { color:#6e7681; }
+
+  .navRow { display:flex; justify-content:space-between; gap:10px; margin-top:4px; }
+  .lockNote { font-size:12.5px; color:var(--muted); align-self:center; }
+
+  /* promise line */
+  .promise {
+    text-align:center; font-size:13px; color:var(--muted); background:var(--panel);
+    border:1px solid var(--border); border-radius:10px; padding:9px 14px; margin-bottom:16px; line-height:1.6;
+  }
+  .promise b { color:var(--green); }
+
+  /* floating hint bulb */
+  .hintFab {
+    position:fixed; right:22px; bottom:22px; z-index:60;
+    width:58px; height:58px; border-radius:50%; cursor:pointer;
+    background:var(--panel); border:2px solid rgba(210,153,34,.55);
+    display:flex; align-items:center; justify-content:center; font-size:26px; padding:0;
+    box-shadow:0 0 0 0 rgba(210,153,34,.45), 0 6px 20px rgba(0,0,0,.5);
+    animation:bulbGlow 2.4s ease-in-out infinite;
+    transition:transform .18s, border-color .18s;
+  }
+  .hintFab:hover { transform:scale(1.08); border-color:var(--yellow); filter:none; }
+  .hintFab:active { transform:scale(.95); }
+  .hintFab.open { animation:none; border-color:var(--yellow); background:rgba(210,153,34,.2); }
+  @keyframes bulbGlow {
+    0%,100% { box-shadow:0 0 0 0 rgba(210,153,34,.42), 0 6px 20px rgba(0,0,0,.5); }
+    50%     { box-shadow:0 0 22px 5px rgba(210,153,34,.30), 0 6px 20px rgba(0,0,0,.5); }
+  }
+  .hintFabLbl {
+    position:fixed; right:88px; bottom:38px; z-index:60; pointer-events:none;
+    background:var(--panel); border:1px solid var(--border); border-radius:8px;
+    padding:5px 11px; font-size:12px; color:var(--muted); white-space:nowrap;
+    opacity:0; transform:translateX(8px); transition:opacity .2s, transform .2s;
+  }
+  .hintFab:hover + .hintFabLbl { opacity:1; transform:translateX(0); }
+
+  .hintPanel {
+    position:fixed; right:22px; bottom:92px; z-index:60; width:min(340px, calc(100vw - 44px));
+    background:var(--panel); border:1px solid rgba(210,153,34,.45); border-radius:13px;
+    padding:16px 18px; box-shadow:0 12px 40px rgba(0,0,0,.6);
+    display:none; font-size:13.5px; line-height:1.65;
+  }
+  .hintPanel.on { display:block; animation:hintIn .22s ease; }
+  @keyframes hintIn { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:none; } }
+  .hintPanel b { color:var(--yellow); }
+  .hintPanelHead {
+    display:flex; justify-content:space-between; align-items:center;
+    font-size:11.5px; font-weight:800; letter-spacing:.5px; color:var(--yellow);
+    text-transform:uppercase; margin-bottom:9px;
+  }
+  .hintClose { background:none; border:none; color:var(--muted); font-size:17px; cursor:pointer; padding:0 2px; }
+  .hintClose:hover { color:var(--text); }
+
+  @media (max-width:640px) {
+    .hintFab { right:14px; bottom:14px; width:52px; height:52px; font-size:23px; }
+    .hintPanel { right:14px; bottom:76px; }
+    .hintFabLbl { display:none; }
+  }
+  @media (prefers-reduced-motion: reduce) { .hintFab { animation:none; } }
+
+  /* celebration toast */
+  .toast {
+    position:fixed; left:50%; bottom:26px; transform:translateX(-50%) translateY(20px);
+    background:var(--panel); border:1px solid var(--green); border-radius:12px;
+    padding:13px 22px; font-size:14px; font-weight:700; color:var(--green);
+    box-shadow:0 8px 30px rgba(0,0,0,.5); opacity:0; pointer-events:none;
+    transition:opacity .3s, transform .3s; z-index:50; text-align:center;
+  }
+  .toast.on { opacity:1; transform:translateX(-50%) translateY(0); }
+  .toast small { display:block; color:var(--muted); font-weight:400; font-size:12px; margin-top:3px; }
+
+  .finishCard {
+    background:linear-gradient(135deg, rgba(63,185,80,.14), rgba(88,166,255,.08));
+    border:1px solid rgba(63,185,80,.4); border-radius:14px; padding:26px; text-align:center;
+  }
+  .finishCard h2 { font-size:22px; margin-bottom:8px; }
+  .finishCard p { color:var(--muted); font-size:14.5px; line-height:1.7; margin-bottom:16px; }
+  .bigLink {
+    display:inline-block; background:var(--green); color:#0d1117; text-decoration:none;
+    padding:12px 26px; border-radius:9px; font-weight:800; font-size:15px;
+  }
+  .recap { text-align:left; background:var(--panel2); border-radius:10px; padding:14px 18px; margin-bottom:18px; font-size:13.5px; line-height:1.9; }
+  .recap code { color:var(--purple); font-weight:700; }
+
+  @media (max-width:640px) {
+    header { padding:12px 16px; } .logo { font-size:19px; }
+    .container { padding:14px 13px 40px; }
+    .card { padding:16px; }
+    h1 { font-size:20px; }
+    .railLbl { display:none; }
+    .railDot { width:26px; height:26px; font-size:12px; }
+    .jarBody { width:70px; height:70px; font-size:25px; }
+    .box { width:44px; height:44px; font-size:13px; }
+    .seatBody { width:44px; height:44px; font-size:18px; }
+    .frame { width:100%; }
+  }
+
+  /* level selector */
+  .levelBar { display:flex; gap:8px; margin-bottom:8px; }
+  .lvlBtn {
+    flex:1; background:var(--panel); border:1.5px solid var(--border); color:var(--muted);
+    border-radius:11px; padding:10px 6px; cursor:pointer; font-family:inherit;
+    display:flex; flex-direction:column; align-items:center; gap:2px; transition:all .18s;
+  }
+  .lvlBtn:hover { border-color:var(--muted); }
+  .lvlBtn.on { border-color:var(--accent); background:rgba(88,166,255,.12); color:var(--text); }
+  .lvlBtn.locked { opacity:.5; cursor:not-allowed; }
+  .lvlBtn.locked:hover { border-color:var(--border); }
+  .lvlIcon { font-size:18px; line-height:1; }
+  .lvlName { font-size:12.5px; font-weight:800; }
+  .lvlCount { font-size:10.5px; opacity:.8; font-variant-numeric:tabular-nums; }
+  .levelBlurb { font-size:12.5px; color:var(--muted); text-align:center; margin-bottom:16px; }
+  .levelBlurb b { color:var(--text); }
+
+  /* trap panel */
+  .trapBox {
+    background:rgba(248,81,73,.07); border:1px solid rgba(248,81,73,.32);
+    border-radius:12px; padding:16px 18px; margin-top:14px;
+  }
+  .trapHead { font-size:14px; font-weight:800; color:var(--red); margin-bottom:4px; }
+  .trapSub { font-size:12.5px; color:var(--muted); margin-bottom:12px; line-height:1.55; }
+</style>
+<script>if(location.protocol.startsWith("http")){var m=document.createElement("link");m.rel="manifest";m.href="manifest.json";document.head.appendChild(m);}</script>
+<meta name="theme-color" content="#0d1117">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+</head>
+
+<body>
+
+<header>
+  <a href="mindaicode-home.html" style="text-decoration:none; color:inherit;">
+    <div class="logo">&#129504; MindAI<span>Code</span></div>
+  </a>
+  <div class="tagline">
+    <a href="mindaicode-course-path.html" style="color:var(--purple); font-weight:600;">&#128506;&#65039; Course path</a>
+    <a href="mindaicode-home.html">&#127968; All algorithms</a>
+  </div>
+</header>
+
+<div class="container">
+
+  <div class="levelBar" id="levelBar"></div>
+  <div class="levelBlurb" id="levelBlurb"></div>
+
+  <div class="rail" id="rail"></div>
+  <div class="xpBar">
+    <span id="stepLabel">Step 1 of 6</span>
+    <span>&#11088; XP: <b id="xpTotal">0</b></span>
+  </div>
+
+  <div class="promise">
+    6 short games &middot; about <b>15 minutes</b> &middot; <b>no coding experience needed</b><br>
+    Getting one wrong is part of it &mdash; every game explains itself and lets you retry. Your progress saves automatically.
+  </div>
+
+  <!-- ===================== STEP 1 - VARIABLES ===================== -->
+  <div class="step" id="step0">
+    <div class="card">
+      <div class="kicker">Game 1 &middot; Variables</div>
+      <h1 id="swapTitle"></h1>
+      <div class="techName">The real word for this is <code>variable</code></div>
+
+      <div class="analogy">
+        &#127891; <strong>Think of a labelled jar in a kitchen.</strong> The label on the front says <b>sugar</b> and never changes. But what is <em>inside</em> can be emptied and refilled any time. The label is the variable's <b>name</b>; the contents are its <b>value</b>.
+      </div>
+
+      <div class="gameBox">
+        <div class="gameTitle">&#127918; Build the program</div>
+        <div class="gameSub" id="swapBrief"></div>
+
+        <div class="jarRow" id="jarRow"></div>
+
+        <div style="font-size:12px; color:var(--muted); margin-bottom:6px;">Instruction cards &mdash; click to add:</div>
+        <div class="cardPool" id="swapPool"></div>
+
+        <div style="font-size:12px; color:var(--muted); margin-bottom:6px;">Your program:</div>
+        <div class="program" id="swapProgram"></div>
+
+        <div class="copyHint" id="swapHint"></div>
+
+        <div class="controls">
+          <button id="swapStepBtn">&#9197; Run one line</button>
+          <button id="swapRunBtn" class="secondary">&#9654; Run it all</button>
+          <button id="swapClearBtn" class="ghost">Clear</button>
+        </div>
+        <div class="feedback" id="swapFb"></div>
+        <div class="trapBox" id="swapTraps" style="display:none;"></div>
+      </div>
+
+      <div class="dq">
+        <div class="dqHead">THERE ARE NO DUMB QUESTIONS</div>
+        <div class="dqQ">Why can't I just write <code>x = y</code> and <code>y = x</code>?</div>
+        <div class="dqA">Because the first line already overwrote x. The moment <code>x = y</code> runs, the 5 that was in x is gone &mdash; permanently. So <code>y = x</code> copies 10 back. You end up with two 10s and no 5.</div>
+        <div class="dqQ">Is the two-variable version better because it uses less memory?</div>
+        <div class="dqA">Almost never. A temp variable costs one CPU register, which is nothing, and compilers optimise the temp swap perfectly. The arithmetic and XOR versions are interview curiosities &mdash; they are usually <em>slower</em> and they have real failure cases you can try at Intermediate and Pro level.</div>
+      </div>
+
+      <button class="peekBtn" data-peek="peek1">&#128064; Peek at the real code</button>
+      <div class="peekBody" id="peek1">
+        <div class="code">
+          <div class="line"><span class="cm"># with a temp variable - the one to actually use</span></div>
+          <div class="line">temp = x</div>
+          <div class="line">x = y</div>
+          <div class="line">y = temp</div>
+          <div class="line"></div>
+          <div class="line"><span class="cm"># most languages also give you this for free:</span></div>
+          <div class="line">x, y = y, x        <span class="cm"># Python</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================== STEP 2 - ARRAYS ===================== -->
+  <div class="step" id="step1">
+    <div class="card">
+      <div class="kicker">Game 2 &middot; Arrays &amp; Indexing</div>
+      <h1>The off-by-one trap that catches everyone &#128238;</h1>
+      <div class="techName">The real words are <code>array</code> and <code>index</code></div>
+
+      <div class="analogy">
+        &#127891; <strong>Think of the post boxes in an apartment building.</strong> A row of them, each with a number painted on. An <b>array</b> is that row; the painted number is the <b>index</b>. The catch: programming counts like a <em>ground floor</em> &mdash; the first box is <b>0</b>, not 1.
+      </div>
+
+      <div class="gameBox">
+        <div class="gameTitle">&#127918; Locker Hunt</div>
+        <div class="gameSub" id="lockerPrompt">Loading...</div>
+
+        <div class="scoreRow">
+          <span class="scorePill" id="lockerRound">Round 1</span>
+          <span class="scorePill" id="lockerScore">Score 0</span>
+          <span class="lives" id="lockerLives"></span>
+        </div>
+
+        <div class="boxRow" id="lockerBoxes"></div>
+        <div class="feedback" id="lockerFb"></div>
+        <div class="controls" style="margin-top:10px;">
+          <button id="lockerNextBtn" style="display:none;">Next round &rarr;</button>
+          <button id="lockerRetryBtn" class="ghost" style="display:none;">&#8634; Play again</button>
+        </div>
+      </div>
+
+      <div class="dq">
+        <div class="dqHead">THERE ARE NO DUMB QUESTIONS</div>
+        <div class="dqQ">Why on earth does counting start at 0?</div>
+        <div class="dqA">An index is really a <em>distance</em>, not a position. Index 0 means "0 boxes away from the start" &mdash; the first box. Index 3 means "3 boxes along." Read it as distance and it stops feeling weird.</div>
+        <div class="dqQ">What happens if I ask for a box that doesn't exist?</div>
+        <div class="dqA">The program crashes with an "index out of range" error. With 5 boxes the valid indexes are 0 to 4. There is no index 5 &mdash; one of the most common bugs in all of programming.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================== STEP 3 - LOOPS ===================== -->
+  <div class="step" id="step2">
+    <div class="card">
+      <div class="kicker">Game 3 &middot; Loops</div>
+      <h1>Guess the output before the computer does &#128257;</h1>
+      <div class="techName">The real word for this is a <code>loop</code></div>
+
+      <div class="analogy">
+        &#127891; <strong>Think of a teacher taking attendance.</strong> She goes down the register one name at a time and does the same thing for each. She does not skip anyone and does not do anyone twice. That is a <b>loop</b>.
+      </div>
+
+      <div class="gameBox">
+        <div class="gameTitle">&#127918; Predict the answer</div>
+        <div class="gameSub">Read the code and work it out <em>first</em>. Then pick your answer and watch it run.</div>
+
+        <div class="scoreRow">
+          <span class="scorePill" id="loopRound">Round 1</span>
+          <span class="scorePill" id="loopScore">Score 0</span>
+        </div>
+
+        <div class="code" id="loopCode" style="margin-bottom:14px;"></div>
+        <div style="font-size:13px; color:var(--muted); margin-bottom:8px;" id="loopQuestion"></div>
+        <div class="optRow" id="loopOpts"></div>
+
+        <div class="boxRow" id="loopBoxes"></div>
+        <div style="text-align:center; font-family:Consolas, monospace; font-size:14px; margin-bottom:10px;" id="loopRunning"></div>
+
+        <div class="feedback" id="loopFb"></div>
+        <div class="controls" style="margin-top:10px;">
+          <button id="loopNextBtn" style="display:none;">Next round &rarr;</button>
+          <button id="loopRetryBtn" class="ghost" style="display:none;">&#8634; Play again</button>
+        </div>
+      </div>
+
+      <div class="dq">
+        <div class="dqHead">THERE ARE NO DUMB QUESTIONS</div>
+        <div class="dqQ">Why does <code>range(5)</code> run 5 times but never reach 5?</div>
+        <div class="dqA">Because it starts at 0. It gives 0, 1, 2, 3, 4 &mdash; count them, that is five values. It stops <em>before</em> 5, exactly like array indexes.</div>
+        <div class="dqQ">Does the loop variable have to be called <code>i</code>?</div>
+        <div class="dqA">No. <code>i</code> is just an old habit that stuck (it stands for "index"). You will see i, j and k everywhere, including on the rest of this site.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================== STEP 4 - FUNCTIONS ===================== -->
+  <div class="step" id="step3">
+    <div class="card">
+      <div class="kicker">Game 4 &middot; Functions &amp; Decisions</div>
+      <h1>You be the machine &#129302;</h1>
+      <div class="techName">The real words are <code>function</code> and <code>if / else</code></div>
+
+      <div class="analogy">
+        &#127891; <strong>Think of a vending machine.</strong> Something goes <em>in</em>, it makes a <em>decision</em>, something comes <em>out</em>. Same input, same output, every time. A <b>function</b> is exactly that.
+      </div>
+
+      <div class="gameBox">
+        <div class="gameTitle">&#127918; You are the function</div>
+        <div class="gameSub">Normally the computer runs this. This time <em>you</em> do &mdash; apply the rule yourself.</div>
+
+        <div class="code" id="fnCode" style="margin-bottom:14px;"></div>
+
+        <div class="scoreRow">
+          <span class="scorePill" id="fnRound">Round 1</span>
+          <span class="scorePill" id="fnScore">Score 0</span>
+        </div>
+
+        <div style="text-align:center; margin-bottom:14px;">
+          <div style="font-size:12.5px; color:var(--muted); margin-bottom:6px;" id="fnPrompt"></div>
+          <div style="font-family:Consolas, monospace; font-size:26px; font-weight:800;" id="fnCall"></div>
+        </div>
+        <div class="optRow" style="justify-content:center;" id="fnOpts"></div>
+
+        <div class="feedback" id="fnFb"></div>
+        <div class="controls" style="margin-top:10px;">
+          <button id="fnNextBtn" style="display:none;">Next round &rarr;</button>
+          <button id="fnRetryBtn" class="ghost" style="display:none;">&#8634; Play again</button>
+        </div>
+      </div>
+
+      <div class="dq">
+        <div class="dqHead">THERE ARE NO DUMB QUESTIONS</div>
+        <div class="dqQ">What is <code>%</code> actually doing?</div>
+        <div class="dqA">It divides and hands back only the <em>remainder</em>. 7 % 2 is 1, because 7 divided by 2 is 3 with 1 left over. So "n % 2 == 0" asks "does 2 divide into n cleanly?"</div>
+        <div class="dqQ">What is the difference between <code>return</code> and printing?</div>
+        <div class="dqA">Printing shows a value on screen for a human. Returning hands it back to whatever called the function so the program can keep using it. A function that prints but never returns gives the rest of your code nothing.</div>
+        <div class="dqQ">Why is <code>=</code> sometimes <code>==</code>?</div>
+        <div class="dqA">One <code>=</code> means "put this value in that box". Two <code>==</code> asks a yes/no question: "is x equal to 5?" It changes nothing. Mixing them up is a classic beginner bug.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================== STEP 5 - RECURSION ===================== -->
+  <div class="step" id="step4">
+    <div class="card" id="cinemaCard">
+      <div class="kicker">Game 5 &middot; Recursion</div>
+      <h1>Which row am I sitting in? &#127916;</h1>
+      <div class="techName">The real word for this is <code>recursion</code></div>
+
+      <div class="analogy">
+        &#127891; <strong>You are in a dark cinema and cannot see the row numbers.</strong> So you tap the person in front and ask, "which row are you in?" They cannot see either &mdash; so they ask the person in front of <em>them</em>. This carries on until someone in the very front row says "I'm row 1". Then each person adds one and passes the answer back.
+      </div>
+
+      <div class="gameBox">
+        <div class="gameTitle">&#127918; Play it out</div>
+        <div class="gameSub">Keep asking forward until someone knows, then watch the answers travel back.</div>
+
+        <div class="screenBar">S C R E E N</div>
+        <div class="cinemaRow" id="cinemaRow"></div>
+        <div class="controls">
+          <button id="cinemaAskBtn">&#128587; Ask the person in front</button>
+          <button id="cinemaResetBtn" class="ghost">&#8634; Restart</button>
+        </div>
+        <div class="feedback neutral on" id="cinemaFb"></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="gameBox" id="predictBox">
+        <div class="gameTitle">&#127919; Now predict this &mdash; <span id="recFnName"></span></div>
+        <div class="gameSub">Same idea, written as real code. Read it carefully before you answer.</div>
+        <div class="code" id="recCode" style="margin-bottom:14px;"></div>
+        <div style="font-size:13px; color:var(--muted); margin-bottom:8px;" id="recQuestion"></div>
+        <div class="optRow" id="recOpts"></div>
+        <div class="feedback" id="recFb"></div>
+
+        <div id="recRunWrap" style="display:none; margin-top:14px;">
+          <div style="font-size:12.5px; color:var(--muted); margin-bottom:6px;">Waiting calls (the "stack"):</div>
+          <div class="stackWrap" id="recStack"></div>
+          <div style="font-size:12.5px; color:var(--muted);">Results so far:</div>
+          <div class="outRow" id="recOut"></div>
+          <div class="controls" style="margin-top:12px;">
+            <button id="recStepBtn">&#9197; Step</button>
+            <button id="recPlayBtn" class="secondary">&#9654; Play it out</button>
+          </div>
+          <div class="feedback neutral on" id="recStepFb"></div>
+        </div>
+      </div>
+
+      <div class="dq">
+        <div class="dqHead">THERE ARE NO DUMB QUESTIONS</div>
+        <div class="dqQ">What is the "base case"?</div>
+        <div class="dqA">It is the person in row 1 &mdash; the one who can answer <em>without</em> asking anyone else. In code it is the <code>if</code> at the top. It is what stops the chain.</div>
+        <div class="dqQ">What if there is no base case?</div>
+        <div class="dqA">The asking never stops. Every call waits on the next, forever, and the program runs out of memory. That crash has a name you will hear a lot: <b>stack overflow</b>.</div>
+        <div class="dqQ">Why does the last call finish first?</div>
+        <div class="dqA">Because the work sits <em>after</em> the recursive call. Nothing can finish until the one it is waiting on finishes. You will meet this exact shape again in Module 3 &mdash; it is called a <b>stack</b>.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================== STEP 6 - QUIZ ===================== -->
+  <div class="step" id="step5">
+    <div class="card">
+      <div class="kicker">Final Check</div>
+      <h1>Everything you just played &#127891;</h1>
+      <div class="techName">Answer them all correctly to finish this level</div>
+      <div id="quizQ" style="font-size:15.5px; margin-bottom:14px;"></div>
+      <div id="quizOpts"></div>
+      <div id="quizFb" style="font-size:13.5px; margin-top:12px; color:var(--muted); min-height:20px; line-height:1.65;"></div>
+    </div>
+
+    <div class="finishCard" id="finishCard" style="display:none;">
+      <h2 id="finishTitle"></h2>
+      <div class="recap">
+        <div><code>variable</code> &mdash; a labelled jar holding a value that can change</div>
+        <div><code>array</code> &mdash; a row of numbered boxes</div>
+        <div><code>index</code> &mdash; the box number, counting from <b>0</b></div>
+        <div><code>loop</code> &mdash; do the same thing once per box</div>
+        <div><code>function</code> &mdash; input goes in, decision happens, answer comes out</div>
+        <div><code>recursion</code> &mdash; keep asking a smaller version until someone can answer</div>
+      </div>
+      <p id="finishBody"></p>
+      <button id="finishNextLevel" style="display:none; margin-bottom:12px;"></button>
+      <div><a class="bigLink" href="mindaicode-big-o.html">Start Module 0 &mdash; Big-O &rarr;</a></div>
+    </div>
+  </div>
+
+  <div class="navRow">
+    <button id="backBtn" class="ghost">&larr; Back</button>
+    <button id="nextBtn">Next &rarr;</button>
+  </div>
+
+</div>
+
+<div class="hintPanel" id="hintPanel">
+  <div class="hintPanelHead"><span id="hintTitle">Hint</span><button class="hintClose" id="hintClose" aria-label="Close hint">&#10005;</button></div>
+  <div id="hintText"></div>
+</div>
+<button class="hintFab" id="hintFab" aria-label="Show a hint for this game">&#128161;</button>
+<div class="hintFabLbl">Stuck? Get a hint</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="basics-content.js"></script>
+<script src="basics-engine.js"></script>
+<script>initBasics();</script>
+<script>
+if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
+  window.addEventListener('load', function () {
+    navigator.serviceWorker.register('sw.js').catch(function () {});
+  });
+}
+</script>
+<script src="firebase-config.js"></script>
+<script src="mindaicode-auth.js"></script>
+</body>
+</html>

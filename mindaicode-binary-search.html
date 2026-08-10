@@ -1,0 +1,617 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MindAICode — Linear vs Jump vs Binary Search</title>
+<style>
+  :root {
+    --bg:#0d1117; --panel:#161b22; --panel2:#1c2333; --accent:#58a6ff; --accent2:#f78166;
+    --purple:#d2a8ff; --green:#3fb950; --yellow:#d29922; --red:#f85149;
+    --text:#e6edf3; --muted:#8b949e; --border:#30363d;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family:'Segoe UI', system-ui, sans-serif; background:var(--bg); color:var(--text); min-height:100vh; }
+  header {
+    display:flex; align-items:center; justify-content:space-between;
+    padding:14px 28px; background:var(--panel); border-bottom:1px solid var(--border); flex-wrap:wrap; gap:8px;
+  }
+  .logo { font-size:22px; font-weight:800; }
+  .logo span { color:var(--accent); }
+  .tagline { display:flex; gap:14px; align-items:center; flex-wrap:wrap; font-size:13px; }
+  .tagline a { text-decoration:none; }
+  .container { max-width:1080px; margin:0 auto; padding:24px 20px 60px; }
+
+  .card { background:var(--panel); border:1px solid var(--border); border-radius:12px; padding:20px; margin-bottom:18px; }
+  h1 { font-size:24px; margin-bottom:6px; }
+  h3 { font-size:16px; margin-bottom:10px; }
+  .subtitle { color:var(--muted); font-size:14px; margin-bottom:16px; }
+
+  .intro {
+    background:linear-gradient(135deg, rgba(88,166,255,.10), rgba(63,185,80,.08));
+    border:1px solid var(--border); border-radius:12px; padding:22px 24px; margin-bottom:18px;
+  }
+  .intro h2 { font-size:20px; margin-bottom:8px; }
+  .intro p { font-size:15px; line-height:1.7; margin-bottom:10px; }
+  .analogy { background:var(--panel2); border-left:4px solid var(--green); padding:12px 16px; border-radius:8px; margin:12px 0; font-size:14.5px; line-height:1.6; }
+
+  .controls { display:flex; flex-wrap:wrap; gap:10px; align-items:center; margin-bottom:16px; }
+  button {
+    background:var(--accent); color:#0d1117; border:none; padding:10px 18px;
+    border-radius:8px; font-size:14px; font-weight:700; cursor:pointer; font-family:inherit;
+    transition:filter .15s, transform .1s;
+  }
+  button:hover { filter:brightness(1.14); }
+  button:active { transform:scale(.97); }
+  button.secondary { background:var(--panel2); color:var(--text); border:1px solid var(--border); }
+  button:disabled { opacity:.45; cursor:not-allowed; }
+  select, input[type=number] {
+    background:var(--panel2); border:1px solid var(--border); color:var(--text);
+    padding:9px 12px; border-radius:8px; font-size:14px; font-family:inherit;
+  }
+  input[type=number] { width:110px; }
+  label.lbl { font-size:13px; color:var(--muted); font-weight:700; }
+
+  /* Head to head */
+  .vs { display:grid; grid-template-columns:repeat(3, 1fr); gap:16px; }
+  @media (max-width:980px) { .vs { grid-template-columns:1fr; } }
+  .big.sqrt { background:rgba(210,153,34,.12); color:var(--yellow); border:1px solid rgba(210,153,34,.3); }
+  .cell.block { border-color:rgba(210,153,34,.5); background:rgba(210,153,34,.10); }
+  .cell.jumpmark { border-color:var(--yellow); background:rgba(210,153,34,.3); transform:translateY(-3px); }
+  .side { background:var(--panel2); border:1px solid var(--border); border-radius:10px; padding:14px; transition:border-color .3s, box-shadow .3s; }
+  .side.win { border-color:var(--green); box-shadow:0 0 14px rgba(63,185,80,.22); }
+  .side.lose { opacity:.85; }
+  .sideHead { display:flex; justify-content:space-between; align-items:baseline; gap:8px; margin-bottom:4px; }
+  .sideHead strong { font-size:15px; }
+  .sideHead .big { font-size:11.5px; font-weight:700; padding:2px 9px; border-radius:10px; }
+  .big.n { background:rgba(247,129,102,.12); color:var(--accent2); border:1px solid rgba(247,129,102,.3); }
+  .big.logn { background:rgba(63,185,80,.12); color:var(--green); border:1px solid rgba(63,185,80,.3); }
+  .sideSub { font-size:12.5px; color:var(--muted); margin-bottom:10px; }
+  .sideSub b { color:var(--text); font-variant-numeric:tabular-nums; }
+
+  .cells { display:flex; flex-wrap:wrap; gap:3px; }
+  .cell {
+    width:34px; height:34px; display:flex; align-items:center; justify-content:center;
+    background:var(--bg); border:1.5px solid var(--border); border-radius:5px;
+    font-size:12px; font-weight:700; font-family:Consolas, monospace;
+    transition:all .18s; position:relative;
+  }
+  .cell.out { opacity:.18; }
+  .cell.range { border-color:rgba(88,166,255,.45); background:rgba(88,166,255,.07); }
+  .cell.look { border-color:var(--yellow); background:rgba(210,153,34,.22); transform:translateY(-3px); }
+  .cell.mid { border-color:var(--purple); background:rgba(210,168,255,.25); transform:translateY(-3px); }
+  .cell.found { border-color:var(--green); background:rgba(63,185,80,.3); color:var(--green); transform:scale(1.12); }
+  .cell.dead { border-color:var(--red); background:rgba(248,81,73,.15); }
+
+  .note { font-size:13.5px; color:var(--muted); min-height:38px; margin-top:10px; line-height:1.55; }
+  .note b { color:var(--text); }
+
+  .verdict {
+    margin-top:16px; padding:14px 16px; border-radius:10px; display:none;
+    background:rgba(63,185,80,.09); border:1px solid rgba(63,185,80,.32); font-size:14.5px; line-height:1.7;
+  }
+  .verdict h4 { font-size:15px; color:var(--green); margin-bottom:6px; }
+
+  /* scaling table */
+  table { width:100%; border-collapse:collapse; font-size:13.5px; }
+  th, td { text-align:left; padding:9px 10px; border-bottom:1px solid var(--border); }
+  th { color:var(--muted); font-size:12px; text-transform:uppercase; letter-spacing:.4px; }
+  td.num { font-variant-numeric:tabular-nums; }
+  .hl { color:var(--green); font-weight:700; }
+  .bad { color:var(--accent2); font-weight:700; }
+
+  /* code */
+  .tabs { display:flex; gap:6px; margin-bottom:10px; }
+  .tab { background:var(--panel2); color:var(--muted); border:1px solid var(--border); padding:6px 16px;
+    border-radius:8px 8px 0 0; font-size:13px; font-weight:700; cursor:pointer; font-family:inherit; }
+  .tab.on { background:var(--accent); color:#0d1117; border-color:var(--accent); }
+  .codeWrap { display:none; } .codeWrap.on { display:block; }
+  .code { font-family:'Cascadia Code', Consolas, monospace; font-size:13px; line-height:1.55;
+    background:var(--panel2); border-radius:10px; padding:14px 0; overflow-x:auto; }
+  .code .line { padding:3px 14px; white-space:pre; border-left:3px solid transparent; }
+  .code .line.active { background:rgba(88,166,255,.14); border-left-color:var(--accent); }
+  .kw { color:#ff7b72; } .fn { color:#d2a8ff; } .num2 { color:#79c0ff; } .cm { color:#6e7681; }
+
+  .warn {
+    background:rgba(210,153,34,.1); border:1px solid rgba(210,153,34,.35);
+    border-radius:10px; padding:13px 16px; font-size:14px; line-height:1.65; margin-top:14px;
+  }
+  .warn b { color:var(--yellow); }
+
+  @media (max-width:640px) {
+    header { padding:12px 16px; }
+    .logo { font-size:19px; }
+    .container { padding:16px 14px 40px; }
+    .card, .intro { padding:16px; }
+    h1 { font-size:20px; } .intro h2 { font-size:17px; }
+    .intro p { font-size:14px; }
+    .controls { flex-direction:column; align-items:stretch; }
+    button, select, input[type=number] { width:100%; }
+    .cell { width:29px; height:29px; font-size:11px; }
+    .code { font-size:11.5px; }
+  }
+</style>
+<script>if(location.protocol.startsWith("http")){var m=document.createElement("link");m.rel="manifest";m.href="manifest.json";document.head.appendChild(m);}</script>
+<meta name="theme-color" content="#0d1117">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+</head>
+<body>
+
+<header>
+  <a href="mindaicode-home.html" style="text-decoration:none; color:inherit;">
+    <div class="logo">🧠 MindAI<span>Code</span></div>
+  </a>
+  <div class="tagline">
+    <a href="mindaicode-race-all.html" style="color:var(--purple); font-weight:600;">🏁 Race all six</a>
+    <a href="mindaicode-home.html" style="color:var(--muted);">🏠 All algorithms</a>
+  </div>
+</header>
+
+<div class="container">
+
+  <div class="intro">
+    <h2>🔍 Why did we bother sorting?</h2>
+    <p>Here's the payoff. Once a list is <strong>sorted</strong>, you can find anything in it almost instantly. There's more than one way to take advantage of that — three, in fact, each throwing away a different amount of work. On a sorted list of a million items, <strong>binary search finds any value in 20 steps</strong>, <strong>jump search</strong> takes about 1,000, and checking one by one would take up to a million.</p>
+    <div class="analogy">
+      🎓 <strong>Real-life example:</strong> Looking for "Priya" in a class register. <strong>Linear search</strong> is reading every name from the top until you hit hers. <strong>Jump search</strong> is flipping ahead in fixed chunks — page 1, page 2, page 3 — until you overshoot her page, then reading that one page carefully. <strong>Binary search</strong> is what you actually do with a sorted register — open the middle, see you're at "M", and instantly ignore the entire first half. Repeat. That's it.
+    </div>
+    <p style="margin-bottom:0; color:var(--muted); font-size:14px;">All three only work on <strong>sorted</strong> data — which is exactly what the six sorting algorithms were for.</p>
+  </div>
+
+  <div class="card">
+    <h1>Linear vs Jump vs Binary Search 🔍</h1>
+    <p class="subtitle">All three search the same sorted list for the same target, at the same time. Watch how much work each one does.</p>
+
+    <div class="controls">
+      <label class="lbl" for="sizeSel">List size</label>
+      <select id="sizeSel">
+        <option value="16">16 items</option>
+        <option value="32" selected>32 items</option>
+        <option value="64">64 items</option>
+      </select>
+      <label class="lbl" for="targetIn">Find</label>
+      <input type="number" id="targetIn" min="1" step="1">
+      <button id="randBtn" class="secondary">🎲 Random target</button>
+      <button id="goBtn">▶ Search</button>
+      <button id="stepBtn" class="secondary">⏭ Step</button>
+      <button id="resetBtn" class="secondary">↺ Reset</button>
+    </div>
+
+    <div class="vs">
+      <div class="side" id="sideL">
+        <div class="sideHead"><strong>🐌 Linear Search</strong><span class="big n">O(n)</span></div>
+        <div class="sideSub">Checks <b id="lSteps">0</b> item(s) · <span id="lState">ready</span></div>
+        <div class="cells" id="cellsL"></div>
+        <div class="note" id="noteL">Starts at the first item and walks forward one at a time.</div>
+      </div>
+      <div class="side" id="sideJ">
+        <div class="sideHead"><strong>🦘 Jump Search</strong><span class="big sqrt">O(√n)</span></div>
+        <div class="sideSub">Checks <b id="jSteps">0</b> item(s) · <span id="jState">ready</span></div>
+        <div class="cells" id="cellsJ"></div>
+        <div class="note" id="noteJ">Hops forward in fixed blocks, then walks back through the one block it lands in.</div>
+      </div>
+
+      <div class="side" id="sideB">
+        <div class="sideHead"><strong>⚡ Binary Search</strong><span class="big logn">O(log n)</span></div>
+        <div class="sideSub">Checks <b id="bSteps">0</b> item(s) · <span id="bState">ready</span></div>
+        <div class="cells" id="cellsB"></div>
+        <div class="note" id="noteB">Jumps to the middle and throws away half the list each time.</div>
+      </div>
+    </div>
+
+    <div class="verdict" id="verdict"></div>
+  </div>
+
+  <div class="card">
+    <h3>💻 The Code</h3>
+    <div class="tabs">
+      <button class="tab on" data-lang="py" type="button">Python</button>
+      <button class="tab" data-lang="java" type="button">Java</button>
+    </div>
+    <div class="codeWrap on" id="code-py">
+      <div class="code">
+        <div class="line" data-l="0"><span class="kw">def</span> <span class="fn">binary_search</span>(arr, target):</div>
+        <div class="line" data-l="1">    lo, hi = <span class="num2">0</span>, <span class="fn">len</span>(arr) - <span class="num2">1</span></div>
+        <div class="line" data-l="2">    <span class="kw">while</span> lo &lt;= hi:</div>
+        <div class="line" data-l="3">        mid = (lo + hi) // <span class="num2">2</span></div>
+        <div class="line" data-l="4">        <span class="kw">if</span> arr[mid] == target:</div>
+        <div class="line" data-l="4">            <span class="kw">return</span> mid          <span class="cm"># found it</span></div>
+        <div class="line" data-l="5">        <span class="kw">elif</span> arr[mid] &lt; target:</div>
+        <div class="line" data-l="5">            lo = mid + <span class="num2">1</span>       <span class="cm"># throw away left half</span></div>
+        <div class="line" data-l="6">        <span class="kw">else</span>:</div>
+        <div class="line" data-l="6">            hi = mid - <span class="num2">1</span>       <span class="cm"># throw away right half</span></div>
+        <div class="line" data-l="7">    <span class="kw">return</span> -<span class="num2">1</span>                <span class="cm"># not in the list</span></div>
+      </div>
+    </div>
+    <div class="codeWrap" id="code-java">
+      <div class="code">
+        <div class="line" data-l="0"><span class="kw">int</span> <span class="fn">binarySearch</span>(<span class="kw">int</span>[] arr, <span class="kw">int</span> target) {</div>
+        <div class="line" data-l="1">    <span class="kw">int</span> lo = <span class="num2">0</span>, hi = arr.length - <span class="num2">1</span>;</div>
+        <div class="line" data-l="2">    <span class="kw">while</span> (lo &lt;= hi) {</div>
+        <div class="line" data-l="3">        <span class="kw">int</span> mid = lo + (hi - lo) / <span class="num2">2</span>;</div>
+        <div class="line" data-l="4">        <span class="kw">if</span> (arr[mid] == target) <span class="kw">return</span> mid;</div>
+        <div class="line" data-l="5">        <span class="kw">else if</span> (arr[mid] &lt; target) lo = mid + <span class="num2">1</span>;</div>
+        <div class="line" data-l="6">        <span class="kw">else</span> hi = mid - <span class="num2">1</span>;</div>
+        <div class="line" data-l="6">    }</div>
+        <div class="line" data-l="7">    <span class="kw">return</span> -<span class="num2">1</span>;</div>
+        <div class="line" data-l="7">}</div>
+      </div>
+    </div>
+    <div class="warn">
+      <b>⚠️ Watch out:</b> in Java, writing <code>(lo + hi) / 2</code> can overflow when the array is huge, which is why the code above uses <code>lo + (hi - lo) / 2</code>. This exact bug sat undetected in Java's own library for nine years.
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>📈 Why "throw away half" is so powerful</h3>
+    <p class="subtitle" style="margin-bottom:12px;">Worst-case number of items each method has to look at.</p>
+    <div style="overflow-x:auto;">
+      <table>
+        <thead><tr><th>List size</th><th>🐌 Linear O(n)</th><th>🦘 Jump O(√n)</th><th>⚡ Binary O(log n)</th><th>Binary vs Linear</th></tr></thead>
+        <tbody id="scaleBody"></tbody>
+      </table>
+    </div>
+    <p style="font-size:13.5px; color:var(--muted); margin-top:12px; line-height:1.65;">
+      Every time the list <strong>doubles</strong>, binary search needs just <strong>one</strong> extra step — that is what O(log n) means. Jump search sits in the middle: its steps grow with <strong>√n</strong>, so a list 100× bigger only needs about 10× more checks. Both beat linear search by throwing away large chunks of the list without checking them one by one.
+    </p>
+  </div>
+
+  <div class="card">
+    <h3>🧠 Quick check</h3>
+    <div id="quizQ" style="font-size:15px; margin-bottom:12px;"></div>
+    <div id="quizOpts"></div>
+    <div id="quizFb" style="font-size:13.5px; margin-top:10px; color:var(--muted); min-height:20px; line-height:1.6;"></div>
+  </div>
+
+</div>
+
+<script>
+/* ================= DATA ================= */
+let arr = [], target = null;
+let lin = null, bin = null, jmp = null, timer = null;
+
+function buildArray(n) {
+  // strictly increasing sorted values, so every target is unique
+  const a = [];
+  let v = Math.floor(Math.random() * 5) + 2;
+  for (let i = 0; i < n; i++) { a.push(v); v += Math.floor(Math.random() * 4) + 2; }
+  return a;
+}
+
+function newRound(keepTarget) {
+  clearInterval(timer);
+  const n = parseInt(document.getElementById('sizeSel').value, 10);
+  arr = buildArray(n);
+  const tIn = document.getElementById('targetIn');
+  if (!keepTarget || !arr.includes(parseInt(tIn.value, 10))) {
+    target = arr[Math.floor(Math.random() * arr.length)];
+    tIn.value = target;
+  } else {
+    target = parseInt(tIn.value, 10);
+  }
+  lin = { i: 0, steps: 0, done: false, found: -1 };
+  bin = { lo: 0, hi: n - 1, mid: null, steps: 0, done: false, found: -1 };
+  jmp = newJump(n);
+  document.getElementById('verdict').style.display = 'none';
+  document.getElementById('sideL').className = 'side';
+  document.getElementById('sideB').className = 'side';
+  document.getElementById('sideJ').className = 'side';
+  document.getElementById('noteL').innerHTML = 'Starts at the first item and walks forward one at a time.';
+  document.getElementById('noteB').innerHTML = 'Jumps to the middle and throws away half the list each time.';
+  document.getElementById('noteJ').innerHTML = `Block size is √${n} ≈ <b>${jmp.blk}</b>. Hops forward ${jmp.blk} at a time, then walks back through that block.`;
+  document.getElementById('lState').textContent = 'ready';
+  document.getElementById('bState').textContent = 'ready';
+  document.getElementById('jState').textContent = 'ready';
+  highlight([]);
+  renderAll();
+}
+function newJump(n) {
+  const blk = Math.max(1, Math.floor(Math.sqrt(n)));
+  return { blk, phase: 'hop', prev: 0, step: blk, i: 0, steps: 0, done: false, found: -1 };
+}
+
+function makeCells(id) {
+  const box = document.getElementById(id);
+  box.innerHTML = '';
+  arr.forEach(v => {
+    const c = document.createElement('div');
+    c.className = 'cell';
+    c.textContent = v;
+    box.appendChild(c);
+  });
+  return [...box.children];
+}
+
+function renderAll() {
+  const cl = makeCells('cellsL'), cb = makeCells('cellsB'), cj = makeCells('cellsJ');
+  // linear
+  cl.forEach((c, i) => {
+    if (lin.found >= 0 && i === lin.found) c.classList.add('found');
+    else if (i < lin.i) c.classList.add('dead');
+    else if (i === lin.i && !lin.done) c.classList.add('look');
+  });
+  // binary
+  cb.forEach((c, i) => {
+    if (bin.found >= 0 && i === bin.found) { c.classList.add('found'); return; }
+    if (i < bin.lo || i > bin.hi) { c.classList.add('out'); return; }
+    c.classList.add('range');
+    if (i === bin.mid && !bin.done) { c.classList.remove('range'); c.classList.add('mid'); }
+  });
+  // jump: dim everything outside the block currently under consideration
+  const jEnd = Math.min(jmp.step, arr.length);
+  cj.forEach((c, i) => {
+    if (jmp.found >= 0 && i === jmp.found) { c.classList.add('found'); return; }
+    if (jmp.done) return;
+    if (jmp.phase === 'hop') {
+      if (i < jmp.prev) c.classList.add('dead');
+      else if (i === jEnd - 1) c.classList.add('jumpmark');
+    } else {
+      if (i < jmp.prev || i >= jEnd) c.classList.add('out');
+      else c.classList.add('block');
+      if (i === jmp.i) { c.classList.remove('block'); c.classList.add('look'); }
+    }
+  });
+
+  document.getElementById('lSteps').textContent = lin.steps;
+  document.getElementById('bSteps').textContent = bin.steps;
+  document.getElementById('jSteps').textContent = jmp.steps;
+}
+
+/* ================= STEP LOGIC ================= */
+function stepLinear() {
+  if (lin.done) return;
+  if (lin.i >= arr.length) { lin.done = true; document.getElementById('lState').textContent = 'not found'; return; }
+  lin.steps++;
+  const v = arr[lin.i];
+  if (v === target) {
+    lin.found = lin.i; lin.done = true;
+    document.getElementById('lState').innerHTML = '<span style="color:var(--green)">found!</span>';
+    document.getElementById('noteL').innerHTML = `✅ Found <b>${target}</b> at index ${lin.i} — after checking <b>${lin.steps}</b> item(s).`;
+  } else {
+    document.getElementById('noteL').innerHTML = `Checked index ${lin.i}: <b>${v}</b> is not ${target}. Move to the next one.`;
+    lin.i++;
+  }
+}
+function stepBinary() {
+  if (bin.done) return;
+  if (bin.lo > bin.hi) { bin.done = true; document.getElementById('bState').textContent = 'not found'; return; }
+  bin.steps++;
+  bin.mid = Math.floor((bin.lo + bin.hi) / 2);
+  const v = arr[bin.mid];
+  if (v === target) {
+    bin.found = bin.mid; bin.done = true;
+    document.getElementById('bState').innerHTML = '<span style="color:var(--green)">found!</span>';
+    document.getElementById('noteB').innerHTML = `✅ Found <b>${target}</b> at index ${bin.mid} — after checking only <b>${bin.steps}</b> item(s).`;
+    highlight(['4']);
+  } else if (v < target) {
+    const discarded = bin.mid - bin.lo + 1;
+    document.getElementById('noteB').innerHTML = `Middle is <b>${v}</b>, smaller than ${target} — so the answer must be to the right. <b>Discarded ${discarded} items</b> in one move.`;
+    bin.lo = bin.mid + 1;
+    highlight(['5']);
+  } else {
+    const discarded = bin.hi - bin.mid + 1;
+    document.getElementById('noteB').innerHTML = `Middle is <b>${v}</b>, bigger than ${target} — so the answer must be to the left. <b>Discarded ${discarded} items</b> in one move.`;
+    bin.hi = bin.mid - 1;
+    highlight(['6']);
+  }
+}
+function stepJump() {
+  if (jmp.done) return;
+  const n = arr.length;
+  jmp.steps++;
+  if (jmp.phase === 'hop') {
+    const probe = Math.min(jmp.step, n) - 1;
+    const v = arr[probe];
+    if (v < target) {
+      // target is past this block — hop forward
+      jmp.prev = jmp.step;
+      jmp.step += jmp.blk;
+      if (jmp.prev >= n) {
+        jmp.done = true;
+        document.getElementById('jState').textContent = 'not found';
+        document.getElementById('noteJ').innerHTML = `Hopped past the end of the list — <b>${target}</b> is not here.`;
+        return;
+      }
+      document.getElementById('noteJ').innerHTML =
+        `Block ends at <b>${v}</b>, still below ${target} — hop forward ${jmp.blk} more. <b>Skipped ${jmp.blk} items</b> without looking at them.`;
+    } else {
+      // target must be inside this block — walk it
+      jmp.phase = 'scan';
+      jmp.i = jmp.prev;
+      document.getElementById('noteJ').innerHTML =
+        `Block ends at <b>${v}</b>, which is ≥ ${target} — so it must be inside <b>this block</b>. Now walking through just these ${Math.min(jmp.step, n) - jmp.prev} items.`;
+    }
+  } else {
+    const end = Math.min(jmp.step, n);
+    if (jmp.i >= end) {
+      jmp.done = true;
+      document.getElementById('jState').textContent = 'not found';
+      document.getElementById('noteJ').innerHTML = `Walked the whole block without finding <b>${target}</b>.`;
+      return;
+    }
+    const v = arr[jmp.i];
+    if (v === target) {
+      jmp.found = jmp.i; jmp.done = true;
+      document.getElementById('jState').innerHTML = '<span style="color:var(--green)">found!</span>';
+      document.getElementById('noteJ').innerHTML = `✅ Found <b>${target}</b> at index ${jmp.i} — after checking <b>${jmp.steps}</b> item(s).`;
+    } else if (v > target) {
+      jmp.done = true;
+      document.getElementById('jState').textContent = 'not found';
+      document.getElementById('noteJ').innerHTML = `Passed <b>${v}</b>, which is bigger than ${target} — it cannot be in the list.`;
+    } else {
+      document.getElementById('noteJ').innerHTML = `Inside the block: <b>${v}</b> is not ${target}, step forward one.`;
+      jmp.i++;
+    }
+  }
+}
+function stepBoth() {
+  stepLinear(); stepJump(); stepBinary(); renderAll();
+  if (lin.done && bin.done && jmp.done) { clearInterval(timer); showVerdict(); return true; }
+  return false;
+}
+function highlight(lines) {
+  document.querySelectorAll('.codeWrap .line').forEach(el =>
+    el.classList.toggle('active', lines.includes(el.dataset.l)));
+}
+function showVerdict() {
+  const v = document.getElementById('verdict');
+  const n = arr.length;
+  const maxBin = Math.ceil(Math.log2(n + 1));
+  const ratioJ = (lin.steps / Math.max(1, jmp.steps)).toFixed(1);
+  const ratioB = (lin.steps / Math.max(1, bin.steps)).toFixed(1);
+
+  // rank the three by steps taken (fewest = winner)
+  const results = [
+    { id: 'sideL', steps: lin.steps, label: 'Linear' },
+    { id: 'sideJ', steps: jmp.steps, label: 'Jump' },
+    { id: 'sideB', steps: bin.steps, label: 'Binary' },
+  ].sort((a, b) => a.steps - b.steps);
+  results.forEach((r, idx) => {
+    const el = document.getElementById(r.id);
+    el.classList.remove('win', 'lose');
+    if (idx === 0) el.classList.add('win');
+    else if (r.steps > results[0].steps) el.classList.add('lose');
+  });
+
+  v.innerHTML =
+    `<h4>⚡ Binary checked ${bin.steps}, 🦘 Jump checked ${jmp.steps}, 🐌 Linear checked ${lin.steps} item${lin.steps === 1 ? '' : 's'}.</h4>
+     <p>Binary search did <b>${ratioB}× less work</b> than linear; jump search sat in between at <b>${ratioJ}× less work</b>. On this list of ${n}: linear can need up to <b>${n}</b> checks, jump search needs at most <b>~${2 * jmp.blk}</b> (its block size, twice over), and binary can never need more than <b>${maxBin}</b> — because each check eliminates half of what remains.</p>
+     <p style="margin-top:8px; color:var(--muted); font-size:13.5px;">Jump search exists for a reason binary search doesn't cover: on data where jumping is cheap but jumping <em>backward</em> is expensive (like an old-school tape drive), it beats binary search in practice even though O(log n) beats O(√n) on paper. Try a target near the <em>end</em> of the list to see linear search at its worst.</p>`;
+  v.style.display = 'block';
+  try { localStorage.setItem('mbsr_badge_search', '1'); } catch (e) {}
+}
+
+/* ================= CONTROLS ================= */
+document.getElementById('goBtn').onclick = () => {
+  clearInterval(timer);
+  if (lin.done && bin.done && jmp.done) newRound(true);
+  timer = setInterval(() => { if (stepBoth()) clearInterval(timer); }, 650);
+};
+document.getElementById('stepBtn').onclick = () => { clearInterval(timer); stepBoth(); };
+document.getElementById('resetBtn').onclick = () => newRound(true);
+document.getElementById('randBtn').onclick = () => newRound(false);
+document.getElementById('sizeSel').onchange = () => { newRound(false); renderScale(); };
+document.getElementById('targetIn').onchange = () => {
+  const val = parseInt(document.getElementById('targetIn').value, 10);
+  clearInterval(timer);
+  target = isNaN(val) ? arr[0] : val;
+  lin = { i: 0, steps: 0, done: false, found: -1 };
+  bin = { lo: 0, hi: arr.length - 1, mid: null, steps: 0, done: false, found: -1 };
+  jmp = newJump(arr.length);
+  document.getElementById('verdict').style.display = 'none';
+  document.getElementById('sideL').className = 'side';
+  document.getElementById('sideB').className = 'side';
+  document.getElementById('sideJ').className = 'side';
+  document.getElementById('lState').textContent = 'ready';
+  document.getElementById('bState').textContent = 'ready';
+  document.getElementById('jState').textContent = 'ready';
+  if (!arr.includes(target)) {
+    document.getElementById('noteL').innerHTML = `<b>${target}</b> is not in this list — watch all three searches prove it.`;
+    document.getElementById('noteJ').innerHTML = `<b>${target}</b> is not in this list — jump search will rule it out faster than a full scan.`;
+    document.getElementById('noteB').innerHTML = `<b>${target}</b> is not in this list — binary search will rule it out far faster.`;
+  } else {
+    document.getElementById('noteL').innerHTML = 'Starts at the first item and walks forward one at a time.';
+    document.getElementById('noteJ').innerHTML = `Block size is √${arr.length} ≈ <b>${jmp.blk}</b>. Hops forward ${jmp.blk} at a time, then walks back through that block.`;
+    document.getElementById('noteB').innerHTML = 'Jumps to the middle and throws away half the list each time.';
+  }
+  renderAll();
+};
+document.querySelectorAll('.tab').forEach(tab => {
+  tab.onclick = () => {
+    document.querySelectorAll('.tab').forEach(t => t.classList.toggle('on', t === tab));
+    document.querySelectorAll('.codeWrap').forEach(w => w.classList.toggle('on', w.id === 'code-' + tab.dataset.lang));
+  };
+});
+
+/* ================= SCALING TABLE ================= */
+function renderScale() {
+  const rows = [10, 100, 1000, 1000000, 1000000000];
+  const body = document.getElementById('scaleBody');
+  body.innerHTML = '';
+  rows.forEach(n => {
+    const b = Math.ceil(Math.log2(n + 1));
+    const blk = Math.max(1, Math.floor(Math.sqrt(n)));
+    const j = 2 * blk; // worst case: hop all the way + walk one block
+    const tr = document.createElement('tr');
+    tr.innerHTML =
+      `<td class="num">${n.toLocaleString()}</td>
+       <td class="num bad">${n.toLocaleString()}</td>
+       <td class="num" style="color:var(--yellow); font-weight:700;">~${j.toLocaleString()}</td>
+       <td class="num hl">${b}</td>
+       <td class="num">${Math.round(n / b).toLocaleString()}×</td>`;
+    body.appendChild(tr);
+  });
+}
+
+/* ================= QUIZ ================= */
+const quiz = [
+  { q:'What must be true before you can use binary search?',
+    opts:['The list must be sorted','The list must be small','The list must have no duplicates'],
+    ans:0, why:'Binary search decides which half to discard by comparing against the middle value. That decision is only valid if the data is in order.' },
+  { q:'A sorted list has 1,000,000 items. Roughly how many checks does binary search need in the worst case?',
+    opts:['About 1,000','About 20','About 500,000'],
+    ans:1, why:'Each step halves the list, and you can only halve a million about 20 times before reaching one item. log₂(1,000,000) ≈ 20.' },
+  { q:'You need to search an unsorted list just once. What is usually the better choice?',
+    opts:['Sort it first, then binary search','Just use linear search','Neither will work'],
+    ans:1, why:'Sorting costs O(n log n) — more than the O(n) linear scan itself. Sorting first only pays off when you will search the same data many times.' },
+  { q:'A sorted list has 10,000 items. What block size does jump search use, and roughly how many checks does it need?',
+    opts:['Block size 100, about 100–200 checks','Block size 10,000, about 1 check','Block size 1, same as linear search'],
+    ans:0, why:'Jump search uses a block size of √n. For n = 10,000, √n = 100, so it hops in steps of 100 and then scans one block — about 100 to 200 checks total, far fewer than linear search\'s 10,000 but more than binary search\'s ~14.' },
+];
+let qi = 0, qCorrect = 0;
+function showQuiz() {
+  const item = quiz[qi];
+  document.getElementById('quizQ').innerHTML = `<strong>Q${qi + 1}/${quiz.length}:</strong> ${item.q}`;
+  const box = document.getElementById('quizOpts');
+  box.innerHTML = '';
+  document.getElementById('quizFb').textContent = '';
+  item.opts.forEach((o, i) => {
+    const b = document.createElement('button');
+    b.className = 'secondary';
+    b.style.cssText = 'display:block; width:100%; text-align:left; margin-bottom:8px; font-weight:500;';
+    b.textContent = o;
+    b.onclick = () => {
+      box.querySelectorAll('button').forEach(x => x.disabled = true);
+      const ok = i === item.ans;
+      if (ok) qCorrect++;
+      b.style.borderColor = ok ? 'var(--green)' : 'var(--red)';
+      b.style.background = ok ? 'rgba(63,185,80,.15)' : 'rgba(248,81,73,.15)';
+      if (!ok) {
+        const right = box.children[item.ans];
+        right.style.borderColor = 'var(--green)';
+        right.style.background = 'rgba(63,185,80,.15)';
+      }
+      let tail = '';
+      if (qi < quiz.length - 1) tail = ' <a href="#" id="nq" style="color:var(--accent)">Next →</a>';
+      else {
+        tail = ` 🎉 Done — ${qCorrect}/${quiz.length} correct.` +
+          (qCorrect < quiz.length ? ' <a href="#" id="rq" style="color:var(--accent)">Try again</a>' : '');
+        if (qCorrect === quiz.length) { try { localStorage.setItem('mbsr_badge_quiz', '1'); } catch (e) {} }
+      }
+      document.getElementById('quizFb').innerHTML = (ok ? '✅ Correct! ' : '❌ Not quite. ') + item.why + tail;
+      const nq = document.getElementById('nq');
+      if (nq) nq.onclick = e => { e.preventDefault(); qi++; showQuiz(); };
+      const rq = document.getElementById('rq');
+      if (rq) rq.onclick = e => { e.preventDefault(); qi = 0; qCorrect = 0; showQuiz(); };
+    };
+    box.appendChild(b);
+  });
+}
+
+renderScale();
+newRound(false);
+showQuiz();
+</script>
+<script>
+/* ===== Offline support (works when served over http/https) ===== */
+if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
+  window.addEventListener('load', function () {
+    navigator.serviceWorker.register('sw.js').catch(function () { /* offline mode simply unavailable */ });
+  });
+}
+</script>
+<script src="firebase-config.js"></script>
+<script src="mindaicode-auth.js"></script>
+</body>
+</html>

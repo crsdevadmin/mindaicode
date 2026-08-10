@@ -1,0 +1,1730 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MindAICode — Quick Sort Visualizer</title>
+<style>
+  :root {
+    --bg: #0d1117;
+    --panel: #161b22;
+    --panel2: #1c2333;
+    --accent: #58a6ff;
+    --accent2: #f78166;
+    --purple: #d2a8ff;
+    --green: #3fb950;
+    --yellow: #d29922;
+    --text: #e6edf3;
+    --muted: #8b949e;
+    --border: #30363d;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+  }
+  header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 14px 28px;
+    background: var(--panel);
+    border-bottom: 1px solid var(--border);
+  }
+  .logo { font-size: 22px; font-weight: 800; letter-spacing: .5px; }
+  .logo span { color: var(--accent); }
+  .tagline { color: var(--muted); font-size: 13px; }
+
+  .container {
+    max-width: 1360px; margin: 0 auto; padding: 24px;
+    display: grid; grid-template-columns: 1fr 440px; gap: 20px;
+  }
+  @media (max-width: 900px) { .container { grid-template-columns: 1fr; } }
+
+  .card {
+    background: var(--panel); border: 1px solid var(--border);
+    border-radius: 12px; padding: 20px;
+  }
+  h1 { font-size: 24px; margin-bottom: 6px; }
+  h3 { font-size: 15px; margin-bottom: 10px; }
+  .subtitle { color: var(--muted); font-size: 14px; margin-bottom: 16px; }
+  .full { grid-column: 1 / -1; }
+
+  .intro {
+    grid-column: 1 / -1;
+    background: linear-gradient(135deg, rgba(88,166,255,.10), rgba(210,153,34,.08));
+    border: 1px solid var(--border); border-radius: 12px;
+    padding: 22px 24px;
+  }
+  .intro h2 { font-size: 20px; margin-bottom: 8px; }
+  .intro p { font-size: 15px; line-height: 1.7; margin-bottom: 10px; }
+  .intro .analogy {
+    background: var(--panel2); border-left: 4px solid var(--yellow);
+    padding: 12px 16px; border-radius: 8px; margin: 12px 0;
+  }
+  .steps3 { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 12px; }
+  .step3 {
+    flex: 1; min-width: 180px; background: var(--panel2);
+    border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px;
+    font-size: 13.5px; line-height: 1.5; color: var(--muted);
+  }
+  .step3 b { color: var(--accent); display: block; margin-bottom: 4px; font-size: 14px; }
+
+  .badges { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+  .badge {
+    display: flex; align-items: center; gap: 6px;
+    background: var(--panel2); border: 1px solid var(--border);
+    border-radius: 20px; padding: 6px 14px;
+    font-size: 13px; color: var(--muted);
+    filter: grayscale(1); opacity: .55;
+    transition: all .4s;
+  }
+  .badge.earned {
+    filter: none; opacity: 1;
+    color: var(--text); border-color: var(--yellow);
+    background: rgba(210,153,34,.12);
+    box-shadow: 0 0 12px rgba(210,153,34,.25);
+  }
+
+  #stage {
+    position: relative; height: 360px;
+    background: var(--panel2);
+    border: 1px solid var(--border); border-radius: 10px;
+    overflow: hidden; margin-bottom: 16px;
+  }
+  .ball {
+    position: absolute; bottom: 46px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 700; color: #fff;
+    background: radial-gradient(circle at 32% 30%, #79b8ff, #1f6feb 70%);
+    box-shadow: 0 6px 14px rgba(0,0,0,.45), inset 0 -6px 10px rgba(0,0,0,.25);
+    transition: left .55s cubic-bezier(.34,1.56,.64,1), bottom .4s ease, background .3s, transform .3s;
+    user-select: none;
+  }
+  .ball.comparing {
+    background: radial-gradient(circle at 32% 30%, #ffd77a, #d29922 70%);
+    transform: translateY(-10px);
+  }
+  .ball.swapping {
+    background: radial-gradient(circle at 32% 30%, #ffab91, #f4511e 70%);
+    transform: translateY(-18px) scale(1.08);
+  }
+  .ball.pivot {
+    background: radial-gradient(circle at 32% 30%, #e7c8ff, #a371d8 70%);
+    box-shadow: 0 0 0 3px var(--purple), 0 6px 14px rgba(0,0,0,.45);
+  }
+  .ball.sorted {
+    background: radial-gradient(circle at 32% 30%, #7ee787, #2ea043 70%);
+  }
+  .ball.bar-mode {
+    border-radius: 6px 6px 2px 2px;
+    align-items: flex-start; padding-top: 6px;
+    background: linear-gradient(180deg, #79b8ff, #1f6feb 85%);
+    box-shadow: 0 4px 10px rgba(0,0,0,.4);
+  }
+  .ball.bar-mode.comparing {
+    background: linear-gradient(180deg, #ffd77a, #d29922 85%);
+    transform: translateY(-8px);
+  }
+  .ball.bar-mode.swapping {
+    background: linear-gradient(180deg, #ffab91, #f4511e 85%);
+    transform: translateY(-14px);
+  }
+  .ball.bar-mode.pivot {
+    background: linear-gradient(180deg, #e7c8ff, #a371d8 85%);
+    box-shadow: 0 0 0 3px var(--purple);
+  }
+  .ball.bar-mode.sorted {
+    background: linear-gradient(180deg, #7ee787, #2ea043 85%);
+  }
+  .ball.student-mode {
+    background: transparent; box-shadow: none;
+    flex-direction: column; justify-content: flex-end; align-items: center;
+    gap: 0; padding-bottom: 0; border: none; border-radius: 0;
+  }
+  .student-head {
+    width: 28px; height: 28px; border-radius: 50%; flex-shrink: 0;
+    background: radial-gradient(circle at 35% 30%, #ffe0b8, #e8a765 75%);
+    box-shadow: 0 2px 4px rgba(0,0,0,.35);
+    position: relative; margin-bottom: 3px; z-index: 1;
+    transition: box-shadow .3s;
+  }
+  .student-head::before {
+    content: ''; position: absolute; top: 13px; left: 7px;
+    width: 3px; height: 3px; border-radius: 50%;
+    background: #3a2a1a; box-shadow: 11px 0 0 #3a2a1a;
+  }
+  .student-head::after {
+    content: ''; position: absolute; top: 17px; left: 9px;
+    width: 10px; height: 5px; border-radius: 0 0 10px 10px;
+    border-bottom: 2px solid #3a2a1a; border-left: none; border-right: none;
+  }
+  .student-hair {
+    position: absolute; top: -7px; left: 50%; transform: translateX(-50%);
+    width: 26px; height: 17px;
+    border-radius: 50% 50% 4px 4px / 65% 65% 4px 4px;
+    background: #4a3222; z-index: 2;
+  }
+  .student-hair::before {
+    content: ''; position: absolute; bottom: -3px; left: -1px;
+    width: 6px; height: 8px; border-radius: 0 0 6px 6px; background: #4a3222;
+  }
+  .student-hair::after {
+    content: ''; position: absolute; bottom: -3px; right: -1px;
+    width: 6px; height: 8px; border-radius: 0 0 6px 6px; background: #4a3222;
+  }
+  .student-body {
+    width: 100%; flex: 1; min-height: 22px;
+    background: linear-gradient(180deg, #79b8ff, #1f6feb 88%);
+    clip-path: polygon(10% 0%, 90% 0%, 78% 100%, 22% 100%);
+    display: flex; align-items: flex-start; justify-content: center;
+    padding-top: 6px; transition: background .3s; position: relative;
+  }
+  .student-legs {
+    width: 62%; height: 14px; flex-shrink: 0;
+    background: linear-gradient(180deg, #1f6feb, #16468f);
+    -webkit-mask-image: linear-gradient(to right, #000 0 32%, transparent 32% 68%, #000 68% 100%);
+            mask-image: linear-gradient(to right, #000 0 32%, transparent 32% 68%, #000 68% 100%);
+    border-radius: 0 0 4px 4px; transition: background .3s;
+  }
+  .student-tag { font-size: 11px; font-weight: 800; color: #fff; text-shadow: 0 1px 2px rgba(0,0,0,.4); }
+  .ball.student-mode.comparing { transform: translateY(-8px); }
+  .ball.student-mode.comparing .student-head { box-shadow: 0 0 0 3px var(--yellow); }
+  .ball.student-mode.comparing .student-body { background: linear-gradient(180deg, #ffd77a, #d29922 88%); }
+  .ball.student-mode.comparing .student-legs { background: linear-gradient(180deg, #d29922, #a3720f); }
+  .ball.student-mode.swapping { transform: translateY(-14px) scale(1.05); }
+  .ball.student-mode.swapping .student-head { box-shadow: 0 0 0 3px var(--accent2); }
+  .ball.student-mode.swapping .student-body { background: linear-gradient(180deg, #ffab91, #f4511e 88%); }
+  .ball.student-mode.swapping .student-legs { background: linear-gradient(180deg, #f4511e, #b8330c); }
+  .ball.student-mode.pivot .student-head { box-shadow: 0 0 0 3px var(--purple); }
+  .ball.student-mode.pivot .student-body { background: linear-gradient(180deg, #e7c8ff, #a371d8 88%); }
+  .ball.student-mode.pivot .student-legs { background: linear-gradient(180deg, #a371d8, #6f3fa0); }
+  .ball.student-mode.sorted .student-head { box-shadow: 0 0 0 3px var(--green); }
+  .ball.student-mode.sorted .student-body { background: linear-gradient(180deg, #7ee787, #2ea043 88%); }
+  .ball.student-mode.sorted .student-legs { background: linear-gradient(180deg, #2ea043, #1c6b2b); }
+
+  #teacher {
+    position: absolute; top: 10px; font-size: 32px; line-height: 1;
+    transition: left .55s cubic-bezier(.34,1.56,.64,1), opacity .3s;
+    opacity: 0; pointer-events: none; z-index: 6;
+    filter: drop-shadow(0 3px 5px rgba(0,0,0,.5));
+  }
+  #teacher::after {
+    content: '⚖️ partitioning…'; position: absolute; top: -18px; left: 50%;
+    transform: translateX(-50%); font-size: 10px; white-space: nowrap;
+    color: var(--muted); font-weight: 600;
+  }
+  #rangeBracket {
+    position: absolute; bottom: 30px; height: 10px;
+    background: rgba(88,166,255,.18); border: 1.5px solid var(--accent);
+    border-radius: 6px; opacity: 0;
+    transition: left .5s ease, width .5s ease, opacity .3s;
+    pointer-events: none;
+  }
+  #rangeLabel {
+    position: absolute; bottom: 42px; font-size: 11px; font-weight: 700; color: var(--accent);
+    opacity: 0; transition: left .5s ease, opacity .3s; white-space: nowrap;
+    pointer-events: none;
+  }
+  #floor {
+    position: absolute; bottom: 0; left: 0; right: 0; height: 26px;
+    background: linear-gradient(#21262d, #161b22);
+    border-top: 1px solid var(--border);
+  }
+  #passBadge {
+    position: absolute; top: 12px; left: 14px;
+    background: rgba(88,166,255,.12); color: var(--accent);
+    border: 1px solid rgba(88,166,255,.35);
+    padding: 4px 12px; border-radius: 20px; font-size: 13px; font-weight: 600;
+  }
+  #streakBadge {
+    position: absolute; top: 12px; right: 14px;
+    background: rgba(210,153,34,.12); color: var(--yellow);
+    border: 1px solid rgba(210,153,34,.35);
+    padding: 4px 12px; border-radius: 20px; font-size: 13px; font-weight: 600;
+    display: none;
+  }
+
+  .controls { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-bottom: 14px; }
+  button {
+    background: var(--accent); color: #0d1117; border: none;
+    padding: 9px 18px; border-radius: 8px; font-size: 14px; font-weight: 700;
+    cursor: pointer; transition: filter .15s, transform .1s;
+  }
+  button:hover { filter: brightness(1.15); }
+  button:active { transform: scale(.96); }
+  button.secondary { background: var(--panel2); color: var(--text); border: 1px solid var(--border); }
+  button.on { background: var(--yellow); color: #0d1117; border-color: var(--yellow); }
+  button:disabled { opacity: .4; cursor: not-allowed; }
+  .speed { display: flex; align-items: center; gap: 8px; color: var(--muted); font-size: 13px; margin-left: auto; }
+  input[type=range] { accent-color: var(--accent); width: 120px; }
+  input[type=text] {
+    background: var(--panel2); border: 1px solid var(--border); color: var(--text);
+    padding: 9px 12px; border-radius: 8px; font-size: 14px; width: 220px;
+  }
+  select {
+    background: var(--panel2); border: 1px solid var(--border); color: var(--text);
+    padding: 8px 10px; border-radius: 8px; font-size: 14px;
+  }
+  .lab-label { font-size: 13px; color: var(--muted); font-weight: 600; }
+
+  .toolbar { display: flex; flex-direction: column; gap: 10px; margin-bottom: 14px; }
+  .tgroup {
+    display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+    padding: 10px 14px; background: var(--panel2);
+    border: 1px solid var(--border); border-radius: 10px;
+  }
+  .tlabel {
+    font-size: 12px; font-weight: 700; color: var(--muted);
+    text-transform: uppercase; letter-spacing: .4px; min-width: 96px; flex-shrink: 0;
+  }
+  .tbtns { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; flex: 1; }
+  .tbtns.nowrap { flex-wrap: nowrap; overflow-x: auto; padding-bottom: 2px; }
+  .tbtns.nowrap button, .tbtns.nowrap select { flex-shrink: 0; }
+
+  #narration {
+    background: var(--panel2); border-left: 4px solid var(--accent);
+    padding: 12px 16px; border-radius: 8px; font-size: 15px; min-height: 48px;
+  }
+  #narration button { margin: 6px 8px 0 0; padding: 7px 16px; }
+
+  .code {
+    font-family: 'Cascadia Code', 'Fira Code', Consolas, monospace;
+    font-size: 13px; line-height: 1.5;
+    background: var(--panel2); border-radius: 10px;
+    padding: 14px 0; overflow-x: auto; max-width: 100%;
+  }
+  .code .line { padding: 3px 12px; white-space: pre; color: var(--text); border-left: 3px solid transparent; }
+  .code .line.active { background: rgba(88,166,255,.14); border-left-color: var(--accent); }
+
+  .vars { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+  .var {
+    font-family: Consolas, monospace; font-size: 12.5px;
+    background: var(--panel2); border: 1px solid var(--border);
+    border-radius: 6px; padding: 4px 10px; color: var(--muted);
+  }
+  .var b { color: var(--accent); }
+  .var.hi { border-color: var(--yellow); color: var(--text); background: rgba(210,153,34,.1); }
+  .var.pv { border-color: var(--purple); color: var(--text); background: rgba(210,168,255,.1); }
+
+  #arrayView {
+    display: flex; flex-wrap: wrap; gap: 6px; align-items: center;
+    background: var(--panel2); border: 1px solid var(--border);
+    border-radius: 8px; padding: 10px 14px; margin-bottom: 14px;
+    font-family: Consolas, monospace; font-size: 14px;
+  }
+  #arrayView .lbl { color: var(--muted); margin-right: 4px; }
+  .cell {
+    min-width: 38px; text-align: center; padding: 6px 8px;
+    background: var(--bg); border: 1.5px solid var(--border);
+    border-radius: 6px; font-weight: 700; transition: all .3s;
+  }
+  .cell .idx { display: block; font-size: 10px; font-weight: 400; color: var(--muted); }
+  .cell.comparing { border-color: var(--yellow); background: rgba(210,153,34,.15); transform: translateY(-3px); }
+  .cell.swapping { border-color: var(--accent2); background: rgba(247,129,102,.18); transform: translateY(-3px) scale(1.05); }
+  .cell.pivot { border-color: var(--purple); background: rgba(210,168,255,.15); }
+  .cell.sorted { border-color: var(--green); background: rgba(63,185,80,.12); color: var(--green); }
+
+  #tourOverlay { position: fixed; inset: 0; background: rgba(0,0,0,.7); z-index: 100; display: none; }
+  .tour-target {
+    position: relative !important; z-index: 101 !important;
+    box-shadow: 0 0 0 4px var(--accent), 0 0 24px rgba(88,166,255,.5) !important;
+    border-radius: 8px;
+  }
+  #tourTip {
+    position: fixed; z-index: 102; max-width: 320px;
+    background: var(--panel); border: 1px solid var(--accent);
+    border-radius: 12px; padding: 16px 18px; display: none;
+    box-shadow: 0 12px 32px rgba(0,0,0,.6);
+  }
+  #tourTip h4 { font-size: 15px; margin-bottom: 6px; color: var(--accent); }
+  #tourTip p { font-size: 13.5px; line-height: 1.55; color: var(--text); margin-bottom: 12px; }
+  #tourTip .row { display: flex; gap: 8px; align-items: center; }
+  #tourTip .cnt { margin-left: auto; font-size: 12px; color: var(--muted); }
+
+  #aiOverlay { position: fixed; inset: 0; background: rgba(0,0,0,.65); z-index: 110; display: none; }
+  #aiPanel {
+    position: fixed; top: 6%; left: 50%; transform: translateX(-50%);
+    width: min(560px, 90vw); max-height: 84vh; overflow-y: auto;
+    background: var(--panel); border: 1px solid var(--accent);
+    border-radius: 14px; padding: 20px 22px; display: none;
+    box-shadow: 0 20px 50px rgba(0,0,0,.6); z-index: 111;
+  }
+  .ai-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px; }
+  .ai-header h4 { font-size: 17px; color: var(--accent); }
+  .ai-header button {
+    background: var(--panel2); color: var(--muted); border: 1px solid var(--border);
+    padding: 4px 10px; font-size: 13px; border-radius: 6px;
+  }
+  #aiNote { font-size: 11.5px; color: var(--muted); margin-bottom: 12px; padding-bottom: 10px; border-bottom: 1px dashed var(--border); }
+  #aiBody { font-size: 14.5px; line-height: 1.7; color: var(--text); }
+  #aiBody h5 { color: var(--accent); font-size: 14px; margin: 14px 0 4px; }
+  #aiBody code { font-family: Consolas, monospace; font-size: 13px; background: var(--panel2); padding: 1px 6px; border-radius: 4px; }
+  #aiChips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; }
+  .ai-chip {
+    background: var(--panel2); border: 1px solid var(--border); color: var(--text);
+    font-size: 12.5px; font-weight: 600; padding: 6px 12px; border-radius: 16px;
+  }
+  .ai-chip:hover { border-color: var(--accent); color: var(--accent); }
+
+  .tabs { display: flex; gap: 6px; margin-bottom: 10px; }
+  .tab {
+    background: var(--panel2); color: var(--muted); border: 1px solid var(--border);
+    padding: 6px 16px; border-radius: 8px 8px 0 0; font-size: 13px; font-weight: 700; cursor: pointer;
+  }
+  .tab.on { background: var(--accent); color: #0d1117; border-color: var(--accent); }
+  .codeWrap { display: none; }
+  .codeWrap.on { display: block; }
+  .kw { color: #ff7b72; } .fn { color: #d2a8ff; } .num { color: #79c0ff; } .cm { color: #6e7681; }
+
+  .stats { display: flex; gap: 14px; margin-top: 14px; }
+  .stat { flex: 1; background: var(--panel2); border: 1px solid var(--border); border-radius: 8px; padding: 10px; text-align: center; }
+  .stat .v { font-size: 22px; font-weight: 800; color: var(--accent); }
+  .stat .l { font-size: 12px; color: var(--muted); }
+
+  .learn { font-size: 14px; color: var(--muted); line-height: 1.6; }
+  .learn strong { color: var(--text); }
+  .complexity { display: flex; gap: 10px; margin-top: 10px; flex-wrap: wrap; }
+  .chip {
+    background: rgba(247,129,102,.12); color: var(--accent2); border: 1px solid rgba(247,129,102,.35);
+    padding: 3px 10px; border-radius: 14px; font-size: 12.5px; font-weight: 600;
+  }
+  .chip.g { background: rgba(63,185,80,.12); color: var(--green); border-color: rgba(63,185,80,.35); }
+  .chip.r { background: rgba(248,81,73,.12); color: #f85149; border-color: rgba(248,81,73,.35); }
+
+  .quiz-opt {
+    display: block; width: 100%; text-align: left; margin-bottom: 8px;
+    background: var(--panel2); color: var(--text); border: 1px solid var(--border); font-weight: 500;
+  }
+  .quiz-opt.right { border-color: var(--green); background: rgba(63,185,80,.15); }
+  .quiz-opt.wrong { border-color: #f85149; background: rgba(248,81,73,.15); }
+  #quizFeedback { font-size: 13.5px; margin-top: 8px; color: var(--muted); min-height: 20px; }
+
+  .mistake { margin-bottom: 12px; font-size: 13.5px; line-height: 1.55; color: var(--muted); }
+  .mistake b { color: var(--accent2); }
+  .mistake code { font-family: Consolas, monospace; font-size: 12.5px; background: var(--panel2); padding: 1px 6px; border-radius: 4px; color: var(--text); }
+
+  .raceGrid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 12px; }
+  @media (max-width: 700px) { .raceGrid { grid-template-columns: 1fr; } }
+  .racer { background: var(--panel2); border: 1px solid var(--border); border-radius: 10px; padding: 14px; transition: border-color .3s, box-shadow .3s; }
+  .racer.finished { border-color: var(--green); box-shadow: 0 0 14px rgba(63,185,80,.25); }
+  .racerHead { display: flex; justify-content: space-between; margin-bottom: 6px; font-size: 14px; }
+  .racerSub { font-size: 12px; color: var(--muted); margin-bottom: 8px; }
+  .racerHead .ops { color: var(--muted); font-size: 13px; }
+  .bars { display: flex; align-items: flex-end; gap: 2px; height: 130px; }
+  .bar { flex: 1; border-radius: 2px 2px 0 0; background: var(--purple); transition: height .1s linear; }
+  .racer.merge .bar { background: var(--accent); }
+  .bar.hot { background: var(--accent2) !important; }
+  #raceResult {
+    margin-top: 14px; padding: 12px 16px; border-radius: 8px;
+    background: rgba(63,185,80,.1); border: 1px solid rgba(63,185,80,.3);
+    font-size: 14.5px; display: none;
+  }
+
+  /* ===== MOBILE / SMALL SCREENS ===== */
+  @media (max-width: 640px) {
+    header { padding: 12px 16px; }
+    .logo { font-size: 19px; }
+    .tagline { font-size: 12px; }
+    .container { padding: 14px 12px 40px; gap: 14px; }
+    .card { padding: 15px; border-radius: 10px; }
+    h1 { font-size: 20px; }
+    h3 { font-size: 14px; }
+    .subtitle { font-size: 13px; margin-bottom: 12px; }
+    .intro { padding: 18px 16px; }
+    .intro h2 { font-size: 17px; }
+    .intro p { font-size: 14px; line-height: 1.6; }
+    .intro .analogy { padding: 10px 12px; font-size: 13.5px; }
+    .steps3 { gap: 8px; }
+    .step3 { min-width: 100%; font-size: 13px; }
+    .badges { gap: 6px; }
+    .badge { font-size: 11.5px; padding: 5px 10px; }
+    #stage { height: 280px; }
+    .toolbar { gap: 8px; }
+    .tgroup { flex-direction: column; align-items: stretch; gap: 8px; padding: 10px; }
+    .tlabel { min-width: 0; }
+    .tbtns { width: 100%; }
+    .tbtns.nowrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    button { padding: 8px 14px; font-size: 13.5px; }
+    input[type=text] { width: 100%; }
+    select { width: 100%; }
+    .tbtns.nowrap select { width: auto; }
+    .speed { margin-left: 0; }
+    #narration { font-size: 14px; padding: 10px 12px; }
+    #arrayView { font-size: 12.5px; padding: 8px 10px; gap: 4px; }
+    .cell { min-width: 30px; padding: 5px 6px; }
+    .cell .idx { font-size: 9px; }
+    .stats { gap: 8px; }
+    .stat { padding: 8px 6px; }
+    .stat .v { font-size: 18px; }
+    .stat .l { font-size: 11px; }
+    .code { font-size: 11.5px; }
+    .code .line { padding: 2px 10px; }
+    .vars { gap: 6px; }
+    .var { font-size: 11.5px; padding: 3px 8px; }
+    .learn { font-size: 13.5px; }
+    .mistake { font-size: 13px; }
+    .raceGrid { grid-template-columns: 1fr; }
+    .bars { height: 100px; }
+    #aiPanel { top: 3%; width: 94vw; padding: 16px 15px; max-height: 90vh; }
+    #aiBody { font-size: 14px; }
+    .ai-chip { font-size: 12px; }
+    #tourTip { max-width: calc(100vw - 24px); padding: 14px 15px; }
+    #tourTip p { font-size: 13px; }
+  }
+
+  /* ===== CLASSROOM / PROJECTOR MODE ===== */
+  body.classroom .intro,
+  body.classroom .card.full,
+  body.classroom .sidebar { display: none !important; }
+  body.classroom .container { grid-template-columns: 1fr !important; max-width: 1500px; }
+  body.classroom #stage { height: 58vh !important; min-height: 340px; }
+  body.classroom h1 { font-size: 34px; }
+  body.classroom #narration { font-size: 22px; line-height: 1.5; padding: 18px 22px; }
+  body.classroom #arrayView { font-size: 19px; }
+  body.classroom #arrayView .cell { min-width: 52px; padding: 9px 11px; font-size: 19px; }
+  body.classroom #arrayView .cell .idx { font-size: 12px; }
+  body.classroom .stat .v { font-size: 32px; }
+  body.classroom .stat .l { font-size: 15px; }
+  body.classroom .tgroup { padding: 12px 16px; }
+  body.classroom button, body.classroom select { font-size: 16px; padding: 11px 20px; }
+  body.classroom .subtitle { font-size: 17px; }
+  body.classroom #passBadge, body.classroom #streakBadge { font-size: 17px; padding: 6px 16px; }
+  body.classroom .ball { font-weight: 800 !important; }
+  #classBtn.on { background: var(--yellow); color: #0d1117; border-color: var(--yellow); }
+</style>
+<script>if(location.protocol.startsWith("http")){var m=document.createElement("link");m.rel="manifest";m.href="manifest.json";document.head.appendChild(m);}</script>
+<meta name="theme-color" content="#0d1117">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+</head>
+<body>
+
+<header>
+  <a href="mindaicode-home.html" style="display:flex; align-items:center; text-decoration:none; color:inherit;">
+    <div class="logo">🧠 MindAI<span>Code</span></div>
+  </a>
+  <div class="tagline" style="display:flex; gap:14px; align-items:center; flex-wrap:wrap;"><a href="mindaicode-race-all.html" style="color:var(--purple); text-decoration:none; font-weight:600;">🏁 Race all six</a><a href="mindaicode-home.html" style="color:var(--muted); text-decoration:none;">🏠 All algorithms</a></div>
+</header>
+
+<div class="container">
+
+  <!-- INTRO -->
+  <div class="intro">
+    <h2>👋 New here? Start with this (30 seconds)</h2>
+    <p><strong>Quick Sort</strong> picks one value as a <strong>pivot</strong>, then rearranges everything else around it: smaller values to the left, larger values to the right. Once that's done, the pivot is sitting in its exact final position — forever. Then it repeats the same trick on the left and right groups.</p>
+    <div class="analogy">
+      🎓 <strong>Real-life example:</strong> Pick one student in the class as a reference height. Ask everyone to shuffle around: shorter students step to the left, taller students step to the right. The reference student never has to move again — they're now standing exactly where they belong in the final sorted line. Repeat the same trick separately on the "shorter" group and the "taller" group.
+    </div>
+    <div class="steps3">
+      <div class="step3"><b>1️⃣ Watch</b> Press ▶ Play. The purple ball is the current pivot — watch everything sort itself around it.</div>
+      <div class="step3"><b>2️⃣ Predict</b> Turn on 🎯 Predict mode and guess whether each value belongs left or right of the pivot.</div>
+      <div class="step3"><b>3️⃣ See the trap</b> Try the ⚡ Race — this pivot strategy has a nasty worst case on the WRONG kind of data.</div>
+    </div>
+  </div>
+
+  <!-- BADGES -->
+  <div class="card full">
+    <div class="badges">
+      <strong style="margin-right: 6px;">🏆 Your badges:</strong>
+      <span class="badge" data-badge="sort">🏅 First Sort</span>
+      <span class="badge" data-badge="predict">🎯 Predictor ×5</span>
+      <span class="badge" data-badge="quiz">🧠 Quiz Master</span>
+      <span class="badge" data-badge="race">⚡ Race Watcher</span>
+      <span class="badge" data-badge="lab">🧪 Scientist</span>
+    </div>
+  </div>
+
+  <!-- MAIN VISUALIZER -->
+  <div class="card">
+    <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap;">
+      <h1 style="margin-bottom:0;">Quick Sort ⚡</h1>
+      <div style="display:flex; gap:8px; flex-wrap:wrap;">
+        <button id="explainBtn" class="secondary">🤖 Explain step</button>
+        <button id="classBtn" class="secondary">🎥 Classroom</button>
+        <button id="tourBtn" class="secondary">❓ Take the tour</button>
+      </div>
+    </div>
+    <p class="subtitle" id="stageSubtitle">Pick a pivot, partition everything around it, then recurse on each side. The purple ball is the pivot.</p>
+
+    <div id="stage">
+      <div id="passBadge">Pass 0</div>
+      <div id="streakBadge">🎯 Streak: 0</div>
+      <div id="teacher">🧑‍🏫</div>
+      <div id="rangeLabel"></div>
+      <div id="rangeBracket"></div>
+      <div id="floor"></div>
+    </div>
+
+    <div id="arrayView"></div>
+
+    <div class="toolbar">
+      <div class="tgroup">
+        <div class="tbtns nowrap">
+          <button id="playBtn">▶ Play</button>
+          <button id="stepBtn" class="secondary">⏭ Step</button>
+          <button id="predictBtn" class="secondary">🎯 Predict: Off</button>
+          <button id="shuffleBtn" class="secondary">🔀 Shuffle</button>
+          <button id="resetBtn" class="secondary">↺ Reset</button>
+          <select id="shapeSel" title="Visualization style">
+            <option value="circle">⚪ Balls</option>
+            <option value="bar">📊 Bars</option>
+            <option value="student">🧑‍🎓 Students</option>
+          </select>
+          <div class="speed" style="margin-left:0; flex-shrink:0;">
+            <span>🐢</span><input type="range" id="speed" min="1" max="10" value="5" style="width:80px;"><span>🐇</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="tgroup">
+        <span class="tlabel">🔊 Audio</span>
+        <div class="tbtns">
+          <button id="soundBtn" class="secondary">🔊 Sound: On</button>
+          <button id="voiceBtn" class="secondary">🗣 Voice: Off</button>
+          <select id="voiceSpeed" title="Voice speed">
+            <option value="0.65">🐢 Voice: Slow</option>
+            <option value="0.9" selected>🚶 Voice: Normal</option>
+            <option value="1.2">🐇 Voice: Fast</option>
+          </select>
+          <select id="langSel" title="Narration language">
+            <option value="en">🌐 English</option>
+            <option value="ta">🌐 தமிழ்</option>
+            <option value="hi">🌐 हिंदी</option>
+            <option value="te">🌐 తెలుగు</option>
+            <option value="kn">🌐 ಕನ್ನಡ</option>
+            <option value="bn">🌐 বাংলা</option>
+            <option value="mr">🌐 मराठी</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="tgroup">
+        <span class="tlabel">⌨️ Your data</span>
+        <div class="tbtns">
+          <input type="text" id="customInput" placeholder="e.g. 34, 7, 91, 12">
+          <button id="loadBtn" class="secondary">Load</button>
+        </div>
+      </div>
+
+      <div class="tgroup">
+        <span class="tlabel">🧪 Experiments</span>
+        <div class="tbtns">
+          <button id="expCorrect" class="secondary">✅ Correct code</button>
+          <button id="expNoplace" class="secondary">❌ Skip placing the pivot</button>
+          <button id="expWrongcmp" class="secondary">❌ Compare with the wrong value</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="narration">Press <strong>Play</strong> to start, or <strong>Step</strong> to go one comparison at a time.</div>
+
+    <div class="stats">
+      <div class="stat"><div class="v" id="cmpCount">0</div><div class="l">Comparisons</div></div>
+      <div class="stat"><div class="v" id="swapCount">0</div><div class="l">Swaps</div></div>
+      <div class="stat"><div class="v" id="passCount">0</div><div class="l">Partitions</div></div>
+    </div>
+  </div>
+
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+    <div class="card">
+      <h3>💻 The Code</h3>
+      <div class="tabs">
+        <button class="tab on" data-lang="py" type="button">Python</button>
+        <button class="tab" data-lang="java" type="button">Java</button>
+      </div>
+      <div class="codeWrap on" id="code-py">
+        <div class="code">
+          <div class="line" data-l="0"><span class="kw">def</span> <span class="fn">quick_sort</span>(arr, lo, hi):</div>
+          <div class="line" data-l="1">    <span class="kw">if</span> lo &gt;= hi:</div>
+          <div class="line" data-l="1">        <span class="kw">return</span></div>
+          <div class="line" data-l="2">    p = <span class="fn">partition</span>(arr, lo, hi)</div>
+          <div class="line" data-l="9">    quick_sort(arr, lo, p - <span class="num">1</span>)</div>
+          <div class="line" data-l="9">    quick_sort(arr, p + <span class="num">1</span>, hi)</div>
+          <div class="line" data-l=""><span class="fn">&nbsp;</span></div>
+          <div class="line" data-l="3"><span class="kw">def</span> <span class="fn">partition</span>(arr, lo, hi):</div>
+          <div class="line" data-l="3">    pivot = arr[hi]</div>
+          <div class="line" data-l="4">    i = lo - <span class="num">1</span></div>
+          <div class="line" data-l="5">    <span class="kw">for</span> j <span class="kw">in</span> <span class="fn">range</span>(lo, hi):</div>
+          <div class="line" data-l="6">        <span class="kw">if</span> arr[j] &lt;= pivot:</div>
+          <div class="line" data-l="7">            i += <span class="num">1</span></div>
+          <div class="line" data-l="7">            arr[i], arr[j] = arr[j], arr[i]</div>
+          <div class="line" data-l="8">    arr[i+1], arr[hi] = arr[hi], arr[i+1]</div>
+          <div class="line" data-l="8">    <span class="kw">return</span> i + <span class="num">1</span></div>
+        </div>
+      </div>
+      <div class="codeWrap" id="code-java">
+        <div class="code">
+          <div class="line" data-l="0"><span class="kw">void</span> <span class="fn">quickSort</span>(<span class="kw">int</span>[] arr, <span class="kw">int</span> lo, <span class="kw">int</span> hi) {</div>
+          <div class="line" data-l="1">    <span class="kw">if</span> (lo &gt;= hi) <span class="kw">return</span>;</div>
+          <div class="line" data-l="2">    <span class="kw">int</span> p = partition(arr, lo, hi);</div>
+          <div class="line" data-l="9">    quickSort(arr, lo, p - <span class="num">1</span>);</div>
+          <div class="line" data-l="9">    quickSort(arr, p + <span class="num">1</span>, hi);</div>
+          <div class="line" data-l="9">}</div>
+          <div class="line" data-l=""><span class="fn">&nbsp;</span></div>
+          <div class="line" data-l="3"><span class="kw">int</span> <span class="fn">partition</span>(<span class="kw">int</span>[] arr, <span class="kw">int</span> lo, <span class="kw">int</span> hi) {</div>
+          <div class="line" data-l="3">    <span class="kw">int</span> pivot = arr[hi];</div>
+          <div class="line" data-l="4">    <span class="kw">int</span> i = lo - <span class="num">1</span>;</div>
+          <div class="line" data-l="5">    <span class="kw">for</span> (<span class="kw">int</span> j = lo; j &lt; hi; j++) {</div>
+          <div class="line" data-l="6">        <span class="kw">if</span> (arr[j] &lt;= pivot) {</div>
+          <div class="line" data-l="7">            i++;</div>
+          <div class="line" data-l="7">            <span class="fn">swap</span>(arr, i, j);</div>
+          <div class="line" data-l="7">        }</div>
+          <div class="line" data-l="7">    }</div>
+          <div class="line" data-l="8">    swap(arr, i + <span class="num">1</span>, hi);</div>
+          <div class="line" data-l="8">    <span class="kw">return</span> i + <span class="num">1</span>;</div>
+          <div class="line" data-l="8">}</div>
+        </div>
+      </div>
+      <div class="vars">
+        <span class="var" id="varRange">[lo, hi] = <b>–</b></span>
+        <span class="var pv" id="varPivot">pivot = <b>–</b></span>
+        <span class="var" id="varI">i = <b>–</b></span>
+        <span class="var" id="varJ">j = <b>–</b></span>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top: 16px;">
+      <h3>📚 How it works</h3>
+      <div class="learn">
+        Every partition places its pivot in its final sorted position immediately — unlike Merge Sort, where nothing is truly final until the very last merge. Quick Sort sorts <strong>in place</strong> (no extra array), which is why it's often faster in practice than Merge Sort despite matching Big-O on average.
+        <div class="complexity">
+          <span class="chip g">Average: O(n log n)</span>
+          <span class="chip r">Worst: O(n²)</span>
+          <span class="chip">Best: O(n log n)</span>
+          <span class="chip">Stable: No</span>
+          <span class="chip g">Space: O(log n)</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top: 16px;">
+      <h3>🧠 Quick check</h3>
+      <div id="quizQ" style="font-size: 14px; margin-bottom: 10px;"></div>
+      <div id="quizOpts"></div>
+      <div id="quizFeedback"></div>
+    </div>
+
+    <div class="card" style="margin-top: 16px;">
+      <h3>⚠️ Common mistakes</h3>
+      <div class="mistake"><b>Forgetting to place the pivot.</b> After partitioning, the pivot MUST be swapped into position <code>i+1</code> — skip this and it never lands in its correct final spot.</div>
+      <div class="mistake"><b>Comparing against an inconsistent value.</b> Every comparison in one partition call must use the SAME pivot value, or the partition boundary becomes meaningless.</div>
+      <div class="mistake"><b>Always picking the first or last element as pivot.</b> On already-sorted (or reverse-sorted) data, this creates maximally unbalanced partitions — the O(n²) worst case.</div>
+      <div class="mistake"><b>Forgetting the pivot's own index is excluded from both recursive calls</b> (<code>p-1</code> and <code>p+1</code>) — it's already in its final place and never needs revisiting.</div>
+    </div>
+  </div>
+
+  <!-- RACE -->
+  <div class="card full">
+    <h3>⚡ The Race: Quick Sort vs Merge Sort</h3>
+    <p class="subtitle" style="margin-bottom: 4px;">On <strong>already-sorted</strong> data — the exact case that exposes Quick Sort's O(n²) worst case with this pivot strategy.</p>
+    <div class="controls" style="margin: 10px 0 0;">
+      <button id="raceBtn">🏁 Start Race</button>
+    </div>
+    <div class="raceGrid">
+      <div class="racer q" id="racerQ">
+        <div class="racerHead"><strong>⚡ Quick Sort — last-element pivot</strong><span class="ops">Comparisons: <b id="opsQ">0</b></span></div>
+        <div class="racerSub">Swaps so far: <b id="writesQ">0</b></div>
+        <div class="bars" id="barsQ"></div>
+      </div>
+      <div class="racer merge" id="racerM">
+        <div class="racerHead"><strong>🪄 Merge Sort — always O(n log n)</strong><span class="ops">Comparisons: <b id="opsM">0</b></span></div>
+        <div class="racerSub">Placements so far: <b id="writesM">0</b></div>
+        <div class="bars" id="barsM"></div>
+      </div>
+    </div>
+    <div id="raceResult"></div>
+  </div>
+
+</div>
+
+<div id="aiOverlay"></div>
+<div id="aiPanel">
+  <div class="ai-header">
+    <h4>🤖 AI Explainer</h4>
+    <button id="aiClose">✕ Close</button>
+  </div>
+  <div id="aiNote">Playback is paused. This breaks down exactly what just happened — read it, then hit Close and Step to continue, or click a question below for more depth.</div>
+  <div id="aiBody"></div>
+  <div id="aiChips"></div>
+</div>
+
+<div id="tourOverlay"></div>
+<div id="tourTip">
+  <h4 id="tourTitle"></h4>
+  <p id="tourText"></p>
+  <div class="row">
+    <button id="tourNext">Next →</button>
+    <button id="tourSkip" class="secondary">Skip</button>
+    <span class="cnt" id="tourCnt"></span>
+  </div>
+</div>
+
+<script>
+/* ================= LANGUAGES ================= */
+const L = {
+  en: {
+    start: 'Press <strong>Play</strong> to start, or <strong>Step</strong> to go one comparison at a time.',
+    enterRange: (lo, hi, pv) => `⚖️ <strong>Partitioning</strong> range [${lo}, ${hi}] — pivot chosen: the last value, <strong>${pv}</strong>.`,
+    compareLE: (v, pv) => `🔍 Is <strong>${v}</strong> ≤ pivot (<strong>${pv}</strong>)? Yes — it belongs on the left side.`,
+    compareGT: (v, pv) => `🔍 Is <strong>${v}</strong> ≤ pivot (<strong>${pv}</strong>)? No — it stays on the right side.`,
+    swap: (a, b) => `🔄 Swapping <strong>${a}</strong> and <strong>${b}</strong> to grow the "smaller than pivot" region.`,
+    noswap: () => `✅ Already in the correct region — no swap needed.`,
+    pivotPlaced: (v, pos) => `🎯 Pivot <strong>${v}</strong> is swapped into position ${pos} — that's its FINAL sorted spot, forever.`,
+    pivotSkipped: () => `😅 The pivot was never actually swapped into place — it's still sitting where it started.`,
+    trivial: (v) => `✅ A single value (<strong>${v}</strong>) is trivially already sorted.`,
+    done: (c, s, p) => `🎉 <strong>Sorted!</strong> ${c} comparisons, ${s} swaps, ${p} partition step(s).`,
+    doneNoplace: '😅 <strong>The result is wrong.</strong> We skipped swapping the pivot into its final position, so some values never landed where they belonged.',
+    doneWrongcmp: '🤔 <strong>The result is wrong.</strong> We compared against a different value than the one we swapped into the pivot slot — the partition boundary and the actual pivot value didn\'t match.',
+    predictQ: (v, pv) => `🎯 Does <strong>${v}</strong> belong LEFT or RIGHT of pivot <strong>${pv}</strong>?`,
+    right: '✅ Correct prediction! ', wrong: '❌ Wrong — watch: ',
+    minNums: '⚠️ Enter at least 2 numbers separated by commas.',
+  },
+  ta: {
+    start: 'தொடங்க <strong>Play</strong> அழுத்தவும், ஒவ்வொரு ஒப்பீடாக பார்க்க <strong>Step</strong> அழுத்தவும்.',
+    enterRange: (lo, hi, pv) => `⚖️ [${lo}, ${hi}] வரம்பை <strong>பிரிக்கிறோம்</strong> — pivot: <strong>${pv}</strong>.`,
+    compareLE: (v, pv) => `🔍 <strong>${v}</strong> ≤ pivot (<strong>${pv}</strong>)? ஆம் — இடதுபுறம்.`,
+    compareGT: (v, pv) => `🔍 <strong>${v}</strong> ≤ pivot (<strong>${pv}</strong>)? இல்லை — வலதுபுறம்.`,
+    swap: (a, b) => `🔄 <strong>${a}</strong> மற்றும் <strong>${b}</strong> மாற்றப்படுகிறது.`,
+    noswap: () => `✅ ஏற்கனவே சரியான பகுதியில் உள்ளது.`,
+    pivotPlaced: (v, pos) => `🎯 Pivot <strong>${v}</strong> இடம் ${pos}-இல் இறுதியாக வைக்கப்பட்டது.`,
+    pivotSkipped: () => `😅 Pivot அதன் இடத்தில் வைக்கப்படவில்லை.`,
+    trivial: (v) => `✅ ஒரு மதிப்பு (<strong>${v}</strong>) ஏற்கனவே வரிசையாக உள்ளது.`,
+    done: (c, s, p) => `🎉 <strong>வரிசையானது!</strong> ${c} ஒப்பீடுகள், ${s} மாற்றங்கள், ${p} பிரிவுகள்.`,
+    doneNoplace: '😅 <strong>முடிவு தவறானது.</strong>',
+    doneWrongcmp: '🤔 <strong>முடிவு தவறானது.</strong>',
+    predictQ: (v, pv) => `🎯 <strong>${v}</strong> pivot <strong>${pv}</strong>-க்கு இடதா வலதா?`,
+    right: '✅ சரியான கணிப்பு! ', wrong: '❌ தவறு — பாருங்கள்: ',
+    minNums: '⚠️ குறைந்தது 2 எண்களை கமாவால் பிரித்து உள்ளிடவும்.',
+  },
+  hi: {
+    start: 'शुरू करने के लिए <strong>Play</strong> दबाएँ, या <strong>Step</strong> दबाएँ।',
+    enterRange: (lo, hi, pv) => `⚖️ [${lo}, ${hi}] सीमा को <strong>बाँट रहे हैं</strong> — pivot: <strong>${pv}</strong>.`,
+    compareLE: (v, pv) => `🔍 <strong>${v}</strong> ≤ pivot (<strong>${pv}</strong>)? हाँ — बाईं ओर।`,
+    compareGT: (v, pv) => `🔍 <strong>${v}</strong> ≤ pivot (<strong>${pv}</strong>)? नहीं — दाईं ओर।`,
+    swap: (a, b) => `🔄 <strong>${a}</strong> और <strong>${b}</strong> बदले जा रहे हैं।`,
+    noswap: () => `✅ पहले से सही जगह पर है।`,
+    pivotPlaced: (v, pos) => `🎯 Pivot <strong>${v}</strong> स्थान ${pos} पर अंतिम रूप से रखा गया।`,
+    pivotSkipped: () => `😅 Pivot अपनी जगह पर नहीं रखा गया।`,
+    trivial: (v) => `✅ एक मान (<strong>${v}</strong>) पहले से क्रमबद्ध है।`,
+    done: (c, s, p) => `🎉 <strong>क्रमबद्ध!</strong> ${c} तुलनाएँ, ${s} अदला-बदली, ${p} विभाजन।`,
+    doneNoplace: '😅 <strong>परिणाम गलत है।</strong>',
+    doneWrongcmp: '🤔 <strong>परिणाम गलत है।</strong>',
+    predictQ: (v, pv) => `🎯 <strong>${v}</strong> pivot <strong>${pv}</strong> से बाएँ या दाएँ?`,
+    right: '✅ सही अनुमान! ', wrong: '❌ ग़लत — देखिए: ',
+    minNums: '⚠️ कम से कम 2 संख्याएँ कॉमा से अलग करके लिखें।',
+  },
+  te: {
+    start: 'ప్రారంభించడానికి <strong>Play</strong> నొక్కండి, లేదా <strong>Step</strong> నొక్కండి.',
+    enterRange: (lo, hi, pv) => `⚖️ [${lo}, ${hi}] పరిధిని <strong>విభజిస్తున్నాం</strong> — pivot: <strong>${pv}</strong>.`,
+    compareLE: (v, pv) => `🔍 <strong>${v}</strong> ≤ pivot (<strong>${pv}</strong>)? అవును — ఎడమవైపు.`,
+    compareGT: (v, pv) => `🔍 <strong>${v}</strong> ≤ pivot (<strong>${pv}</strong>)? కాదు — కుడివైపు.`,
+    swap: (a, b) => `🔄 <strong>${a}</strong> మరియు <strong>${b}</strong> మార్చబడుతున్నాయి.`,
+    noswap: () => `✅ ఇప్పటికే సరైన వైపు ఉంది — మార్పు అవసరం లేదు.`,
+    pivotPlaced: (v, pos) => `🎯 Pivot <strong>${v}</strong> ${pos} స్థానంలో శాశ్వతంగా ఉంచబడింది.`,
+    pivotSkipped: () => `😅 Pivot దాని స్థానంలో ఉంచబడలేదు.`,
+    trivial: (v) => `✅ ఒకే విలువ (<strong>${v}</strong>) ఇప్పటికే క్రమబద్ధం.`,
+    done: (c, s, p) => `🎉 <strong>క్రమబద్ధం అయ్యింది!</strong> ${c} పోలికలు, ${s} మార్పిడులు, ${p} విభజనలు.`,
+    doneNoplace: '😅 <strong>ఫలితం తప్పు.</strong> Pivot ను సరైన స్థానంలో ఉంచలేదు.',
+    doneWrongcmp: '🤔 <strong>ఫలితం తప్పు.</strong> వేరే విలువతో పోల్చాం.',
+    predictQ: (v, pv) => `🎯 <strong>${v}</strong> pivot <strong>${pv}</strong> కు ఎడమా లేక కుడా?`,
+    right: '✅ సరైన అంచనా! ', wrong: '❌ తప్పు — చూడండి: ',
+    minNums: '⚠️ కనీసం 2 సంఖ్యలను కామాతో వేరు చేసి ఇవ్వండి.',
+  },
+  kn: {
+    start: 'ಪ್ರಾರಂಭಿಸಲು <strong>Play</strong> ಒತ್ತಿರಿ, ಅಥವಾ <strong>Step</strong> ಒತ್ತಿರಿ.',
+    enterRange: (lo, hi, pv) => `⚖️ [${lo}, ${hi}] ವ್ಯಾಪ್ತಿಯನ್ನು <strong>ವಿಭಜಿಸುತ್ತಿದ್ದೇವೆ</strong> — pivot: <strong>${pv}</strong>.`,
+    compareLE: (v, pv) => `🔍 <strong>${v}</strong> ≤ pivot (<strong>${pv}</strong>)? ಹೌದು — ಎಡಗಡೆ.`,
+    compareGT: (v, pv) => `🔍 <strong>${v}</strong> ≤ pivot (<strong>${pv}</strong>)? ಇಲ್ಲ — ಬಲಗಡೆ.`,
+    swap: (a, b) => `🔄 <strong>${a}</strong> ಮತ್ತು <strong>${b}</strong> ಬದಲಾಯಿಸಲಾಗುತ್ತಿದೆ.`,
+    noswap: () => `✅ ಈಗಾಗಲೇ ಸರಿಯಾದ ಬದಿಯಲ್ಲಿದೆ — ಬದಲಾವಣೆ ಬೇಕಿಲ್ಲ.`,
+    pivotPlaced: (v, pos) => `🎯 Pivot <strong>${v}</strong> ${pos} ಸ್ಥಾನದಲ್ಲಿ ಶಾಶ್ವತವಾಗಿ ಇರಿಸಲಾಯಿತು.`,
+    pivotSkipped: () => `😅 Pivot ಅನ್ನು ಅದರ ಸ್ಥಾನದಲ್ಲಿ ಇರಿಸಲಿಲ್ಲ.`,
+    trivial: (v) => `✅ ಒಂದೇ ಮೌಲ್ಯ (<strong>${v}</strong>) ಈಗಾಗಲೇ ವಿಂಗಡಿತ.`,
+    done: (c, s, p) => `🎉 <strong>ವಿಂಗಡಿಸಲಾಗಿದೆ!</strong> ${c} ಹೋಲಿಕೆಗಳು, ${s} ಅದಲುಬದಲುಗಳು, ${p} ವಿಭಜನೆಗಳು.`,
+    doneNoplace: '😅 <strong>ಫಲಿತಾಂಶ ತಪ್ಪು.</strong> Pivot ಅನ್ನು ಸರಿಯಾದ ಸ್ಥಾನದಲ್ಲಿ ಇರಿಸಲಿಲ್ಲ.',
+    doneWrongcmp: '🤔 <strong>ಫಲಿತಾಂಶ ತಪ್ಪು.</strong> ಬೇರೆ ಮೌಲ್ಯದೊಂದಿಗೆ ಹೋಲಿಸಿದೆವು.',
+    predictQ: (v, pv) => `🎯 <strong>${v}</strong> pivot <strong>${pv}</strong> ಗೆ ಎಡವೇ ಬಲವೇ?`,
+    right: '✅ ಸರಿಯಾದ ಊಹೆ! ', wrong: '❌ ತಪ್ಪು — ನೋಡಿ: ',
+    minNums: '⚠️ ಕನಿಷ್ಠ 2 ಸಂಖ್ಯೆಗಳನ್ನು ಅಲ್ಪವಿರಾಮದಿಂದ ಬೇರ್ಪಡಿಸಿ ಬರೆಯಿರಿ.',
+  },
+  bn: {
+    start: 'শুরু করতে <strong>Play</strong> চাপুন, বা <strong>Step</strong> চাপুন।',
+    enterRange: (lo, hi, pv) => `⚖️ [${lo}, ${hi}] পরিসরটি <strong>ভাগ করছি</strong> — pivot: <strong>${pv}</strong>।`,
+    compareLE: (v, pv) => `🔍 <strong>${v}</strong> ≤ pivot (<strong>${pv}</strong>)? হ্যাঁ — বাঁদিকে।`,
+    compareGT: (v, pv) => `🔍 <strong>${v}</strong> ≤ pivot (<strong>${pv}</strong>)? না — ডানদিকে।`,
+    swap: (a, b) => `🔄 <strong>${a}</strong> ও <strong>${b}</strong> বদল করা হচ্ছে।`,
+    noswap: () => `✅ আগে থেকেই সঠিক দিকে আছে — বদলের দরকার নেই।`,
+    pivotPlaced: (v, pos) => `🎯 Pivot <strong>${v}</strong> ${pos} স্থানে চূড়ান্তভাবে বসল।`,
+    pivotSkipped: () => `😅 Pivot নিজের জায়গায় বসানো হয়নি।`,
+    trivial: (v) => `✅ একটি মান (<strong>${v}</strong>) আগে থেকেই সাজানো।`,
+    done: (c, s, p) => `🎉 <strong>সাজানো হয়ে গেছে!</strong> ${c} তুলনা, ${s} অদলবদল, ${p} বিভাজন।`,
+    doneNoplace: '😅 <strong>ফলাফল ভুল।</strong> Pivot সঠিক জায়গায় বসানো হয়নি।',
+    doneWrongcmp: '🤔 <strong>ফলাফল ভুল।</strong> অন্য মানের সাথে তুলনা করেছি।',
+    predictQ: (v, pv) => `🎯 <strong>${v}</strong> pivot <strong>${pv}</strong> এর বাঁয়ে না ডানে?`,
+    right: '✅ সঠিক অনুমান! ', wrong: '❌ ভুল — দেখুন: ',
+    minNums: '⚠️ অন্তত ২টি সংখ্যা কমা দিয়ে আলাদা করে লিখুন।',
+  },
+  mr: {
+    start: 'सुरू करण्यासाठी <strong>Play</strong> दाबा, किंवा <strong>Step</strong> दाबा.',
+    enterRange: (lo, hi, pv) => `⚖️ [${lo}, ${hi}] ही व्याप्ती <strong>विभागत आहोत</strong> — pivot: <strong>${pv}</strong>.`,
+    compareLE: (v, pv) => `🔍 <strong>${v}</strong> ≤ pivot (<strong>${pv}</strong>)? होय — डावीकडे.`,
+    compareGT: (v, pv) => `🔍 <strong>${v}</strong> ≤ pivot (<strong>${pv}</strong>)? नाही — उजवीकडे.`,
+    swap: (a, b) => `🔄 <strong>${a}</strong> आणि <strong>${b}</strong> बदलले जात आहेत.`,
+    noswap: () => `✅ आधीच योग्य बाजूला आहे — बदलाची गरज नाही.`,
+    pivotPlaced: (v, pos) => `🎯 Pivot <strong>${v}</strong> ${pos} स्थानी कायमचा ठेवला.`,
+    pivotSkipped: () => `😅 Pivot त्याच्या जागी ठेवला गेला नाही.`,
+    trivial: (v) => `✅ एकच मूल्य (<strong>${v}</strong>) आधीच क्रमात आहे.`,
+    done: (c, s, p) => `🎉 <strong>क्रमवारी पूर्ण!</strong> ${c} तुलना, ${s} अदलाबदल, ${p} विभाजने.`,
+    doneNoplace: '😅 <strong>निकाल चुकीचा आहे.</strong> Pivot योग्य जागी ठेवला नाही.',
+    doneWrongcmp: '🤔 <strong>निकाल चुकीचा आहे.</strong> वेगळ्या मूल्याशी तुलना केली.',
+    predictQ: (v, pv) => `🎯 <strong>${v}</strong> pivot <strong>${pv}</strong> च्या डावीकडे की उजवीकडे?`,
+    right: '✅ बरोबर अंदाज! ', wrong: '❌ चूक — पाहा: ',
+    minNums: '⚠️ किमान 2 संख्या स्वल्पविरामाने वेगळ्या करून लिहा.',
+  },
+};
+let lang = 'en';
+const voiceLang = { en: 'en-US', ta: 'ta-IN', hi: 'hi-IN', te: 'te-IN', kn: 'kn-IN', bn: 'bn-IN', mr: 'mr-IN' };
+function T() { return L[lang]; }
+document.getElementById('langSel').onchange = function () { lang = this.value; };
+
+/* ================= BADGES ================= */
+function award(id) {
+  const el = document.querySelector(`.badge[data-badge="${id}"]`);
+  if (!el || el.classList.contains('earned')) return;
+  el.classList.add('earned');
+  try { localStorage.setItem('mqs_badge_' + id, '1'); } catch (e) {}
+  tone(880, .2, 'triangle', .12); setTimeout(() => tone(1320, .3, 'triangle', .12), 180);
+}
+try {
+  ['sort','predict','quiz','race','lab'].forEach(id => {
+    if (localStorage.getItem('mqs_badge_' + id))
+      document.querySelector(`.badge[data-badge="${id}"]`).classList.add('earned');
+  });
+} catch (e) {}
+
+/* ================= AUDIO ================= */
+let soundOn = true, voiceOn = false, actx = null;
+function ctx() {
+  if (!actx) actx = new (window.AudioContext || window.webkitAudioContext)();
+  if (actx.state === 'suspended') actx.resume();
+  return actx;
+}
+function tone(freq, dur, type, vol) {
+  if (!soundOn) return;
+  try {
+    const c = ctx(), o = c.createOscillator(), g = c.createGain();
+    o.type = type || 'sine'; o.frequency.value = freq;
+    g.gain.setValueAtTime(vol || 0.15, c.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.001, c.currentTime + dur);
+    o.connect(g); g.connect(c.destination);
+    o.start(); o.stop(c.currentTime + dur);
+  } catch (e) {}
+}
+function sfxCompare(v) { tone(300 + v * 4, .18, 'sine'); }
+function sfxSwap() { tone(220, .12, 'square', .1); setTimeout(() => tone(440, .15, 'square', .1), 110); }
+function sfxPivot() { tone(720, .25, 'triangle', .13); }
+function sfxDone() { [523, 659, 784, 1047].forEach((f, i) => setTimeout(() => tone(f, .3, 'triangle', .14), i * 160)); }
+let lastSpeechPromise = null;
+function speak(text) {
+  lastSpeechPromise = null;
+  if (!voiceOn || !window.speechSynthesis) return null;
+  speechSynthesis.cancel();
+  const clean = text.replace(/[🔁🔍🔄✅⚡🎉⚠️🎯😅🤔⚖️]/g, '');
+  const u = new SpeechSynthesisUtterance(clean);
+  const rate = parseFloat(document.getElementById('voiceSpeed').value);
+  u.rate = rate; u.lang = voiceLang[lang];
+  const p = new Promise(resolve => {
+    let done = false;
+    const finish = () => { if (!done) { done = true; resolve(); } };
+    u.onend = finish;
+    u.onerror = finish;
+    const estMs = Math.max(1000, (clean.length * 65) / rate) + 700;
+    setTimeout(finish, estMs);
+  });
+  lastSpeechPromise = p;
+  speechSynthesis.speak(u);
+  return p;
+}
+document.getElementById('soundBtn').onclick = function () {
+  soundOn = !soundOn;
+  this.textContent = soundOn ? '🔊 Sound: On' : '🔇 Sound: Off';
+};
+document.getElementById('voiceBtn').onclick = function () {
+  voiceOn = !voiceOn;
+  this.textContent = voiceOn ? '🗣 Voice: On' : '🗣 Voice: Off';
+  if (!voiceOn) speechSynthesis.cancel();
+};
+
+/* ================= MAIN VISUALIZER ================= */
+const stage = document.getElementById('stage');
+const narration = document.getElementById('narration');
+const passBadge = document.getElementById('passBadge');
+const streakBadge = document.getElementById('streakBadge');
+const playBtn = document.getElementById('playBtn');
+
+let values = [34, 7, 91, 12, 55, 28, 76, 3];
+// balls[] is indexed by physical SLOT (like Bubble/Selection Sort) — swaps
+// recompute each ball's own centered position for its new slot to avoid the
+// centering-offset drift bug found in the Bubble Sort page.
+let balls = [], steps = [], stepIdx = 0;
+let playing = false, timer = null;
+let stats = { cmp: 0, swap: 0, partitions: 0 };
+let variant = 'correct';
+let predictOn = false, waitingPredict = false, streak = 0;
+let cur = [];
+let cmpIdx = null, swapA = null, swapB = null, pivotIdx = null;
+let locked = [];
+let rangeLo = null, rangeHi = null, sortedAll = false;
+let curLo = null, curHi = null, curI = null, curJ = null, curPivot = null;
+let shapeMode = 'circle';
+
+const stageSubtitle = document.getElementById('stageSubtitle');
+const subtitles = {
+  circle: 'Pick a pivot, partition everything around it, then recurse on each side. The purple ball is the pivot.',
+  bar: 'Watch bars settle to the left or right of the purple pivot bar as partitioning runs.',
+  student: 'The pivot student stands still while a teacher moves shorter students left and taller ones right.',
+};
+document.getElementById('shapeSel').onchange = function () {
+  shapeMode = this.value;
+  stageSubtitle.textContent = subtitles[shapeMode];
+  buildBalls();
+  applyBallStates();
+  updateTeacher();
+  updateRangeBracket();
+};
+
+function applyBallStates() {
+  balls.forEach((b, idx) => {
+    if (!b) return;
+    b.classList.remove('comparing', 'swapping', 'pivot', 'sorted');
+    if (sortedAll || locked[idx]) { b.classList.add('sorted'); return; }
+    if (idx === swapA || idx === swapB) b.classList.add('swapping');
+    else if (idx === cmpIdx) b.classList.add('comparing');
+    if (idx === pivotIdx) b.classList.add('pivot');
+  });
+}
+
+const teacherEl = document.getElementById('teacher');
+function updateTeacher() {
+  if (shapeMode !== 'student') { teacherEl.style.opacity = '0'; return; }
+  let target = null;
+  if (cmpIdx !== null && balls[cmpIdx]) target = [cmpIdx];
+  else if (swapA !== null && swapB !== null && balls[swapA] && balls[swapB]) target = [swapA, swapB];
+  if (!target) { teacherEl.style.opacity = '0'; return; }
+  const xs = target.map(ix => {
+    const b = balls[ix];
+    return parseFloat(b.style.left) + parseFloat(b.style.width) / 2;
+  });
+  const mid = xs.reduce((a, b) => a + b, 0) / xs.length;
+  teacherEl.style.left = (mid - 17) + 'px';
+  teacherEl.style.opacity = '1';
+}
+
+function updateRangeBracket() {
+  const bracket = document.getElementById('rangeBracket');
+  const label = document.getElementById('rangeLabel');
+  if (rangeLo === null || rangeHi === null) {
+    bracket.style.opacity = '0'; label.style.opacity = '0';
+    return;
+  }
+  const size = ballSize();
+  const leftPx = xFor(rangeLo, size);
+  const rightPx = xFor(rangeHi, size) + size;
+  bracket.style.left = leftPx + 'px';
+  bracket.style.width = Math.max(4, rightPx - leftPx) + 'px';
+  bracket.style.opacity = '1';
+  label.style.left = leftPx + 'px';
+  label.textContent = `[${rangeLo}, ${rangeHi}]`;
+  label.style.opacity = '1';
+}
+
+function renderArray() {
+  const box = document.getElementById('arrayView');
+  box.innerHTML = '<span class="lbl">arr =</span>';
+  cur.forEach((v, pos) => {
+    const c = document.createElement('span');
+    c.className = 'cell';
+    if (sortedAll || locked[pos]) c.classList.add('sorted');
+    else if (pos === swapA || pos === swapB) c.classList.add('swapping');
+    else if (pos === cmpIdx) c.classList.add('comparing');
+    if (pos === pivotIdx) c.classList.add('pivot');
+    c.innerHTML = `${v}<span class="idx">[${pos}]</span>`;
+    box.appendChild(c);
+  });
+}
+function renderVars() {
+  document.getElementById('varRange').innerHTML = '[lo, hi] = <b>' + (curLo === null ? '–' : `[${curLo}, ${curHi}]`) + '</b>';
+  document.getElementById('varPivot').innerHTML = 'pivot = <b>' + (curPivot === null ? '–' : curPivot) + '</b>';
+  document.getElementById('varI').innerHTML = 'i = <b>' + (curI === null ? '–' : curI) + '</b>';
+  document.getElementById('varJ').innerHTML = 'j = <b>' + (curJ === null ? '–' : curJ) + '</b>';
+}
+
+function ballSize() {
+  const w = stage.clientWidth;
+  return Math.min(64, Math.max(38, Math.floor((w - 40) / values.length) - 12));
+}
+function xFor(i, size) {
+  const w = stage.clientWidth;
+  const gap = (w - values.length * size) / (values.length + 1);
+  return gap + i * (size + gap);
+}
+function placeBallLeft(b, idx, size) {
+  const w = parseFloat(b.style.width);
+  b.style.left = xFor(idx, size) + (size - w) / 2 + 'px';
+}
+function buildBalls() {
+  balls.forEach(b => { if (b) b.remove(); });
+  balls = [];
+  const size = ballSize();
+  const maxV = Math.max(...values);
+  const stageH = stage.clientHeight;
+  const maxBarH = stageH - 90;
+  values.forEach((v, i) => {
+    const b = document.createElement('div');
+    if (shapeMode === 'bar') {
+      b.textContent = v;
+      b.className = 'ball bar-mode';
+      const h = Math.max(28, Math.round(maxBarH * (v / maxV)));
+      const w = Math.max(30, size * 0.72);
+      b.style.width = w + 'px'; b.style.height = h + 'px';
+      b.style.fontSize = Math.max(11, Math.round(size * 0.26)) + 'px';
+      b.style.left = xFor(i, size) + (size - w) / 2 + 'px';
+    } else if (shapeMode === 'student') {
+      b.className = 'ball student-mode';
+      const HEAD = 28, LEGS = 14;
+      const torsoH = Math.max(20, Math.round(maxBarH * 0.66 * (v / maxV)));
+      const h = HEAD + 3 + torsoH + LEGS;
+      const w = Math.max(34, size * 0.68);
+      b.style.width = w + 'px'; b.style.height = h + 'px';
+      b.style.left = xFor(i, size) + (size - w) / 2 + 'px';
+      b.innerHTML = `<div class="student-head"></div><div class="student-body"><span class="student-tag">${v}</span></div><div class="student-legs"></div>`;
+    } else {
+      b.textContent = v;
+      b.className = 'ball';
+      const s = Math.round(size * (0.72 + 0.28 * (v / maxV)));
+      b.style.width = s + 'px'; b.style.height = s + 'px';
+      b.style.fontSize = Math.max(12, Math.round(s * 0.32)) + 'px';
+      b.style.left = xFor(i, size) + (size - s) / 2 + 'px';
+    }
+    stage.appendChild(b);
+    balls.push(b);
+  });
+}
+
+function computeSteps() {
+  steps = [];
+  const a = [...values];
+  const n = a.length;
+
+  function qs(lo, hi) {
+    if (lo > hi) return;
+    if (lo === hi) { steps.push({ t: 'trivial', idx: lo }); return; }
+    const pivotVal = a[hi];
+    steps.push({ t: 'enterRange', lo, hi, pivotVal });
+    let i = lo - 1;
+    for (let j = lo; j < hi; j++) {
+      steps.push({ t: 'compare', lo, hi, i, j, val: a[j], pivotVal });
+      const cmpAgainst = variant === 'wrongcmp' ? a[lo] : pivotVal;
+      if (a[j] <= cmpAgainst) {
+        i++;
+        if (i !== j) {
+          steps.push({ t: 'swap', lo, hi, i, j, iv: a[i], jv: a[j] });
+          [a[i], a[j]] = [a[j], a[i]];
+        } else {
+          steps.push({ t: 'noswap', lo, hi, i, j });
+        }
+      }
+    }
+    const p = i + 1;
+    if (variant !== 'noplace') {
+      steps.push({ t: 'swapPivot', lo, hi, pos: p, iv: a[p], hiv: a[hi] });
+      [a[p], a[hi]] = [a[hi], a[p]];
+    } else {
+      steps.push({ t: 'swapPivotSkipped', lo, hi, pos: p });
+    }
+    steps.push({ t: 'pivotPlaced', pos: p, val: a[p] });
+    qs(lo, p - 1);
+    qs(p + 1, hi);
+  }
+
+  if (n > 1) qs(0, n - 1);
+  else if (n === 1) steps.push({ t: 'trivial', idx: 0 });
+  steps.push({ t: 'done', variant });
+}
+
+function highlight(lines) {
+  document.querySelectorAll('.codeWrap .line').forEach(el =>
+    el.classList.toggle('active', lines.includes(el.dataset.l)));
+}
+document.querySelectorAll('.tab').forEach(tab => {
+  tab.onclick = () => {
+    document.querySelectorAll('.tab').forEach(t => t.classList.toggle('on', t === tab));
+    document.querySelectorAll('.codeWrap').forEach(w =>
+      w.classList.toggle('on', w.id === 'code-' + tab.dataset.lang));
+  };
+});
+function updateStats() {
+  document.getElementById('cmpCount').textContent = stats.cmp;
+  document.getElementById('swapCount').textContent = stats.swap;
+  document.getElementById('passCount').textContent = stats.partitions;
+}
+function delay() { return 4000 - document.getElementById('speed').value * 300; }
+
+function doSwap(i, j) {
+  const b1 = balls[i], b2 = balls[j];
+  const size = ballSize();
+  const w1 = parseFloat(b1.style.width), w2 = parseFloat(b2.style.width);
+  b1.style.left = xFor(j, size) + (size - w1) / 2 + 'px';
+  b2.style.left = xFor(i, size) + (size - w2) / 2 + 'px';
+  [balls[i], balls[j]] = [balls[j], balls[i]];
+  [cur[i], cur[j]] = [cur[j], cur[i]];
+}
+
+function execStep(prefix) {
+  if (stepIdx >= steps.length) return false;
+  const s = steps[stepIdx++];
+  cmpIdx = null; swapA = null; swapB = null;
+  if (s.t === 'enterRange') {
+    rangeLo = s.lo; rangeHi = s.hi;
+    curLo = s.lo; curHi = s.hi; curPivot = s.pivotVal; curI = s.lo - 1; curJ = null;
+    pivotIdx = s.hi;
+    narration.innerHTML = T().enterRange(s.lo, s.hi, s.pivotVal);
+    highlight(['3']);
+    sfxPivot();
+  } else if (s.t === 'compare') {
+    stats.cmp++;
+    rangeLo = s.lo; rangeHi = s.hi;
+    curI = s.i; curJ = s.j;
+    cmpIdx = s.j;
+    const belongs = s.val <= s.pivotVal;
+    narration.innerHTML = (prefix || '') + (belongs ? T().compareLE(s.val, s.pivotVal) : T().compareGT(s.val, s.pivotVal));
+    highlight(['6']);
+    sfxCompare(s.val);
+  } else if (s.t === 'swap') {
+    stats.swap++;
+    rangeLo = s.lo; rangeHi = s.hi;
+    curI = s.i; curJ = s.j;
+    swapA = s.i; swapB = s.j;
+    doSwap(s.i, s.j);
+    narration.innerHTML = T().swap(s.iv, s.jv);
+    highlight(['7']);
+    sfxSwap();
+  } else if (s.t === 'noswap') {
+    rangeLo = s.lo; rangeHi = s.hi;
+    curI = s.i; curJ = s.j;
+    narration.innerHTML = T().noswap();
+    highlight(['7']);
+  } else if (s.t === 'swapPivot') {
+    rangeLo = s.lo; rangeHi = s.hi;
+    swapA = s.pos; swapB = s.hi;
+    doSwap(s.pos, s.hi);
+    narration.innerHTML = T().pivotPlaced(cur[s.pos], s.pos);
+    highlight(['8']);
+    sfxPivot();
+  } else if (s.t === 'swapPivotSkipped') {
+    rangeLo = s.lo; rangeHi = s.hi;
+    narration.innerHTML = T().pivotSkipped();
+    highlight(['8']);
+  } else if (s.t === 'pivotPlaced') {
+    stats.partitions++;
+    locked[s.pos] = true;
+    pivotIdx = null;
+    narration.innerHTML = T().pivotPlaced(cur[s.pos], s.pos);
+    highlight(['8']);
+  } else if (s.t === 'trivial') {
+    locked[s.idx] = true;
+    narration.innerHTML = T().trivial(cur[s.idx]);
+    highlight(['1']);
+  } else if (s.t === 'done') {
+    rangeLo = null; rangeHi = null; curLo = null; curHi = null; curI = null; curJ = null; curPivot = null; pivotIdx = null;
+    if (s.variant === 'correct') {
+      sortedAll = true;
+      narration.innerHTML = T().done(stats.cmp, stats.swap, stats.partitions);
+      sfxDone();
+      award('sort');
+    } else if (s.variant === 'noplace') {
+      narration.innerHTML = T().doneNoplace;
+    } else if (s.variant === 'wrongcmp') {
+      narration.innerHTML = T().doneWrongcmp;
+    }
+    highlight([]);
+    stopPlay();
+  }
+  applyBallStates();
+  renderArray();
+  renderVars();
+  updateTeacher();
+  updateRangeBracket();
+  speak(narration.textContent);
+  updateStats();
+  return stepIdx < steps.length;
+}
+
+function doStep() {
+  if (stepIdx >= steps.length) return false;
+  const s = steps[stepIdx];
+  if (predictOn && s.t === 'compare' && !waitingPredict) {
+    waitingPredict = true;
+    cmpIdx = s.j;
+    rangeLo = s.lo; rangeHi = s.hi;
+    applyBallStates();
+    updateTeacher();
+    updateRangeBracket();
+    narration.innerHTML = T().predictQ(s.val, s.pivotVal) +
+      `<br><button id="pLeft">Left</button><button id="pRight" class="secondary">Right</button>`;
+    speak(narration.textContent);
+    document.getElementById('pLeft').onclick = () => answerPredict('left', s);
+    document.getElementById('pRight').onclick = () => answerPredict('right', s);
+    return true;
+  }
+  return execStep();
+}
+function answerPredict(choice, s) {
+  waitingPredict = false;
+  const correct = (choice === 'left') === (s.val <= s.pivotVal);
+  if (correct) { streak++; tone(780, .15, 'triangle', .12); }
+  else { streak = 0; tone(180, .25, 'sawtooth', .08); }
+  streakBadge.textContent = '🎯 Streak: ' + streak;
+  if (streak >= 5) award('predict');
+  const more = execStep(correct ? T().right : T().wrong);
+  if (playing) scheduleNext(more);
+}
+
+function scheduleNext(more) {
+  if (!more) { stopPlay(); return; }
+  const baseDelay = delay();
+  const speechP = lastSpeechPromise;
+  const start = Date.now();
+  if (voiceOn && speechP) {
+    speechP.then(() => {
+      if (!playing) return;
+      const remaining = Math.max(0, baseDelay - (Date.now() - start));
+      timer = setTimeout(playLoop, remaining);
+    });
+  } else {
+    timer = setTimeout(playLoop, baseDelay);
+  }
+}
+
+function playLoop() {
+  if (!playing) return;
+  const more = doStep();
+  if (waitingPredict) return;
+  scheduleNext(more);
+}
+function stopPlay() {
+  playing = false;
+  clearTimeout(timer);
+  playBtn.textContent = '▶ Play';
+}
+playBtn.onclick = () => {
+  if (playing) { stopPlay(); return; }
+  if (stepIdx >= steps.length) reset(false);
+  playing = true;
+  playBtn.textContent = '⏸ Pause';
+  playLoop();
+};
+document.getElementById('stepBtn').onclick = () => { if (!waitingPredict) { stopPlay(); doStep(); } };
+document.getElementById('predictBtn').onclick = function () {
+  predictOn = !predictOn;
+  this.textContent = '🎯 Predict: ' + (predictOn ? 'On' : 'Off');
+  this.classList.toggle('on', predictOn);
+  streakBadge.style.display = predictOn ? 'block' : 'none';
+};
+
+function reset(newOrder) {
+  stopPlay();
+  waitingPredict = false;
+  if (newOrder) values = values.map(() => Math.floor(Math.random() * 97) + 3);
+  stepIdx = 0;
+  stats = { cmp: 0, swap: 0, partitions: 0 };
+  cur = [...values];
+  locked = new Array(values.length).fill(false);
+  cmpIdx = null; swapA = null; swapB = null; pivotIdx = null;
+  rangeLo = null; rangeHi = null; sortedAll = false;
+  curLo = null; curHi = null; curI = null; curJ = null; curPivot = null;
+  updateStats();
+  passBadge.textContent = 'Pass 0';
+  narration.innerHTML = T().start;
+  highlight([]);
+  buildBalls();
+  computeSteps();
+  applyBallStates();
+  renderArray();
+  renderVars();
+  updateTeacher();
+  updateRangeBracket();
+}
+document.getElementById('shuffleBtn').onclick = () => { variant = 'correct'; reset(true); };
+document.getElementById('resetBtn').onclick = () => { variant = 'correct'; reset(false); };
+document.getElementById('loadBtn').onclick = () => {
+  const nums = document.getElementById('customInput').value
+    .split(/[\s,]+/).map(Number).filter(v => !isNaN(v)).slice(0, 12);
+  if (nums.length >= 2) { values = nums; variant = 'correct'; reset(false); }
+  else narration.innerHTML = T().minNums;
+};
+
+/* Experiments */
+function runExperiment(v) {
+  variant = v;
+  reset(false);
+  if (v !== 'correct') award('lab');
+  playing = true;
+  playBtn.textContent = '⏸ Pause';
+  playLoop();
+}
+document.getElementById('expCorrect').onclick = () => runExperiment('correct');
+document.getElementById('expNoplace').onclick = () => runExperiment('noplace');
+document.getElementById('expWrongcmp').onclick = () => runExperiment('wrongcmp');
+
+window.addEventListener('resize', () => {
+  const size = ballSize();
+  balls.forEach((b, i) => { if (b) placeBallLeft(b, i, size); });
+  updateRangeBracket();
+});
+
+reset(false);
+
+/* ================= QUIZ ================= */
+const quiz = [
+  { q: 'What is a "pivot" in Quick Sort?',
+    opts: ['A random value that gets discarded', 'A chosen value that everything else is partitioned around', 'The largest value in the array'],
+    ans: 1, why: 'Every other value gets compared to the pivot and pushed to its left (smaller) or right (larger) side.' },
+  { q: "After partitioning, what do we know about the pivot's final position?",
+    opts: ['It might move again later', "It's now in its correct, final sorted position — forever", 'It gets removed from the array'],
+    ans: 1, why: 'Unlike Merge Sort (where nothing is truly final until the last merge), Quick Sort locks in the pivot\'s spot immediately after each partition.' },
+  { q: "When does Quick Sort hit its O(n²) worst case (with a last-element pivot)?",
+    opts: ['On random, shuffled data', 'On already-sorted or reverse-sorted data', 'Only on arrays with duplicate values'],
+    ans: 1, why: 'Already-sorted data means the last element is always the largest (or smallest) remaining value, creating a maximally unbalanced partition every single time.' },
+];
+let qi = 0, quizCorrect = 0;
+function showQuiz() {
+  const item = quiz[qi];
+  document.getElementById('quizQ').innerHTML = `<strong>Q${qi + 1}/${quiz.length}:</strong> ${item.q}`;
+  const box = document.getElementById('quizOpts');
+  box.innerHTML = '';
+  document.getElementById('quizFeedback').textContent = '';
+  item.opts.forEach((o, i) => {
+    const b = document.createElement('button');
+    b.className = 'quiz-opt'; b.textContent = o;
+    b.onclick = () => {
+      box.querySelectorAll('button').forEach(x => x.disabled = true);
+      const ok = i === item.ans;
+      if (ok) quizCorrect++;
+      b.classList.add(ok ? 'right' : 'wrong');
+      if (!ok) box.children[item.ans].classList.add('right');
+      let tail;
+      if (qi < quiz.length - 1) tail = ' <a href="#" id="nextQ" style="color:var(--accent)">Next →</a>';
+      else {
+        tail = ` 🎉 Quiz done — ${quizCorrect}/${quiz.length} correct!`;
+        if (quizCorrect === quiz.length) award('quiz');
+        else tail += ' <a href="#" id="retryQ" style="color:var(--accent)">Try again</a>';
+      }
+      document.getElementById('quizFeedback').innerHTML =
+        (ok ? '✅ Correct! ' : '❌ Not quite. ') + item.why + tail;
+      const n = document.getElementById('nextQ');
+      if (n) n.onclick = e => { e.preventDefault(); qi++; showQuiz(); };
+      const r = document.getElementById('retryQ');
+      if (r) r.onclick = e => { e.preventDefault(); qi = 0; quizCorrect = 0; showQuiz(); };
+    };
+    box.appendChild(b);
+  });
+}
+showQuiz();
+
+/* ================= RACE ================= */
+const RN = 30;
+let raceTimer = null;
+function buildRaceBars(id, vals) {
+  const box = document.getElementById(id);
+  box.innerHTML = '';
+  vals.forEach(v => {
+    const b = document.createElement('div');
+    b.className = 'bar';
+    b.style.height = v + '%';
+    box.appendChild(b);
+  });
+  return [...box.children];
+}
+function quickOpsRace(vals) {
+  const a = [...vals], ops = [];
+  function qs(lo, hi) {
+    if (lo >= hi) return;
+    const pivot = a[hi];
+    let i = lo - 1;
+    for (let j = lo; j < hi; j++) {
+      ops.push({ t: 'c', i: j });
+      if (a[j] <= pivot) {
+        i++;
+        if (i !== j) {
+          [a[i], a[j]] = [a[j], a[i]];
+          ops.push({ t: 'w', i, v: a[i] });
+          ops.push({ t: 'w', i: j, v: a[j] });
+        }
+      }
+    }
+    [a[i + 1], a[hi]] = [a[hi], a[i + 1]];
+    ops.push({ t: 'w', i: i + 1, v: a[i + 1] });
+    ops.push({ t: 'w', i: hi, v: a[hi] });
+    qs(lo, i);
+    qs(i + 2, hi);
+  }
+  qs(0, a.length - 1);
+  return ops;
+}
+function mergeOpsRace(vals) {
+  const a = [...vals], ops = [];
+  function ms(lo, hi) {
+    if (hi - lo < 2) return;
+    const mid = (lo + hi) >> 1;
+    ms(lo, mid); ms(mid, hi);
+    const merged = [];
+    let i = lo, j = mid;
+    while (i < mid && j < hi) {
+      ops.push({ t: 'c', i });
+      merged.push(a[i] <= a[j] ? a[i++] : a[j++]);
+    }
+    while (i < mid) merged.push(a[i++]);
+    while (j < hi) merged.push(a[j++]);
+    merged.forEach((v, k) => { a[lo + k] = v; ops.push({ t: 'w', i: lo + k, v }); });
+  }
+  ms(0, a.length);
+  return ops;
+}
+function sortedAsc(n) {
+  return Array.from({ length: n }, (_, i) => Math.round(3 + (i * 94) / (n - 1)));
+}
+document.getElementById('raceBtn').onclick = () => {
+  clearInterval(raceTimer);
+  document.getElementById('raceResult').style.display = 'none';
+  document.getElementById('racerQ').classList.remove('finished');
+  document.getElementById('racerM').classList.remove('finished');
+  const vals = sortedAsc(RN);
+  const barsQ = buildRaceBars('barsQ', vals);
+  const barsM = buildRaceBars('barsM', vals);
+  const opsQ = quickOpsRace(vals), opsM = mergeOpsRace(vals);
+  let qi_ = 0, mi = 0, writesQ = 0, writesM = 0;
+  const apply = (ops, idx, bars) => {
+    const op = ops[idx];
+    bars.forEach(b => b.classList.remove('hot'));
+    if (op.t === 'w') bars[op.i].style.height = op.v + '%';
+    if (bars[op.i]) bars[op.i].classList.add('hot');
+    return op.t === 'w';
+  };
+  raceTimer = setInterval(() => {
+    // run Quick Sort much faster per-tick since it can be O(n^2) on this data (many more ops)
+    for (let k = 0; k < 6 && qi_ < opsQ.length; k++) {
+      if (apply(opsQ, qi_, barsQ)) writesQ++;
+      qi_++;
+    }
+    document.getElementById('opsQ').textContent = qi_;
+    document.getElementById('writesQ').textContent = writesQ;
+    if (qi_ >= opsQ.length) {
+      document.getElementById('racerQ').classList.add('finished');
+      barsQ.forEach(b => b.classList.remove('hot'));
+    }
+    if (mi < opsM.length) {
+      if (apply(opsM, mi, barsM)) writesM++;
+      mi++;
+      document.getElementById('opsM').textContent = mi;
+      document.getElementById('writesM').textContent = writesM;
+      if (mi >= opsM.length) {
+        document.getElementById('racerM').classList.add('finished');
+        barsM.forEach(b => b.classList.remove('hot'));
+      }
+    }
+    if (qi_ >= opsQ.length && mi >= opsM.length) {
+      clearInterval(raceTimer);
+      const r = document.getElementById('raceResult');
+      r.style.display = 'block';
+      r.innerHTML = `🏆 <strong>Merge Sort needed far fewer total steps</strong> on this already-sorted data — Quick Sort: ${qi_} operations, Merge Sort: ${mi} operations. With a last-element pivot, sorted input forces Quick Sort into its O(n²) worst case — the pivot is always the largest remaining value, so every partition only shrinks the problem by 1. Merge Sort never has a worst case beyond O(n log n), no matter the input. This is exactly why real-world Quick Sort implementations pick a RANDOM or median-of-three pivot instead.`;
+      sfxDone();
+      award('race');
+    }
+  }, 14);
+};
+
+/* ================= GUIDED TOUR ================= */
+const tourSteps = [
+  { sel: '#playBtn', title: '▶ Play / Pause', text: 'Starts the animation automatically. Press again to pause any time.' },
+  { sel: '#stepBtn', title: '⏭ Step', text: 'Moves one comparison at a time — watch values sort themselves around the purple pivot.' },
+  { sel: '#predictBtn', title: '🎯 Predict mode', text: 'Guess whether each value belongs left or right of the pivot. 5 in a row earns a badge!' },
+  { sel: '#speed', title: '🐢 Animation speed', text: 'Drag left for slow, right for fast.' },
+  { sel: '#soundBtn', title: '🔊 Sound effects', text: 'A distinct chime plays whenever a pivot is chosen or locked into place.' },
+  { sel: '#voiceBtn', title: '🗣 Voice narration', text: 'Reads every explanation aloud, with a speed dropdown next to it.' },
+  { sel: '#langSel', title: '🌐 Language', text: 'Switch narration to Tamil or Hindi.' },
+  { sel: '#customInput', title: '⌨️ Your own numbers', text: 'Sort your own list by typing numbers and pressing Load.' },
+  { sel: '#expNoplace', title: '🧪 Experiments', text: 'Run broken versions — skip placing the pivot, or compare against the wrong value — and see exactly why each step matters.' },
+  { sel: '#explainBtn', title: '🤖 AI Explainer', text: 'Pause any time for a deep explanation of exactly what just happened, using this run\'s real values.' },
+  { sel: '#arrayView', title: '🔢 Live array', text: 'The blue bracket above the stage shows the current [lo, hi] range being partitioned. Purple = pivot, green = locked in its final position.' },
+  { sel: '#code-py', title: '💻 Live code', text: 'Two functions: quick_sort (recursion) and partition (the actual rearranging). The exact running line lights up. Switch tabs for Python or Java.' },
+  { sel: '#quizOpts', title: '🧠 Quiz', text: 'Test yourself on why the pivot\'s position is final, and when Quick Sort hits its worst case.' },
+  { sel: '#raceBtn', title: '⚡ The Race', text: 'Quick Sort vs Merge Sort on ALREADY-SORTED data — see Quick Sort\'s O(n²) worst case in action.' },
+];
+let tourIdx = -1, tourEl = null;
+const tourOverlay = document.getElementById('tourOverlay');
+const tourTip = document.getElementById('tourTip');
+function tourShow(i) {
+  if (tourEl) tourEl.classList.remove('tour-target');
+  if (i >= tourSteps.length) { tourEnd(); return; }
+  tourIdx = i;
+  const st = tourSteps[i];
+  tourEl = document.querySelector(st.sel);
+  if (!tourEl) { tourShow(i + 1); return; }
+  tourOverlay.style.display = 'block';
+  tourEl.classList.add('tour-target');
+  tourEl.scrollIntoView({ block: 'center', behavior: 'instant' });
+  document.getElementById('tourTitle').textContent = st.title;
+  document.getElementById('tourText').textContent = st.text;
+  document.getElementById('tourCnt').textContent = (i + 1) + '/' + tourSteps.length;
+  document.getElementById('tourNext').textContent = i === tourSteps.length - 1 ? 'Finish ✓' : 'Next →';
+  const r = tourEl.getBoundingClientRect();
+  tourTip.style.display = 'block';
+  const tw = 320, th = tourTip.offsetHeight || 140;
+  let top = r.bottom + 12;
+  if (top + th > window.innerHeight - 10) top = Math.max(10, r.top - th - 12);
+  let left = Math.min(Math.max(10, r.left), window.innerWidth - tw - 10);
+  tourTip.style.top = top + 'px';
+  tourTip.style.left = left + 'px';
+}
+function tourEnd() {
+  if (tourEl) tourEl.classList.remove('tour-target');
+  tourEl = null; tourIdx = -1;
+  tourOverlay.style.display = 'none';
+  tourTip.style.display = 'none';
+  try { localStorage.setItem('mqs_toured', '1'); } catch (e) {}
+}
+document.getElementById('tourBtn').onclick = () => tourShow(0);
+document.getElementById('tourNext').onclick = () => tourShow(tourIdx + 1);
+document.getElementById('tourSkip').onclick = tourEnd;
+tourOverlay.onclick = tourEnd;
+try { if (!localStorage.getItem('mqs_toured')) setTimeout(() => tourShow(0), 800); } catch (e) {}
+
+/* ================= AI EXPLAINER ================= */
+const aiOverlay = document.getElementById('aiOverlay');
+const aiPanel = document.getElementById('aiPanel');
+const aiBody = document.getElementById('aiBody');
+const aiChips = document.getElementById('aiChips');
+
+function explainForStep() {
+  const s = steps[stepIdx - 1];
+  if (!s) return `<p>Nothing has run yet. Press <strong>Step</strong> or <strong>Play</strong> once, then click this button again.</p>`;
+  let html = '';
+  if (s.t === 'enterRange') {
+    html = `
+      <p>Partitioning range <code>[${s.lo}, ${s.hi}]</code>. The pivot is the LAST value in this range: <code>${s.pivotVal}</code>.</p>
+      <h5>Why the last element?</h5>
+      <p>It's the simplest pivot choice — no extra work to find it. The trade-off: on already-sorted data it produces the worst possible partitions (see the Race below).</p>`;
+  } else if (s.t === 'compare') {
+    html = `<p>Checking whether <code>${s.val}</code> (at index ${s.j}) belongs in the "smaller than pivot" region — comparing it against pivot <code>${s.pivotVal}</code>.</p>`;
+  } else if (s.t === 'swap' || s.t === 'noswap') {
+    html = `<p>Index <code>i</code> marks the boundary of the "confirmed smaller than pivot" region. When a qualifying value is found, it's swapped into position <code>i</code>, growing that region by one.</p>`;
+  } else if (s.t === 'swapPivot' || s.t === 'pivotPlaced') {
+    html = `
+      <p>The pivot is swapped from the end of the range into position <code>${s.pos}</code> — everything to its left is ≤ pivot, everything to its right is > pivot.</p>
+      <h5>Why this position is final</h5>
+      <p>Every future partition call only ever touches ranges strictly to the left (<code>[lo, ${s.pos}-1]</code>) or strictly to the right (<code>[${s.pos}+1, hi]</code>) of this pivot — so this index is never revisited.</p>`;
+  } else if (s.t === 'trivial') {
+    html = `<p>A range with just one element (index ${s.idx}) needs no work — a single value is trivially sorted.</p>`;
+  } else if (s.t === 'done') {
+    if (s.variant === 'correct') {
+      html = `
+        <p>🎉 Sorted: <strong>${stats.cmp}</strong> comparisons, <strong>${stats.swap}</strong> swaps, across <strong>${stats.partitions}</strong> partition step(s).</p>
+        <h5>Average vs worst case</h5>
+        <p>On average, each partition splits the range roughly in half, giving O(n log n) — similar to Merge Sort but done in-place. On unlucky data, a partition can split off just 1 element at a time, degrading to O(n²).</p>`;
+    } else if (s.variant === 'noplace') {
+      html = `<p>This was the <strong>"Skip placing the pivot"</strong> experiment. We never swapped the pivot into its correct boundary position, so it's still sitting wherever it started — the final array isn't fully sorted.</p>`;
+    } else if (s.variant === 'wrongcmp') {
+      html = `<p>This was the <strong>"Compare with the wrong value"</strong> experiment. Comparisons used a different reference value than the one actually swapped into the pivot slot — the partition boundary doesn't match where the real pivot ended up, producing a wrong result.</p>`;
+    }
+  }
+  return html || `<p>Step through the animation and I'll explain exactly what happened.</p>`;
+}
+
+const AI_FAQ = {
+  practice: {
+    label: 'Why is Quick Sort usually faster in practice than Merge Sort?',
+    body: `<h5>In-place, better cache behavior</h5>
+      <p>Quick Sort rearranges values within the original array — no extra array allocation, unlike Merge Sort's O(n) temporary arrays. Working within a smaller, contiguous memory region also plays nicer with CPU caches. Same average Big-O, smaller constant factors.</p>`,
+  },
+  worst: {
+    label: 'Why is the worst case O(n²)?',
+    body: `<h5>Maximally unbalanced partitions</h5>
+      <p>If the pivot is always the smallest or largest remaining value, each partition only removes ONE element from the problem instead of roughly half. That turns log n levels of recursion into n levels — n + (n-1) + (n-2) + ... = O(n²) total work.</p>`,
+  },
+  stable: {
+    label: 'Is Quick Sort stable?',
+    body: `<h5>No, not in this standard form</h5>
+      <p>Swapping elements across the partition boundary can change the relative order of equal values. Merge Sort (with a ≤ comparison) IS stable — that's one reason many language standard libraries default to a merge-sort-based algorithm for sorting objects.</p>`,
+  },
+  betterpivot: {
+    label: 'How do real implementations avoid the worst case?',
+    body: `<h5>Smarter pivot choices</h5>
+      <p>Picking a RANDOM element, or the median of the first/middle/last three elements, makes the "always unlucky" worst case extremely unlikely on any real input — including already-sorted data. Some libraries (introsort) also switch to Heap Sort if recursion gets suspiciously deep, guaranteeing O(n log n) no matter what.</p>`,
+  },
+};
+
+function renderAiChips() {
+  aiChips.innerHTML = '';
+  Object.entries(AI_FAQ).forEach(([key, item]) => {
+    const chip = document.createElement('button');
+    chip.className = 'ai-chip';
+    chip.textContent = '❓ ' + item.label;
+    chip.onclick = () => {
+      aiBody.innerHTML += `<hr style="border-color:var(--border); margin:16px 0;">` + item.body;
+      aiPanel.scrollTop = aiPanel.scrollHeight;
+    };
+    aiChips.appendChild(chip);
+  });
+}
+
+function openAiExplainer() {
+  stopPlay();
+  aiBody.innerHTML = explainForStep();
+  renderAiChips();
+  aiOverlay.style.display = 'block';
+  aiPanel.style.display = 'block';
+}
+function closeAiExplainer() {
+  aiOverlay.style.display = 'none';
+  aiPanel.style.display = 'none';
+}
+document.getElementById('explainBtn').onclick = openAiExplainer;
+document.getElementById('aiClose').onclick = closeAiExplainer;
+aiOverlay.onclick = closeAiExplainer;
+
+/* ===== Classroom mode: hide everything except the animation ===== */
+(function () {
+  var btn = document.getElementById('classBtn');
+  if (!btn) return;
+  function apply(on) {
+    document.body.classList.toggle('classroom', on);
+    btn.classList.toggle('on', on);
+    btn.textContent = on ? '\u2715 Exit classroom' : '\U0001F3A5 Classroom';
+    try { localStorage.setItem('mac_classroom', on ? '1' : '0'); } catch (e) {}
+    window.dispatchEvent(new Event('resize'));
+  }
+  btn.onclick = function () { apply(!document.body.classList.contains('classroom')); };
+  var want = false;
+  try {
+    want = localStorage.getItem('mac_classroom') === '1' ||
+           /[?&]classroom=1/.test(location.search);
+  } catch (e) { want = /[?&]classroom=1/.test(location.search); }
+  if (want) apply(true);
+})();
+</script>
+<script>
+/* ===== Offline support (works when served over http/https) ===== */
+if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
+  window.addEventListener('load', function () {
+    navigator.serviceWorker.register('sw.js').catch(function () { /* offline mode simply unavailable */ });
+  });
+}
+</script>
+<script src="firebase-config.js"></script>
+<script src="mindaicode-auth.js"></script>
+</body>
+</html>

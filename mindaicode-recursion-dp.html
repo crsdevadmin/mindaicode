@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MindAICode — Recursion &amp; Dynamic Programming</title>
+<style>
+  :root {
+    --bg:#0d1117; --panel:#161b22; --panel2:#1c2333; --accent:#58a6ff; --accent2:#f78166;
+    --purple:#d2a8ff; --green:#3fb950; --yellow:#d29922; --red:#f85149;
+    --text:#e6edf3; --muted:#8b949e; --border:#30363d;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family:'Segoe UI', system-ui, sans-serif; background:var(--bg); color:var(--text); min-height:100vh; }
+  header {
+    display:flex; align-items:center; justify-content:space-between;
+    padding:14px 28px; background:var(--panel); border-bottom:1px solid var(--border); flex-wrap:wrap; gap:8px;
+  }
+  .logo { font-size:22px; font-weight:800; }
+  .logo span { color:var(--accent); }
+  .tagline { display:flex; gap:14px; align-items:center; flex-wrap:wrap; font-size:13px; }
+  .tagline a { text-decoration:none; color:var(--muted); }
+  .container { max-width:1080px; margin:0 auto; padding:24px 20px 60px; }
+
+  .card { background:var(--panel); border:1px solid var(--border); border-radius:12px; padding:20px; margin-bottom:18px; }
+  h1 { font-size:24px; margin-bottom:6px; }
+  h2.secH { font-size:19px; margin-bottom:4px; }
+  h3 { font-size:16px; margin-bottom:10px; }
+  .subtitle { color:var(--muted); font-size:14px; margin-bottom:16px; }
+
+  .intro {
+    background:linear-gradient(135deg, rgba(88,166,255,.10), rgba(63,185,80,.08));
+    border:1px solid var(--border); border-radius:12px; padding:22px 24px; margin-bottom:18px;
+  }
+  .intro h1 { font-size:24px; margin-bottom:8px; }
+  .intro p { font-size:15px; line-height:1.7; margin-bottom:10px; }
+
+  .controls { display:flex; flex-wrap:wrap; gap:10px; align-items:center; margin-bottom:14px; }
+  button {
+    background:var(--accent); color:#0d1117; border:none; padding:9px 16px;
+    border-radius:8px; font-size:13.5px; font-weight:700; cursor:pointer; font-family:inherit;
+    transition:filter .15s, transform .1s;
+  }
+  button:hover { filter:brightness(1.14); }
+  button:active { transform:scale(.97); }
+  button.secondary { background:var(--panel2); color:var(--text); border:1px solid var(--border); }
+  button:disabled { opacity:.4; cursor:not-allowed; }
+  input[type=number] { background:var(--panel2); border:1px solid var(--border); color:var(--text);
+    padding:8px 12px; border-radius:8px; font-size:13.5px; font-family:inherit; width:80px; }
+  label.lbl { font-size:12.5px; color:var(--muted); font-weight:700; }
+
+  .badgeLbl {
+    display:inline-block; font-size:11px; font-weight:700; padding:3px 10px; border-radius:10px;
+    background:rgba(210,168,255,.12); color:var(--purple); border:1px solid rgba(210,168,255,.35); margin-left:8px;
+  }
+  .badgeLbl.on { background:rgba(63,185,80,.14); color:var(--green); border-color:rgba(63,185,80,.4); }
+
+  .fibWrap { display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:12px; }
+  @media (max-width:820px) { .fibWrap { grid-template-columns:1fr; } }
+  .treeBox { background:var(--bg); border:1px dashed var(--border); border-radius:10px; padding:8px; }
+  .treeBox svg { width:100%; height:auto; display:block; }
+  .treeHead { font-size:13px; color:var(--muted); margin-bottom:6px; }
+  .treeHead b { color:var(--text); }
+  .edge { stroke:var(--border); stroke-width:1.5; }
+  .fnode circle { fill:var(--panel2); stroke:var(--border); stroke-width:1.5; }
+  .fnode text { fill:var(--text); font-size:10.5px; text-anchor:middle; dominant-baseline:central; font-family:Consolas, monospace; }
+  .fnode.cached circle { fill:rgba(63,185,80,.28); stroke:var(--green); }
+
+  .statRow { display:flex; gap:18px; flex-wrap:wrap; margin-bottom:10px; font-size:13.5px; }
+  .statBox { background:var(--panel2); border:1px solid var(--border); border-radius:8px; padding:8px 14px; }
+  .statBox b { font-size:17px; display:block; font-variant-numeric:tabular-nums; }
+  .statBox.naive b { color:var(--accent2); }
+  .statBox.memo b { color:var(--green); }
+
+  .note { font-size:13.5px; color:var(--muted); min-height:22px; margin-bottom:10px; line-height:1.55; }
+  .note b { color:var(--text); }
+
+  table.dp { border-collapse:collapse; font-size:12px; font-family:Consolas, monospace; }
+  table.dp th, table.dp td { border:1px solid var(--border); padding:5px 8px; text-align:center; min-width:26px; }
+  table.dp th { background:var(--panel2); color:var(--muted); font-weight:700; }
+  table.dp td { background:var(--bg); transition:all .2s; }
+  table.dp td.final { background:rgba(63,185,80,.28); color:var(--green); font-weight:700; }
+  table.dp td.path { background:rgba(210,153,34,.22); }
+  .dpScroll { overflow-x:auto; margin-bottom:12px; }
+
+  table.cmp { width:100%; border-collapse:collapse; font-size:13.5px; }
+  table.cmp th, table.cmp td { text-align:left; padding:9px 10px; border-bottom:1px solid var(--border); }
+  table.cmp th { color:var(--muted); font-size:12px; text-transform:uppercase; letter-spacing:.4px; }
+  .hl { color:var(--green); font-weight:700; }
+  .bad { color:var(--accent2); font-weight:700; }
+
+  @media (max-width:640px) {
+    header { padding:12px 16px; } .logo { font-size:19px; }
+    .container { padding:16px 14px 40px; }
+    .card, .intro { padding:16px; }
+    h1, .intro h1 { font-size:20px; }
+    .controls { flex-direction:column; align-items:stretch; }
+    button, input[type=number] { width:100%; }
+  }
+</style>
+<script>if(location.protocol.startsWith("http")){var m=document.createElement("link");m.rel="manifest";m.href="manifest.json";document.head.appendChild(m);}</script>
+<meta name="theme-color" content="#0d1117">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+</head>
+<body>
+
+<header>
+  <a href="mindaicode-home.html" style="text-decoration:none; color:inherit;">
+    <div class="logo">🧠 MindAI<span>Code</span></div>
+  </a>
+  <div class="tagline">
+    <a href="mindaicode-course-path.html" style="color:var(--purple); font-weight:600;">🗺️ Course path</a>
+    <a href="mindaicode-home.html">🏠 All algorithms</a>
+  </div>
+</header>
+
+<div class="container">
+
+  <div class="intro">
+    <h1>🌀 Recursion &amp; Dynamic Programming</h1>
+    <p>Plain recursion can recompute the exact same sub-problem thousands of times without noticing. <strong>Dynamic programming</strong> is just recursion with a notebook — remember an answer once, and reuse it instead of recalculating it. That single idea turns exponential blowups into fast, linear-or-better solutions.</p>
+    <p style="margin-bottom:0; color:var(--muted); font-size:14px;">Module 7 · Three classic examples below: Fibonacci (the simplest case), 0/1 Knapsack, and Longest Common Subsequence.</p>
+  </div>
+
+  <!-- ================= FIBONACCI ================= -->
+  <div class="card">
+    <h2 class="secH">🌀 Fibonacci: Naive vs Memoized <span id="fibBadge" class="badgeLbl">not earned</span></h2>
+    <p class="subtitle">Naive recursion recomputes fib(k) from scratch every single time it's needed. Memoization computes it once, writes it in a notebook, and just looks it up next time.</p>
+    <div class="controls">
+      <label class="lbl" for="fibN">n</label>
+      <input type="number" id="fibN" min="1" max="12" value="6">
+      <button id="fibRunBtn">▶ Compare</button>
+    </div>
+    <div class="statRow">
+      <div class="statBox naive">Naive calls<b id="naiveCalls">–</b></div>
+      <div class="statBox memo">Memoized calls<b id="memoCalls">–</b></div>
+      <div class="statBox">fib(n)<b id="fibValue">–</b></div>
+    </div>
+    <div class="fibWrap">
+      <div>
+        <div class="treeHead">🔴 Naive — <b>every</b> call re-expands, even repeats</div>
+        <div class="treeBox"><svg id="naiveSvg" viewBox="0 0 600 260"></svg></div>
+      </div>
+      <div>
+        <div class="treeHead">🟢 Memoized — repeats short-circuit instantly (highlighted)</div>
+        <div class="treeBox"><svg id="memoSvg" viewBox="0 0 600 260"></svg></div>
+      </div>
+    </div>
+    <div class="note" id="fibNote">Pick an n (2–12) and press Compare.</div>
+
+    <div style="overflow-x:auto; margin-top:12px;">
+      <table class="cmp">
+        <thead><tr><th>n</th><th>Naive calls (exponential)</th><th>Memoized calls (linear: 2n−1)</th></tr></thead>
+        <tbody id="fibScaleBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ================= KNAPSACK ================= -->
+  <div class="card">
+    <h2 class="secH">🎒 0/1 Knapsack <span id="knapBadge" class="badgeLbl">not earned</span></h2>
+    <p class="subtitle">4 items, a bag that holds at most <b>5 kg</b>. Each item is taken whole or not at all — pick the combination worth the most.</p>
+    <div id="knapItems" style="font-size:13px; color:var(--muted); margin-bottom:10px;"></div>
+    <div class="controls">
+      <button id="knapBuildBtn">▶ Build DP table</button>
+    </div>
+    <div class="dpScroll"><table class="dp" id="knapTable"></table></div>
+    <div class="note" id="knapNote">Press Build to fill the table row by row.</div>
+
+    <div class="tabs" style="margin-top:6px;">
+      <div class="code" style="font-family:'Cascadia Code', Consolas, monospace; font-size:12.5px; line-height:1.55; background:var(--panel2); border-radius:10px; padding:14px;">
+<span class="cm" style="color:#6e7681;"># dp[i][c] = best value using the first i items with capacity c</span><br>
+<span style="color:#ff7b72;">for</span> i in range(1, n+1):<br>
+&nbsp;&nbsp;<span style="color:#ff7b72;">for</span> c in range(capacity+1):<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#ff7b72;">if</span> weight[i-1] &gt; c:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;dp[i][c] = dp[i-1][c]&nbsp;&nbsp;<span class="cm" style="color:#6e7681;"># item doesn't fit, skip it</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#ff7b72;">else</span>:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;dp[i][c] = max(dp[i-1][c], dp[i-1][c-weight[i-1]] + value[i-1])
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= LCS ================= -->
+  <div class="card">
+    <h2 class="secH">🔤 Longest Common Subsequence <span id="lcsBadge" class="badgeLbl">not earned</span></h2>
+    <p class="subtitle">Find the longest sequence of characters appearing in both strings, in the same order — not necessarily touching.</p>
+    <div style="font-size:13px; color:var(--muted); margin-bottom:10px;">String A: <b style="color:var(--text); font-family:Consolas, monospace;">ABCBDAB</b> &nbsp;·&nbsp; String B: <b style="color:var(--text); font-family:Consolas, monospace;">BDCABA</b></div>
+    <div class="controls">
+      <button id="lcsBuildBtn">▶ Build DP table</button>
+    </div>
+    <div class="dpScroll"><table class="dp" id="lcsTable"></table></div>
+    <div class="note" id="lcsNote">Press Build to fill the table and reveal the longest common subsequence.</div>
+  </div>
+
+  <div class="card">
+    <h3>📈 Same idea, different problem</h3>
+    <div style="overflow-x:auto;">
+      <table class="cmp">
+        <thead><tr><th>Problem</th><th>DP table shape</th><th>Time complexity</th></tr></thead>
+        <tbody>
+          <tr><td>Fibonacci (memoized)</td><td>1D, size n</td><td class="num hl">O(n)</td></tr>
+          <tr><td>0/1 Knapsack</td><td>2D, items × capacity</td><td class="num hl">O(n·W)</td></tr>
+          <tr><td>Longest Common Subsequence</td><td>2D, len(A) × len(B)</td><td class="num hl">O(m·n)</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p style="font-size:13.5px; color:var(--muted); margin-top:12px; line-height:1.65;">
+      Every DP solution follows the same recipe: define what a "sub-problem" means, write a rule for combining smaller sub-problems into bigger ones, then fill a table (or a memo) so no sub-problem is ever solved twice.
+    </p>
+  </div>
+
+  <div class="card">
+    <h3>🧠 Quick check</h3>
+    <div id="quizQ" style="font-size:15px; margin-bottom:12px;"></div>
+    <div id="quizOpts"></div>
+    <div id="quizFb" style="font-size:13.5px; margin-top:10px; color:var(--muted); min-height:20px; line-height:1.6;"></div>
+  </div>
+
+</div>
+
+<script>
+/* ================= FIBONACCI ================= */
+function buildFibTree(n, memo) {
+  const node = { n, cached:false, children:[] };
+  if (memo && (n in memo)) { node.cached = true; node.value = memo[n]; return node; }
+  if (n <= 1) { node.value = n; if (memo) memo[n] = n; return node; }
+  const left = buildFibTree(n - 1, memo);
+  const right = buildFibTree(n - 2, memo);
+  node.value = left.value + right.value;
+  node.children = [left, right];
+  if (memo) memo[n] = node.value;
+  return node;
+}
+function treeSize(node) { return 1 + node.children.reduce((s, c) => s + treeSize(c), 0); }
+function fibIterative(n) { let a = 0, b = 1; for (let i = 0; i < n; i++) { const t = a + b; a = b; b = t; } return a; }
+
+function layoutFibTree(root) {
+  const positions = new Map();
+  let x = 0;
+  let maxDepth = 0;
+  function assign(node, depth) {
+    maxDepth = Math.max(maxDepth, depth);
+    if (node.children.length === 0) {
+      positions.set(node, { x: x * 40 + 25, y: depth * 40 + 20 });
+      x++;
+      return;
+    }
+    node.children.forEach(c => assign(c, depth + 1));
+    const xs = node.children.map(c => positions.get(c).x);
+    positions.set(node, { x: (xs[0] + xs[xs.length - 1]) / 2, y: depth * 40 + 20 });
+  }
+  assign(root, 0);
+  return { positions, width: Math.max(600, x * 40 + 50), height: maxDepth * 40 + 50 };
+}
+function renderFibTree(svgId, root) {
+  const svg = document.getElementById(svgId);
+  const { positions, width, height } = layoutFibTree(root);
+  svg.setAttribute('viewBox', `0 0 ${width} ${height}`);
+  let html = '';
+  function drawEdges(node) {
+    const p = positions.get(node);
+    node.children.forEach(c => { const cp = positions.get(c); html += `<line class="edge" x1="${p.x}" y1="${p.y}" x2="${cp.x}" y2="${cp.y}"></line>`; drawEdges(c); });
+  }
+  drawEdges(root);
+  function drawNodes(node) {
+    const p = positions.get(node);
+    html += `<g class="fnode${node.cached ? ' cached' : ''}"><circle cx="${p.x}" cy="${p.y}" r="13"></circle><text x="${p.x}" y="${p.y}">${node.n}</text></g>`;
+    node.children.forEach(drawNodes);
+  }
+  drawNodes(root);
+  svg.innerHTML = html;
+}
+function runFibComparison() {
+  const n = Math.max(1, Math.min(12, parseInt(document.getElementById('fibN').value, 10) || 1));
+  document.getElementById('fibN').value = n;
+  const naiveTree = buildFibTree(n, null);
+  const memoTree = buildFibTree(n, {});
+  const naiveCount = treeSize(naiveTree);
+  const memoCount = treeSize(memoTree);
+  document.getElementById('naiveCalls').textContent = naiveCount;
+  document.getElementById('memoCalls').textContent = memoCount;
+  document.getElementById('fibValue').textContent = naiveTree.value;
+  renderFibTree('naiveSvg', naiveTree);
+  renderFibTree('memoSvg', memoTree);
+  const ratio = (naiveCount / memoCount).toFixed(1);
+  document.getElementById('fibNote').innerHTML =
+    `For n=${n}: naive makes <b>${naiveCount}</b> calls, memoized makes only <b>${memoCount}</b> — <b>${ratio}× fewer</b>. The green nodes in the memoized tree are repeats that got answered instantly from the notebook instead of being recomputed.`;
+  try { localStorage.setItem('mrdp_badge_fib', '1'); } catch (e) {}
+  updateBadgeLabels();
+}
+document.getElementById('fibRunBtn').onclick = runFibComparison;
+
+function renderFibScale() {
+  const body = document.getElementById('fibScaleBody');
+  body.innerHTML = '';
+  [10, 20, 30, 40].forEach(n => {
+    const naive = 2 * fibIterative(n + 1) - 1;
+    const memo = 2 * n - 1;
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td>${n}</td><td class="num bad">${naive.toLocaleString()}</td><td class="num hl">${memo.toLocaleString()}</td>`;
+    body.appendChild(tr);
+  });
+}
+
+/* ================= KNAPSACK ================= */
+const KNAP_ITEMS = [ { w:2, v:3 }, { w:3, v:4 }, { w:4, v:5 }, { w:5, v:6 } ];
+const KNAP_CAP = 5;
+document.getElementById('knapItems').innerHTML =
+  KNAP_ITEMS.map((it, i) => `Item ${i + 1}: weight ${it.w}, value ${it.v}`).join(' &nbsp;·&nbsp; ');
+
+function buildKnapsackDP(items, capacity) {
+  const n = items.length;
+  const dp = Array.from({ length: n + 1 }, () => new Array(capacity + 1).fill(0));
+  for (let i = 1; i <= n; i++) {
+    for (let c = 0; c <= capacity; c++) {
+      if (items[i - 1].w > c) dp[i][c] = dp[i - 1][c];
+      else dp[i][c] = Math.max(dp[i - 1][c], dp[i - 1][c - items[i - 1].w] + items[i - 1].v);
+    }
+  }
+  return dp;
+}
+function knapsackChosen(dp, items, capacity) {
+  const chosen = [];
+  let i = items.length, c = capacity;
+  while (i > 0) {
+    if (dp[i][c] !== dp[i - 1][c]) { chosen.unshift(i - 1); c -= items[i - 1].w; }
+    i--;
+  }
+  return chosen;
+}
+let knapDpCache = null;
+function renderKnapsackTable() {
+  const dp = buildKnapsackDP(KNAP_ITEMS, KNAP_CAP);
+  knapDpCache = dp;
+  const chosen = knapsackChosen(dp, KNAP_ITEMS, KNAP_CAP);
+  const table = document.getElementById('knapTable');
+  let html = '<tr><th>items \\ cap</th>' + Array.from({ length: KNAP_CAP + 1 }, (_, c) => `<th>${c}</th>`).join('') + '</tr>';
+  for (let i = 0; i <= KNAP_ITEMS.length; i++) {
+    html += `<tr><th>${i === 0 ? 'none' : 'i≤' + i}</th>`;
+    for (let c = 0; c <= KNAP_CAP; c++) {
+      const isFinal = i === KNAP_ITEMS.length && c === KNAP_CAP;
+      html += `<td class="${isFinal ? 'final' : ''}">${dp[i][c]}</td>`;
+    }
+    html += '</tr>';
+  }
+  table.innerHTML = html;
+  document.getElementById('knapNote').innerHTML =
+    `Best value with capacity ${KNAP_CAP}: <b>${dp[KNAP_ITEMS.length][KNAP_CAP]}</b>, achieved by taking item(s) <b>${chosen.map(i => i + 1).join(', ')}</b> (total weight ${chosen.reduce((s, i) => s + KNAP_ITEMS[i].w, 0)}).`;
+  try { localStorage.setItem('mrdp_badge_knapsack', '1'); } catch (e) {}
+  updateBadgeLabels();
+}
+document.getElementById('knapBuildBtn').onclick = renderKnapsackTable;
+
+/* ================= LCS ================= */
+const LCS_A = 'ABCBDAB', LCS_B = 'BDCABA';
+function buildLcsDP(a, b) {
+  const dp = Array.from({ length: a.length + 1 }, () => new Array(b.length + 1).fill(0));
+  for (let i = 1; i <= a.length; i++) {
+    for (let j = 1; j <= b.length; j++) {
+      if (a[i - 1] === b[j - 1]) dp[i][j] = dp[i - 1][j - 1] + 1;
+      else dp[i][j] = Math.max(dp[i - 1][j], dp[i][j - 1]);
+    }
+  }
+  return dp;
+}
+function lcsReconstruct(dp, a, b) {
+  let i = a.length, j = b.length, out = '';
+  while (i > 0 && j > 0) {
+    if (a[i - 1] === b[j - 1]) { out = a[i - 1] + out; i--; j--; }
+    else if (dp[i - 1][j] >= dp[i][j - 1]) i--;
+    else j--;
+  }
+  return out;
+}
+function renderLcsTable() {
+  const dp = buildLcsDP(LCS_A, LCS_B);
+  const subseq = lcsReconstruct(dp, LCS_A, LCS_B);
+  const table = document.getElementById('lcsTable');
+  let html = '<tr><th></th><th>∅</th>' + [...LCS_B].map(ch => `<th>${ch}</th>`).join('') + '</tr>';
+  for (let i = 0; i <= LCS_A.length; i++) {
+    html += `<tr><th>${i === 0 ? '∅' : LCS_A[i - 1]}</th>`;
+    for (let j = 0; j <= LCS_B.length; j++) {
+      const isFinal = i === LCS_A.length && j === LCS_B.length;
+      html += `<td class="${isFinal ? 'final' : ''}">${dp[i][j]}</td>`;
+    }
+    html += '</tr>';
+  }
+  table.innerHTML = html;
+  document.getElementById('lcsNote').innerHTML =
+    `Longest common subsequence length: <b>${dp[LCS_A.length][LCS_B.length]}</b> — one valid answer is <b>"${subseq}"</b>.`;
+  try { localStorage.setItem('mrdp_badge_lcs', '1'); } catch (e) {}
+  updateBadgeLabels();
+}
+document.getElementById('lcsBuildBtn').onclick = renderLcsTable;
+
+/* ================= BADGES ================= */
+function readFlag(key) { try { return localStorage.getItem(key) === '1'; } catch (e) { return false; } }
+function setFlag(key) { try { localStorage.setItem(key, '1'); } catch (e) {} }
+function updateBadgeLabels() {
+  const map = { fibBadge: 'mrdp_badge_fib', knapBadge: 'mrdp_badge_knapsack', lcsBadge: 'mrdp_badge_lcs' };
+  Object.entries(map).forEach(([elId, key]) => {
+    const el = document.getElementById(elId);
+    const on = readFlag(key);
+    el.textContent = on ? 'earned ✓' : 'not earned';
+    el.classList.toggle('on', on);
+  });
+}
+
+/* ================= QUIZ ================= */
+const quiz = [
+  { q:'Why is naive recursive Fibonacci so slow for larger n?',
+    opts:['JavaScript is a slow language','It recomputes the exact same sub-problems (like fib(3)) over and over again','Recursion always doubles in speed automatically'],
+    ans:1, why:'Both branches of the recursion tree end up asking for the same smaller Fibonacci values repeatedly — fib(3) alone gets recomputed many times inside a naive call for fib(10). That repeated work is exactly what memoization eliminates.' },
+  { q:'What does memoization actually do?',
+    opts:['Deletes function calls that look unnecessary','Stores the result of each sub-problem the first time it\'s computed, and reuses it if asked again','Runs the function on a faster CPU core'],
+    ans:1, why:'Memoization is a cache keyed by the sub-problem\'s input. The first time fib(5) is requested it gets computed and stored; every later request for fib(5) just reads the stored answer.' },
+  { q:'In the 0/1 Knapsack DP table, what does dp[i][c] represent?',
+    opts:['The weight of item i','The best total value achievable using the first i items with capacity c','The number of items still available'],
+    ans:1, why:'Each cell answers a smaller version of the same question: "with only these first i items, and this much capacity, what\'s the most value I can pack in?" The final answer is just the bottom-right cell.' },
+  { q:'Longest Common Subsequence does NOT require the matching characters to be:',
+    opts:['In the same relative order','Touching / consecutive in the original strings','The same letter case'],
+    ans:1, why:'A subsequence can skip characters — it just can\'t reorder them. That\'s the key difference from a "substring," which does have to be contiguous.' },
+  { q:'What is the key difference between top-down memoization and bottom-up tabulation?',
+    opts:['Memoization is recursive and fills the cache on demand; tabulation is iterative and fills the whole table in order','They always produce different final answers','Tabulation cannot be used for Knapsack or LCS'],
+    ans:0, why:'Both approaches avoid recomputation, but memoization starts from the big question and recurses down, caching as it goes, while tabulation starts from the smallest sub-problems and iteratively builds up to the final answer — which is exactly how the Knapsack and LCS tables above were filled.' },
+];
+let qi = 0, qCorrect = 0;
+function showQuiz() {
+  const item = quiz[qi];
+  document.getElementById('quizQ').innerHTML = `<strong>Q${qi + 1}/${quiz.length}:</strong> ${item.q}`;
+  const box = document.getElementById('quizOpts');
+  box.innerHTML = '';
+  document.getElementById('quizFb').textContent = '';
+  item.opts.forEach((o, i) => {
+    const b = document.createElement('button');
+    b.className = 'secondary';
+    b.style.cssText = 'display:block; width:100%; text-align:left; margin-bottom:8px; font-weight:500;';
+    b.textContent = o;
+    b.onclick = () => {
+      box.querySelectorAll('button').forEach(x => x.disabled = true);
+      const ok = i === item.ans;
+      if (ok) qCorrect++;
+      b.style.borderColor = ok ? 'var(--green)' : 'var(--red)';
+      b.style.background = ok ? 'rgba(63,185,80,.15)' : 'rgba(248,81,73,.15)';
+      if (!ok) {
+        const right = box.children[item.ans];
+        right.style.borderColor = 'var(--green)';
+        right.style.background = 'rgba(63,185,80,.15)';
+      }
+      let tail = '';
+      if (qi < quiz.length - 1) tail = ' <a href="#" id="nq" style="color:var(--accent)">Next →</a>';
+      else {
+        tail = ` 🎉 Done — ${qCorrect}/${quiz.length} correct.` +
+          (qCorrect < quiz.length ? ' <a href="#" id="rq" style="color:var(--accent)">Try again</a>' : '');
+        if (qCorrect === quiz.length) { setFlag('mrdp_badge_quiz'); updateBadgeLabels(); }
+      }
+      document.getElementById('quizFb').innerHTML = (ok ? '✅ Correct! ' : '❌ Not quite. ') + item.why + tail;
+      const nq = document.getElementById('nq');
+      if (nq) nq.onclick = e => { e.preventDefault(); qi++; showQuiz(); };
+      const rq = document.getElementById('rq');
+      if (rq) rq.onclick = e => { e.preventDefault(); qi = 0; qCorrect = 0; showQuiz(); };
+    };
+    box.appendChild(b);
+  });
+}
+
+renderFibScale();
+runFibComparison();
+updateBadgeLabels();
+showQuiz();
+</script>
+<script>
+/* ===== Offline support (works when served over http/https) ===== */
+if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
+  window.addEventListener('load', function () {
+    navigator.serviceWorker.register('sw.js').catch(function () { /* offline mode simply unavailable */ });
+  });
+}
+</script>
+<script src="firebase-config.js"></script>
+<script src="mindaicode-auth.js"></script>
+</body>
+</html>

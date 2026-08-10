@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MindAICode — What "Stable Sorting" Actually Means</title>
+<style>
+  :root {
+    --bg:#0d1117; --panel:#161b22; --panel2:#1c2333; --accent:#58a6ff; --accent2:#f78166;
+    --purple:#d2a8ff; --green:#3fb950; --yellow:#d29922; --red:#f85149;
+    --text:#e6edf3; --muted:#8b949e; --border:#30363d;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family:'Segoe UI', system-ui, sans-serif; background:var(--bg); color:var(--text); min-height:100vh; }
+  header {
+    display:flex; align-items:center; justify-content:space-between;
+    padding:14px 28px; background:var(--panel); border-bottom:1px solid var(--border); flex-wrap:wrap; gap:8px;
+  }
+  .logo { font-size:22px; font-weight:800; }
+  .logo span { color:var(--accent); }
+  .tagline { display:flex; gap:14px; align-items:center; flex-wrap:wrap; font-size:13px; }
+  .tagline a { text-decoration:none; }
+  .container { max-width:1000px; margin:0 auto; padding:24px 20px 60px; }
+
+  .intro {
+    background:linear-gradient(135deg, rgba(210,168,255,.12), rgba(88,166,255,.07));
+    border:1px solid var(--border); border-radius:12px; padding:22px 24px; margin-bottom:18px;
+  }
+  .intro h2 { font-size:20px; margin-bottom:8px; }
+  .intro p { font-size:15px; line-height:1.7; margin-bottom:9px; }
+  .intro p:last-child { margin-bottom:0; color:var(--muted); font-size:14px; }
+
+  .card { background:var(--panel); border:1px solid var(--border); border-radius:12px; padding:20px; margin-bottom:18px; }
+  h3 { font-size:16px; margin-bottom:8px; }
+  .sub { color:var(--muted); font-size:13.5px; margin-bottom:14px; line-height:1.6; }
+
+  .bar { display:flex; gap:10px; flex-wrap:wrap; align-items:center; margin-bottom:16px; }
+  button {
+    background:var(--accent); color:#0d1117; border:none; padding:10px 18px;
+    border-radius:8px; font-size:14px; font-weight:700; cursor:pointer; font-family:inherit;
+    transition:filter .15s, transform .1s;
+  }
+  button:hover { filter:brightness(1.14); }
+  button:active { transform:scale(.97); }
+  button.secondary { background:var(--panel2); color:var(--text); border:1px solid var(--border); }
+
+  .stage { display:grid; grid-template-columns:1fr 1fr; gap:18px; }
+  @media (max-width:780px) { .stage { grid-template-columns:1fr; } }
+  .col { background:var(--panel2); border:1px solid var(--border); border-radius:10px; padding:14px; }
+  .col h4 { font-size:14.5px; margin-bottom:3px; }
+  .col .tag { font-size:12px; margin-bottom:12px; }
+  .col.stable { border-color:rgba(63,185,80,.45); }
+  .col.stable h4 { color:var(--green); }
+  .col.unstable { border-color:rgba(247,129,102,.45); }
+  .col.unstable h4 { color:var(--accent2); }
+
+  .list { display:flex; flex-direction:column; gap:6px; }
+  .row {
+    display:flex; align-items:center; gap:10px;
+    background:var(--bg); border:1.5px solid var(--border); border-radius:8px;
+    padding:9px 12px; font-size:14px; transition:all .45s cubic-bezier(.4,0,.2,1);
+  }
+  .row .nm { flex:1; font-weight:600; }
+  .row .mk {
+    font-family:Consolas, monospace; font-weight:800; font-size:14px;
+    padding:2px 9px; border-radius:6px; background:var(--panel2);
+  }
+  .row.g85 { border-left:4px solid var(--yellow); }
+  .row.g90 { border-left:4px solid var(--purple); }
+  .row.bad { border-color:var(--red); background:rgba(248,81,73,.09); }
+  .row.good { border-color:var(--green); background:rgba(63,185,80,.07); }
+  .row .flag { font-size:12px; font-weight:700; }
+  .row .flag.no { color:var(--red); }
+  .row .flag.yes { color:var(--green); }
+
+  .verdictBox { margin-top:14px; font-size:13.5px; line-height:1.65; padding:11px 14px; border-radius:8px; display:none; }
+  .verdictBox.ok { display:block; background:rgba(63,185,80,.1); border:1px solid rgba(63,185,80,.32); }
+  .verdictBox.no { display:block; background:rgba(248,81,73,.1); border:1px solid rgba(248,81,73,.32); }
+
+  .why {
+    background:rgba(88,166,255,.08); border:1px solid rgba(88,166,255,.3);
+    border-radius:10px; padding:15px 17px; font-size:14.5px; line-height:1.75; margin-top:18px; display:none;
+  }
+  .why h4 { color:var(--accent); font-size:15px; margin-bottom:7px; }
+  .why p + p { margin-top:9px; }
+
+  table { width:100%; border-collapse:collapse; font-size:13.5px; }
+  th, td { text-align:left; padding:9px 10px; border-bottom:1px solid var(--border); }
+  th { color:var(--muted); font-size:12px; text-transform:uppercase; letter-spacing:.4px; }
+  .yes { color:var(--green); font-weight:700; }
+  .no { color:var(--accent2); font-weight:700; }
+  td a { color:var(--accent); text-decoration:none; }
+
+  @media (max-width:640px) {
+    header { padding:12px 16px; }
+    .logo { font-size:19px; }
+    .container { padding:16px 14px 40px; }
+    .card, .intro { padding:16px; }
+    .intro h2 { font-size:17px; } .intro p { font-size:14px; }
+    .bar { flex-direction:column; align-items:stretch; }
+    button { width:100%; }
+    .row { font-size:13px; padding:8px 10px; }
+  }
+</style>
+<script>if(location.protocol.startsWith("http")){var m=document.createElement("link");m.rel="manifest";m.href="manifest.json";document.head.appendChild(m);}</script>
+<meta name="theme-color" content="#0d1117">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+</head>
+<body>
+
+<header>
+  <a href="mindaicode-home.html" style="text-decoration:none; color:inherit;">
+    <div class="logo">🧠 MindAI<span>Code</span></div>
+  </a>
+  <div class="tagline">
+    <a href="mindaicode-race-all.html" style="color:var(--purple); font-weight:600;">🏁 Race all six</a>
+    <a href="mindaicode-home.html" style="color:var(--muted);">🏠 All algorithms</a>
+  </div>
+</header>
+
+<div class="container">
+
+  <div class="intro">
+    <h2>⚖️ What "stable" actually means</h2>
+    <p>Every textbook table has a <strong>Stable: Yes/No</strong> column, and almost nobody explains what it costs you. Here it is in one screen.</p>
+    <p>A sort is <strong>stable</strong> if items with <em>equal</em> values keep the order they were already in. It only matters when you sort the same data <strong>twice, by two different things</strong> — which is exactly what real applications do all the time.</p>
+  </div>
+
+  <div class="card">
+    <h3>📋 The class list</h3>
+    <div class="sub">Here are five students, already sorted <strong>alphabetically by name</strong>. Notice that Anita, Chetan and Esha all scored 90, and Bharat and Divya both scored 85.</div>
+    <div class="list" id="original"></div>
+
+    <div class="bar" style="margin-top:16px; margin-bottom:0;">
+      <button id="sortBtn">📊 Now sort them by marks</button>
+      <button id="resetBtn" class="secondary">↺ Start over</button>
+    </div>
+  </div>
+
+  <div class="card" id="resultCard" style="display:none;">
+    <h3>Same data, same marks, two different answers</h3>
+    <div class="sub">Both columns sorted correctly by marks — lowest first. Look at what happened <em>inside</em> each group of equal marks.</div>
+    <div class="stage">
+      <div class="col stable">
+        <h4>🃏 Insertion Sort — stable</h4>
+        <div class="tag" style="color:var(--muted);">Only shifts values; never jumps them past each other</div>
+        <div class="list" id="listStable"></div>
+        <div class="verdictBox" id="vStable"></div>
+      </div>
+      <div class="col unstable">
+        <h4>🔎 Selection Sort — not stable</h4>
+        <div class="tag" style="color:var(--muted);">Swaps distant values, which can leapfrog equal ones</div>
+        <div class="list" id="listUnstable"></div>
+        <div class="verdictBox" id="vUnstable"></div>
+      </div>
+    </div>
+
+    <div class="why" id="why">
+      <h4>💡 Why it happened</h4>
+      <p id="whyText"></p>
+      <p><strong>Where this bites in real life:</strong> an online shop sorts products by rating, then the user sorts by price. With a stable sort, items at the same price stay in rating order — the earlier sort still counts. With an unstable sort, that earlier work is scrambled and the list looks random to the user.</p>
+      <p style="color:var(--muted); font-size:13.5px;">This is why Java uses a merge-sort variant for objects, and why Python's <code>sorted()</code> is guaranteed stable — so you can sort by one key, then another, and both hold.</p>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>📋 Which of our six are stable?</h3>
+    <div style="overflow-x:auto;">
+      <table>
+        <thead><tr><th>Algorithm</th><th>Stable?</th><th>Why</th></tr></thead>
+        <tbody>
+          <tr><td><a href="mindaicode-bubble-sort.html">🫧 Bubble</a></td><td class="yes">Yes</td><td>Only swaps neighbours, and only when strictly out of order.</td></tr>
+          <tr><td><a href="mindaicode-selection-sort.html">🔎 Selection</a></td><td class="no">No</td><td>Swaps far-apart values, which can jump one equal item over another.</td></tr>
+          <tr><td><a href="mindaicode-insertion-sort.html">🃏 Insertion</a></td><td class="yes">Yes</td><td>Stops shifting as soon as it meets an equal value, so it lands after it.</td></tr>
+          <tr><td><a href="mindaicode-merge-sort.html">🪄 Merge</a></td><td class="yes">Yes</td><td>On ties it takes from the left half first, preserving original order.</td></tr>
+          <tr><td><a href="mindaicode-quick-sort.html">⚡ Quick</a></td><td class="no">No</td><td>Partition swaps move values across the array unpredictably.</td></tr>
+          <tr><td><a href="mindaicode-heap-sort.html">🌲 Heap</a></td><td class="no">No</td><td>Sift-down swaps values between distant tree positions.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p style="font-size:13.5px; color:var(--muted); margin-top:12px; line-height:1.65;">
+      Notice the pattern: the sorts that only move things <strong>one step at a time</strong> tend to be stable. The fast ones that fling values across the array are not — that speed is exactly what costs them stability.
+    </p>
+  </div>
+
+</div>
+
+<script>
+/* Alphabetical by name, with deliberate ties in marks. */
+const STUDENTS = [
+  { name: 'Anita',  mark: 90 },
+  { name: 'Bharat', mark: 85 },
+  { name: 'Chetan', mark: 90 },
+  { name: 'Divya',  mark: 85 },
+  { name: 'Esha',   mark: 90 },
+];
+
+/* --- the two algorithms, sorting by MARK only --- */
+function insertionByMark(src) {           // stable
+  const a = src.map(s => ({ ...s }));
+  for (let i = 1; i < a.length; i++) {
+    const key = a[i];
+    let j = i - 1;
+    while (j >= 0 && a[j].mark > key.mark) { a[j + 1] = a[j]; j--; }
+    a[j + 1] = key;
+  }
+  return a;
+}
+function selectionByMark(src) {           // not stable
+  const a = src.map(s => ({ ...s }));
+  for (let i = 0; i < a.length - 1; i++) {
+    let min = i;
+    for (let j = i + 1; j < a.length; j++) if (a[j].mark < a[min].mark) min = j;
+    if (min !== i) { const t = a[i]; a[i] = a[min]; a[min] = t; }
+  }
+  return a;
+}
+
+/* --- did equal-mark groups keep their alphabetical order? --- */
+function stabilityReport(result) {
+  const groups = {};
+  result.forEach((s, idx) => {
+    (groups[s.mark] = groups[s.mark] || []).push({ ...s, idx });
+  });
+  const broken = [];
+  Object.keys(groups).forEach(mark => {
+    const names = groups[mark].map(g => g.name);
+    const sortedNames = [...names].sort();
+    if (JSON.stringify(names) !== JSON.stringify(sortedNames)) {
+      broken.push({ mark, got: names, expected: sortedNames });
+    }
+  });
+  return { broken, groups };
+}
+
+function rowHtml(s, flag) {
+  const cls = 'g' + s.mark;
+  return `<div class="row ${cls} ${flag || ''}">
+            <span class="nm">${s.name}</span>
+            <span class="mk">${s.mark}</span>
+          </div>`;
+}
+
+function renderOriginal() {
+  document.getElementById('original').innerHTML = STUDENTS.map(s => rowHtml(s)).join('');
+}
+
+function renderResult(listId, verdictId, result, label) {
+  const { broken } = stabilityReport(result);
+  const brokenNames = new Set();
+  broken.forEach(b => b.got.forEach(n => brokenNames.add(n)));
+
+  document.getElementById(listId).innerHTML =
+    result.map(s => rowHtml(s, brokenNames.has(s.name) ? 'bad' : 'good')).join('');
+
+  const v = document.getElementById(verdictId);
+  if (broken.length === 0) {
+    v.className = 'verdictBox ok';
+    v.innerHTML = `✅ <strong>Order preserved.</strong> Within every group of equal marks, the names are still in alphabetical order — exactly as they were before.`;
+  } else {
+    const b = broken[0];
+    v.className = 'verdictBox no';
+    v.innerHTML = `❌ <strong>Original order lost.</strong> The students on ${b.mark} came out as <strong>${b.got.join(' → ')}</strong>, but they started as <strong>${b.expected.join(' → ')}</strong>. The alphabetical sort you did earlier has been undone.`;
+  }
+  return broken;
+}
+
+document.getElementById('sortBtn').onclick = () => {
+  const stable = insertionByMark(STUDENTS);
+  const unstable = selectionByMark(STUDENTS);
+  document.getElementById('resultCard').style.display = 'block';
+  renderResult('listStable', 'vStable', stable, 'stable');
+  const broken = renderResult('listUnstable', 'vUnstable', unstable, 'unstable');
+
+  const why = document.getElementById('why');
+  const whyText = document.getElementById('whyText');
+  if (broken.length) {
+    const b = broken[0];
+    whyText.innerHTML =
+      `Selection Sort finds the smallest remaining value and <strong>swaps it into place from wherever it is</strong>. ` +
+      `That long-distance swap threw <strong>${b.got[0]}</strong> over the top of the other ${b.mark}s, and nothing ever puts them back. ` +
+      `Insertion Sort never does that — it only ever shifts values one position at a time, and it stops shifting the moment it meets an equal value, so equal items always keep their original order.`;
+  } else {
+    whyText.textContent = 'On this particular data both happened to preserve the order — try different marks to expose the difference.';
+  }
+  why.style.display = 'block';
+  document.getElementById('resultCard').scrollIntoView({ behavior: 'smooth', block: 'start' });
+};
+
+document.getElementById('resetBtn').onclick = () => {
+  document.getElementById('resultCard').style.display = 'none';
+  document.getElementById('why').style.display = 'none';
+};
+
+renderOriginal();
+</script>
+<script>
+/* ===== Offline support (works when served over http/https) ===== */
+if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
+  window.addEventListener('load', function () {
+    navigator.serviceWorker.register('sw.js').catch(function () { /* offline mode simply unavailable */ });
+  });
+}
+</script>
+<script src="firebase-config.js"></script>
+<script src="mindaicode-auth.js"></script>
+</body>
+</html>

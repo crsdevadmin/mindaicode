@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MindAICode — Revision Mode</title>
+<style>
+  :root {
+    --bg:#0d1117; --panel:#161b22; --panel2:#1c2333; --accent:#58a6ff; --accent2:#f78166;
+    --purple:#d2a8ff; --green:#3fb950; --yellow:#d29922; --red:#f85149;
+    --text:#e6edf3; --muted:#8b949e; --border:#30363d;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family:'Segoe UI', system-ui, sans-serif; background:var(--bg); color:var(--text); min-height:100vh; }
+  header {
+    display:flex; align-items:center; justify-content:space-between;
+    padding:14px 28px; background:var(--panel); border-bottom:1px solid var(--border); flex-wrap:wrap; gap:8px;
+  }
+  .logo { font-size:22px; font-weight:800; }
+  .logo span { color:var(--accent); }
+  a.back { color:var(--muted); text-decoration:none; font-size:13px; }
+  .container { max-width:760px; margin:0 auto; padding:24px 20px 60px; }
+
+  .hero {
+    background:linear-gradient(135deg, rgba(210,168,255,.13), rgba(88,166,255,.07));
+    border:1px solid var(--border); border-radius:14px; padding:22px 24px; margin-bottom:18px;
+  }
+  .hero h1 { font-size:23px; margin-bottom:6px; }
+  .hero p { color:var(--muted); font-size:14.5px; line-height:1.65; }
+
+  .bar { display:flex; align-items:center; gap:12px; margin-bottom:16px; flex-wrap:wrap; }
+  .pillStat {
+    background:var(--panel); border:1px solid var(--border); border-radius:20px;
+    padding:6px 14px; font-size:13px; color:var(--muted);
+  }
+  .pillStat b { color:var(--text); }
+  .pillStat.warn { border-color:rgba(210,153,34,.4); background:rgba(210,153,34,.1); color:var(--yellow); }
+  .track { flex:1; min-width:120px; height:7px; background:var(--panel2); border-radius:4px; overflow:hidden; }
+  .track > div { height:100%; width:0%; background:var(--accent); transition:width .35s ease; }
+
+  .qcard { background:var(--panel); border:1px solid var(--border); border-radius:14px; padding:22px 24px; }
+  .tag {
+    display:inline-block; font-size:11.5px; font-weight:700; padding:3px 10px;
+    border-radius:11px; background:var(--panel2); border:1px solid var(--border);
+    color:var(--muted); margin-bottom:12px;
+  }
+  .tag.again { background:rgba(210,153,34,.13); border-color:rgba(210,153,34,.4); color:var(--yellow); }
+  .qtext { font-size:16.5px; line-height:1.5; margin-bottom:16px; }
+  .opt {
+    display:block; width:100%; text-align:left; margin-bottom:9px; cursor:pointer;
+    background:var(--panel2); color:var(--text); border:1px solid var(--border);
+    border-radius:9px; padding:12px 15px; font-size:14.5px; font-family:inherit;
+    transition:border-color .15s, background .15s;
+  }
+  .opt:hover:not(:disabled) { border-color:var(--accent); }
+  .opt:disabled { cursor:default; }
+  .opt.right { border-color:var(--green); background:rgba(63,185,80,.14); }
+  .opt.wrong { border-color:var(--red); background:rgba(248,81,73,.14); }
+  .fb { margin-top:14px; font-size:14px; line-height:1.65; color:var(--muted); }
+  .fb b { color:var(--text); }
+  .fb .verdict { font-weight:700; }
+  .fb .verdict.ok { color:var(--green); }
+  .fb .verdict.no { color:var(--red); }
+  .fb a { color:var(--accent); }
+  .row { display:flex; gap:10px; margin-top:16px; flex-wrap:wrap; }
+  button.primary {
+    background:var(--accent); color:#0d1117; border:none; font-weight:700;
+    padding:11px 20px; border-radius:9px; font-size:14px; cursor:pointer; font-family:inherit;
+  }
+  button.primary:hover { filter:brightness(1.12); }
+  button.ghost {
+    background:transparent; border:1px solid var(--border); color:var(--muted);
+    padding:11px 18px; border-radius:9px; font-size:13.5px; cursor:pointer; font-weight:600; font-family:inherit;
+  }
+  button.ghost:hover { color:var(--text); }
+
+  .done { text-align:center; padding:14px 0 4px; }
+  .done .big { font-size:44px; margin-bottom:8px; }
+  .done h2 { font-size:21px; margin-bottom:8px; }
+  .done p { color:var(--muted); font-size:14.5px; line-height:1.65; margin-bottom:6px; }
+  .scoreLine { font-size:15px; margin:12px 0; }
+  .weak {
+    background:var(--panel2); border:1px solid var(--border); border-radius:10px;
+    padding:14px 16px; margin-top:14px; text-align:left;
+  }
+  .weak h4 { font-size:14px; margin-bottom:8px; color:var(--yellow); }
+  .weak ul { margin:0; padding-left:18px; }
+  .weak li { font-size:13.5px; color:var(--muted); line-height:1.7; }
+  .weak a { color:var(--accent); text-decoration:none; }
+
+  @media (max-width:640px) {
+    header { padding:12px 16px; }
+    .logo { font-size:19px; }
+    .container { padding:16px 14px 40px; }
+    .hero { padding:18px 16px; }
+    .hero h1 { font-size:20px; }
+    .qcard { padding:18px 16px; }
+    .qtext { font-size:15.5px; }
+    .opt { font-size:14px; padding:11px 13px; }
+    .row { flex-direction:column; }
+    button.primary, button.ghost { width:100%; }
+  }
+</style>
+<script>if(location.protocol.startsWith("http")){var m=document.createElement("link");m.rel="manifest";m.href="manifest.json";document.head.appendChild(m);}</script>
+<meta name="theme-color" content="#0d1117">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+</head>
+<body>
+
+<header>
+  <a href="mindaicode-home.html" style="text-decoration:none; color:inherit;">
+    <div class="logo">🧠 MindAI<span>Code</span></div>
+  </a>
+  <a class="back" href="mindaicode-home.html">🏠 All algorithms</a>
+</header>
+
+<div class="container">
+
+  <div class="hero">
+    <h1>🔁 Revision Mode</h1>
+    <p>Mixed questions from all six sorting algorithms. Anything you get wrong comes back at the end of the round — and again next time you visit, until you get it right.</p>
+  </div>
+
+  <div class="bar">
+    <span class="pillStat">Question <b id="qNum">1</b> / <b id="qTot">0</b></span>
+    <span class="pillStat">Score <b id="score">0</b></span>
+    <span class="pillStat warn" id="againPill" style="display:none;">🔁 <b id="againCount">0</b> to revisit</span>
+    <div class="track"><div id="trackFill"></div></div>
+  </div>
+
+  <div class="qcard" id="card"></div>
+
+</div>
+
+<script>
+/* ===================== QUESTION BANK ===================== */
+const BANK = [
+  // Bubble
+  { id:'b1', algo:'Bubble Sort', href:'mindaicode-bubble-sort.html',
+    q:'In Bubble Sort, what happens after the first complete pass?',
+    opts:['The whole array is sorted','The largest value is guaranteed to be at the end','The smallest value moves to the front'],
+    ans:1, why:'Each pass repeatedly pushes the bigger of every adjacent pair to the right, so the single largest value always ends up at the far end.' },
+  { id:'b2', algo:'Bubble Sort', href:'mindaicode-bubble-sort.html',
+    q:'Why is Bubble Sort almost never used in real software?',
+    opts:['It gives wrong answers on large data','It does far more swaps than needed — O(n²) even on easy input','It needs too much extra memory'],
+    ans:1, why:'It is correct, just wasteful: it keeps comparing and swapping neighbours long after better algorithms would have finished.' },
+  // Selection
+  { id:'s1', algo:'Selection Sort', href:'mindaicode-selection-sort.html',
+    q:'How many swaps does Selection Sort perform per pass?',
+    opts:['One at most','One per comparison','It never swaps'],
+    ans:0, why:'It scans the whole unsorted region to find the minimum, then performs a single swap to put it in place.' },
+  { id:'s2', algo:'Selection Sort', href:'mindaicode-selection-sort.html',
+    q:'When is Selection Sort genuinely a sensible choice?',
+    opts:['When the data is already sorted','When writing to memory is very expensive','When you need a stable sort'],
+    ans:1, why:'It makes at most n−1 swaps total — the fewest writes of any simple sort — which matters when each write is costly (flash memory, for example).' },
+  // Insertion
+  { id:'i1', algo:'Insertion Sort', href:'mindaicode-insertion-sort.html',
+    q:'What is Insertion Sort’s best-case time complexity, and when does it happen?',
+    opts:['O(n log n) on random data','O(n) when the data is already sorted','O(1) on small arrays'],
+    ans:1, why:'On sorted input each new value is already bigger than the one before it, so the inner loop exits immediately — just n−1 comparisons and zero shifts.' },
+  { id:'i2', algo:'Insertion Sort', href:'mindaicode-insertion-sort.html',
+    q:'What does Insertion Sort do with the "key" value it holds out?',
+    opts:['Shifts bigger values right, then drops the key into the gap','Swaps it with every value it passes','Places it at the end of the array'],
+    ans:0, why:'It only shifts — it does not swap. The held key is written once, into the gap left behind after all bigger values moved right.' },
+  // Merge
+  { id:'m1', algo:'Merge Sort', href:'mindaicode-merge-sort.html',
+    q:'What must be true of two halves before you can merge them?',
+    opts:['They must be the same length','Each half must already be sorted','They must contain no duplicates'],
+    ans:1, why:'Merging only inspects the front of each half. That is only valid if the smallest unused value in each half really is at its front.' },
+  { id:'m2', algo:'Merge Sort', href:'mindaicode-merge-sort.html',
+    q:'What is the main cost of Merge Sort compared to Quick Sort?',
+    opts:['It needs O(n) extra memory','It can degrade to O(n²)','It cannot handle duplicates'],
+    ans:0, why:'Merge Sort copies data into temporary arrays while merging. Quick Sort rearranges in place, which is why it is often faster in practice.' },
+  { id:'m3', algo:'Merge Sort', href:'mindaicode-merge-sort.html',
+    q:'If one half runs out during a merge, what must happen next?',
+    opts:['Stop — the merge is finished','Copy the remaining values from the other half','Start the merge again'],
+    ans:1, why:'Whatever is left in the other half is already sorted and still belongs in the output. Forgetting this silently drops values.' },
+  // Quick
+  { id:'q1', algo:'Quick Sort', href:'mindaicode-quick-sort.html',
+    q:'After one partition step, what do we know about the pivot?',
+    opts:['It is in its final sorted position','It is the largest value','It must be partitioned again'],
+    ans:0, why:'Everything left of it is smaller and everything right is larger, so no future step ever needs to move it again.' },
+  { id:'q2', algo:'Quick Sort', href:'mindaicode-quick-sort.html',
+    q:'With a last-element pivot, which input triggers the O(n²) worst case?',
+    opts:['Randomly shuffled data','Already sorted or reverse sorted data','Data with many duplicates'],
+    ans:1, why:'On sorted data the pivot is always the largest remaining value, so each partition peels off just one element instead of halving the problem.' },
+  { id:'q3', algo:'Quick Sort', href:'mindaicode-quick-sort.html',
+    q:'How do real-world Quick Sort implementations avoid that worst case?',
+    opts:['They pick a random or median-of-three pivot','They sort the array first','They switch to Bubble Sort'],
+    ans:0, why:'Randomising the pivot makes consistently unlucky splits vanishingly unlikely. Some libraries also fall back to Heap Sort if recursion gets too deep.' },
+  // Heap
+  { id:'h1', algo:'Heap Sort', href:'mindaicode-heap-sort.html',
+    q:'In an array-based heap, where are the children of index i?',
+    opts:['At i−1 and i+1','At 2i+1 and 2i+2','At i/2 and i/2+1'],
+    ans:1, why:'That index arithmetic is what lets a plain array behave like a binary tree with no pointers at all.' },
+  { id:'h2', algo:'Heap Sort', href:'mindaicode-heap-sort.html',
+    q:'Why does Heap Sort have no bad-input worst case?',
+    opts:['It checks if the data is sorted first','Its cost depends on the heap’s shape, which depends only on size','It uses randomisation'],
+    ans:1, why:'The tree is always about log n deep regardless of the values, so every extraction costs O(log n) no matter what the input looks like.' },
+  { id:'h3', algo:'Heap Sort', href:'mindaicode-heap-sort.html',
+    q:'Why must the active heap size shrink after each extraction?',
+    opts:['To save memory','So finished values at the end are not pulled back into the heap','It does not need to shrink'],
+    ans:1, why:'Extracted values sit at the end in their final position. If sift-down could still see them, it would drag them back and corrupt the result.' },
+  // Cross-cutting
+  { id:'x1', algo:'Comparing sorts', href:'mindaicode-race-all.html',
+    q:'Which three sorts guarantee O(n log n) in the WORST case?',
+    opts:['Merge, Quick, Heap','Merge and Heap only','Quick and Heap only'],
+    ans:1, why:'Quick Sort averages O(n log n) but degrades to O(n²) on unlucky pivots. Only Merge and Heap guarantee it no matter the input.' },
+  { id:'x2', algo:'Comparing sorts', href:'mindaicode-race-all.html',
+    q:'What does it mean for a sort to be "stable"?',
+    opts:['It never crashes','Equal values keep their original relative order','It always takes the same time'],
+    ans:1, why:'Stability matters when sorting by a second key — sort by name, then by marks, and a stable sort keeps names alphabetical within each mark.' },
+  { id:'x3', algo:'Comparing sorts', href:'mindaicode-race-all.html',
+    q:'On nearly-sorted data, which often beats Merge Sort despite worse Big-O?',
+    opts:['Insertion Sort','Selection Sort','Bubble Sort'],
+    ans:0, why:'Insertion Sort exits its inner loop immediately when values are already in place, approaching O(n). Big-O describes scaling, not every real input.' },
+  { id:'x4', algo:'Comparing sorts', href:'mindaicode-race-all.html',
+    q:'Which sorts work in place, needing only O(1) extra memory?',
+    opts:['Merge and Quick','Bubble, Selection, Insertion and Heap','All six'],
+    ans:1, why:'Merge needs O(n) scratch space and Quick needs O(log n) for its recursion stack. The others rearrange values within the original array.' },
+];
+
+/* ===================== STATE ===================== */
+const WRONG_KEY = 'mrev_wrong';
+function loadWrong() {
+  try { return JSON.parse(localStorage.getItem(WRONG_KEY) || '[]'); } catch (e) { return []; }
+}
+function saveWrong(ids) {
+  try { localStorage.setItem(WRONG_KEY, JSON.stringify([...new Set(ids)])); } catch (e) {}
+}
+
+function shuffle(a) {
+  const r = [...a];
+  for (let i = r.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [r[i], r[j]] = [r[j], r[i]];
+  }
+  return r;
+}
+
+let queue = [], pos = 0, score = 0, missedThisRound = [], answeredCount = 0;
+const carriedIn = loadWrong();
+
+function buildQueue() {
+  // Questions previously missed come first, then a shuffle of everything else.
+  const missed = BANK.filter(q => carriedIn.includes(q.id));
+  const rest = shuffle(BANK.filter(q => !carriedIn.includes(q.id)));
+  queue = [...shuffle(missed), ...rest];
+  pos = 0; score = 0; missedThisRound = []; answeredCount = 0;
+  document.getElementById('qTot').textContent = queue.length;
+  render();
+}
+
+function updateBar() {
+  document.getElementById('qNum').textContent = Math.min(pos + 1, queue.length);
+  document.getElementById('score').textContent = score;
+  document.getElementById('trackFill').style.width = (answeredCount / queue.length * 100) + '%';
+  const pill = document.getElementById('againPill');
+  const n = missedThisRound.length;
+  pill.style.display = n ? 'inline-block' : 'none';
+  document.getElementById('againCount').textContent = n;
+}
+
+function render() {
+  updateBar();
+  const card = document.getElementById('card');
+  if (pos >= queue.length) return renderDone();
+  const q = queue[pos];
+  const isRepeat = carriedIn.includes(q.id);
+  card.innerHTML =
+    `<span class="tag${isRepeat ? ' again' : ''}">${isRepeat ? '🔁 You missed this last time · ' : ''}${q.algo}</span>
+     <div class="qtext">${q.q}</div>
+     <div id="opts"></div>
+     <div class="fb" id="fb"></div>`;
+  const box = document.getElementById('opts');
+  q.opts.forEach((text, i) => {
+    const b = document.createElement('button');
+    b.className = 'opt';
+    b.textContent = text;
+    b.onclick = () => answer(i, q);
+    box.appendChild(b);
+  });
+}
+
+function answer(choice, q) {
+  const btns = [...document.querySelectorAll('#opts .opt')];
+  btns.forEach(b => b.disabled = true);
+  const ok = choice === q.ans;
+  btns[choice].classList.add(ok ? 'right' : 'wrong');
+  if (!ok) btns[q.ans].classList.add('right');
+  answeredCount++;
+  if (ok) {
+    score++;
+    // Getting it right clears it from the carry-over list.
+    saveWrong(loadWrong().filter(id => id !== q.id));
+  } else {
+    missedThisRound.push(q.id);
+    saveWrong([...loadWrong(), q.id]);
+  }
+  document.getElementById('fb').innerHTML =
+    `<span class="verdict ${ok ? 'ok' : 'no'}">${ok ? '✅ Correct.' : '❌ Not quite.'}</span> ${q.why}
+     <div class="row">
+       <button class="primary" id="nextBtn">${pos + 1 >= queue.length ? 'See results →' : 'Next question →'}</button>
+       <a class="opt" style="width:auto; margin:0; padding:11px 18px; text-decoration:none; display:inline-block;" href="${q.href}">Revisit ${q.algo} →</a>
+     </div>`;
+  updateBar();
+  document.getElementById('nextBtn').onclick = () => { pos++; render(); };
+}
+
+function renderDone() {
+  const card = document.getElementById('card');
+  const pct = Math.round((score / queue.length) * 100);
+  const stillWrong = loadWrong();
+  const emoji = pct === 100 ? '🏆' : pct >= 80 ? '🎉' : pct >= 50 ? '👍' : '📚';
+  const msg = pct === 100
+    ? 'Perfect round — you know all six cold.'
+    : pct >= 80 ? 'Strong round. A couple of gaps left to close.'
+    : pct >= 50 ? 'Decent start. The ones you missed are saved for next time.'
+    : 'Worth another pass — revisit the pages below, then come back.';
+
+  let weakHtml = '';
+  if (stillWrong.length) {
+    const items = stillWrong.map(id => {
+      const q = BANK.find(x => x.id === id);
+      return q ? `<li><a href="${q.href}">${q.algo}</a> — ${q.q}</li>` : '';
+    }).join('');
+    weakHtml =
+      `<div class="weak">
+         <h4>🔁 Saved for next time (${stillWrong.length})</h4>
+         <ul>${items}</ul>
+       </div>`;
+  }
+
+  card.innerHTML =
+    `<div class="done">
+       <div class="big">${emoji}</div>
+       <h2>${score} out of ${queue.length} correct</h2>
+       <div class="scoreLine"><b>${pct}%</b></div>
+       <p>${msg}</p>
+       ${weakHtml}
+       <div class="row" style="justify-content:center;">
+         <button class="primary" id="againBtn">${stillWrong.length ? 'Practise the missed ones →' : 'Go again →'}</button>
+         <a class="opt" style="width:auto; margin:0; padding:11px 18px; text-decoration:none; display:inline-block;" href="mindaicode-home.html">Back to algorithms</a>
+       </div>
+     </div>`;
+  document.getElementById('trackFill').style.width = '100%';
+  document.getElementById('againBtn').onclick = () => {
+    const w = loadWrong();
+    if (w.length) {
+      queue = shuffle(BANK.filter(q => w.includes(q.id)));
+      pos = 0; score = 0; missedThisRound = []; answeredCount = 0;
+      document.getElementById('qTot').textContent = queue.length;
+      render();
+    } else buildQueue();
+  };
+}
+
+buildQueue();
+</script>
+<script>
+/* ===== Offline support (works when served over http/https) ===== */
+if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
+  window.addEventListener('load', function () {
+    navigator.serviceWorker.register('sw.js').catch(function () { /* offline mode simply unavailable */ });
+  });
+}
+</script>
+<script src="firebase-config.js"></script>
+<script src="mindaicode-auth.js"></script>
+</body>
+</html>

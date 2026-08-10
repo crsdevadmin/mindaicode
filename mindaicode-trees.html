@@ -1,0 +1,627 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MindAICode — Trees &amp; Heaps</title>
+<style>
+  :root {
+    --bg:#0d1117; --panel:#161b22; --panel2:#1c2333; --accent:#58a6ff; --accent2:#f78166;
+    --purple:#d2a8ff; --green:#3fb950; --yellow:#d29922; --red:#f85149;
+    --text:#e6edf3; --muted:#8b949e; --border:#30363d;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family:'Segoe UI', system-ui, sans-serif; background:var(--bg); color:var(--text); min-height:100vh; }
+  header {
+    display:flex; align-items:center; justify-content:space-between;
+    padding:14px 28px; background:var(--panel); border-bottom:1px solid var(--border); flex-wrap:wrap; gap:8px;
+  }
+  .logo { font-size:22px; font-weight:800; }
+  .logo span { color:var(--accent); }
+  .tagline { display:flex; gap:14px; align-items:center; flex-wrap:wrap; font-size:13px; }
+  .tagline a { text-decoration:none; color:var(--muted); }
+  .container { max-width:1080px; margin:0 auto; padding:24px 20px 60px; }
+
+  .card { background:var(--panel); border:1px solid var(--border); border-radius:12px; padding:20px; margin-bottom:18px; }
+  h1 { font-size:24px; margin-bottom:6px; }
+  h2.secH { font-size:19px; margin-bottom:4px; }
+  h3 { font-size:16px; margin-bottom:10px; }
+  .subtitle { color:var(--muted); font-size:14px; margin-bottom:16px; }
+
+  .intro {
+    background:linear-gradient(135deg, rgba(88,166,255,.10), rgba(63,185,80,.08));
+    border:1px solid var(--border); border-radius:12px; padding:22px 24px; margin-bottom:18px;
+  }
+  .intro h1 { font-size:24px; margin-bottom:8px; }
+  .intro p { font-size:15px; line-height:1.7; margin-bottom:10px; }
+
+  .controls { display:flex; flex-wrap:wrap; gap:10px; align-items:center; margin-bottom:14px; }
+  button {
+    background:var(--accent); color:#0d1117; border:none; padding:9px 16px;
+    border-radius:8px; font-size:13.5px; font-weight:700; cursor:pointer; font-family:inherit;
+    transition:filter .15s, transform .1s;
+  }
+  button:hover { filter:brightness(1.14); }
+  button:active { transform:scale(.97); }
+  button.secondary { background:var(--panel2); color:var(--text); border:1px solid var(--border); }
+  button.danger { background:rgba(248,81,73,.16); color:var(--red); border:1px solid rgba(248,81,73,.4); }
+  button:disabled { opacity:.4; cursor:not-allowed; }
+  input[type=text] { background:var(--panel2); border:1px solid var(--border); color:var(--text);
+    padding:8px 12px; border-radius:8px; font-size:13.5px; font-family:inherit; width:100px; }
+  label.lbl { font-size:12.5px; color:var(--muted); font-weight:700; }
+
+  .badgeLbl {
+    display:inline-block; font-size:11px; font-weight:700; padding:3px 10px; border-radius:10px;
+    background:rgba(210,168,255,.12); color:var(--purple); border:1px solid rgba(210,168,255,.35); margin-left:8px;
+  }
+  .badgeLbl.on { background:rgba(63,185,80,.14); color:var(--green); border-color:rgba(63,185,80,.4); }
+
+  .treeBox { background:var(--bg); border:1px dashed var(--border); border-radius:10px; padding:8px; margin-bottom:12px; }
+  .treeBox svg { width:100%; height:auto; display:block; }
+  .edge { stroke:var(--border); stroke-width:2; }
+  .tnode circle { fill:var(--panel2); stroke:var(--border); stroke-width:2; transition:all .2s; }
+  .tnode text { fill:var(--text); font-size:13px; font-weight:700; text-anchor:middle; dominant-baseline:central; font-family:Consolas, monospace; }
+  .tnode.hi circle { fill:rgba(210,153,34,.32); stroke:var(--yellow); stroke-width:3; }
+  .tnode.found circle { fill:rgba(63,185,80,.3); stroke:var(--green); }
+  .tnode.visitOrder { fill:var(--yellow); font-size:10px; }
+
+  .orderList { display:flex; flex-wrap:wrap; gap:5px; margin-top:6px; }
+  .orderChip { background:var(--panel2); border:1px solid var(--border); border-radius:6px; padding:2px 8px; font-family:Consolas, monospace; font-size:12px; }
+  .orderChip.hi { border-color:var(--yellow); color:var(--yellow); }
+
+  .note { font-size:13.5px; color:var(--muted); min-height:22px; margin-bottom:10px; line-height:1.55; }
+  .note b { color:var(--text); }
+
+  .arrBox { display:flex; flex-wrap:wrap; gap:6px; margin-bottom:12px; }
+  .arrCell {
+    min-width:38px; height:38px; display:flex; align-items:center; justify-content:center;
+    background:var(--panel2); border:1.5px solid var(--border); border-radius:7px; font-family:Consolas, monospace;
+    font-weight:700; font-size:13px; position:relative; transition:all .2s;
+  }
+  .arrCell .idx { position:absolute; top:-16px; font-size:9.5px; color:var(--muted); left:0; right:0; text-align:center; }
+  .arrCell.hi { border-color:var(--yellow); background:rgba(210,153,34,.22); }
+
+  .tabs { display:flex; gap:6px; margin-bottom:10px; }
+  .tab { background:var(--panel2); color:var(--muted); border:1px solid var(--border); padding:6px 16px;
+    border-radius:8px 8px 0 0; font-size:13px; font-weight:700; cursor:pointer; font-family:inherit; }
+  .tab.on { background:var(--accent); color:#0d1117; border-color:var(--accent); }
+  .codeWrap { display:none; } .codeWrap.on { display:block; }
+  .code { font-family:'Cascadia Code', Consolas, monospace; font-size:12.5px; line-height:1.55;
+    background:var(--panel2); border-radius:10px; padding:14px 0; overflow-x:auto; }
+  .code .line { padding:3px 14px; white-space:pre; }
+  .kw { color:#ff7b72; } .fn { color:#d2a8ff; } .num2 { color:#79c0ff; } .cm { color:#6e7681; }
+
+  table.cmp { width:100%; border-collapse:collapse; font-size:13.5px; }
+  table.cmp th, table.cmp td { text-align:left; padding:9px 10px; border-bottom:1px solid var(--border); }
+  table.cmp th { color:var(--muted); font-size:12px; text-transform:uppercase; letter-spacing:.4px; }
+  .hl { color:var(--green); font-weight:700; }
+  .bad { color:var(--accent2); font-weight:700; }
+
+  @media (max-width:640px) {
+    header { padding:12px 16px; } .logo { font-size:19px; }
+    .container { padding:16px 14px 40px; }
+    .card, .intro { padding:16px; }
+    h1, .intro h1 { font-size:20px; }
+    .controls { flex-direction:column; align-items:stretch; }
+    button, input[type=text] { width:100%; }
+  }
+</style>
+<script>if(location.protocol.startsWith("http")){var m=document.createElement("link");m.rel="manifest";m.href="manifest.json";document.head.appendChild(m);}</script>
+<meta name="theme-color" content="#0d1117">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+</head>
+<body>
+
+<header>
+  <a href="mindaicode-home.html" style="text-decoration:none; color:inherit;">
+    <div class="logo">🧠 MindAI<span>Code</span></div>
+  </a>
+  <div class="tagline">
+    <a href="mindaicode-course-path.html" style="color:var(--purple); font-weight:600;">🗺️ Course path</a>
+    <a href="mindaicode-home.html">🏠 All algorithms</a>
+  </div>
+</header>
+
+<div class="container">
+
+  <div class="intro">
+    <h1>🌳 Trees &amp; Heaps</h1>
+    <p>A tree grows one insert at a time. A <strong>Binary Search Tree</strong> keeps a strict rule at every node: everything smaller goes left, everything bigger goes right — which is exactly what makes searching it fast. A <strong>heap</strong> keeps a looser rule (just parent vs. child) but guarantees instant access to the smallest — or largest — item.</p>
+    <p style="margin-bottom:0; color:var(--muted); font-size:14px;">Module 5 · Heap Sort already used a max-heap to sort an array — this page treats the heap as its own reusable data structure.</p>
+  </div>
+
+  <!-- ================= BST ================= -->
+  <div class="card">
+    <h2 class="secH">🌲 Binary Search Tree <span id="bstBadge" class="badgeLbl">not earned</span></h2>
+    <p class="subtitle">Every node: left subtree is <strong>smaller</strong>, right subtree is <strong>bigger</strong>. That rule alone is what lets search skip half the tree at every step.</p>
+    <div class="controls">
+      <label class="lbl" for="bstVal">Value</label>
+      <input type="text" id="bstVal" maxlength="5" placeholder="e.g. 42">
+      <button id="bstInsertBtn">➕ Insert</button>
+      <button id="bstSearchBtn" class="secondary">🔍 Search</button>
+      <button id="bstDeleteBtn" class="secondary">🗑 Delete</button>
+      <button id="bstResetBtn" class="danger">Reset tree</button>
+    </div>
+    <div class="treeBox"><svg id="bstSvg" viewBox="0 0 620 280"></svg></div>
+    <div class="note" id="bstNote">Insert a few numbers to grow the tree.</div>
+
+    <div class="controls">
+      <label class="lbl">Traversal</label>
+      <button id="inorderBtn" class="secondary">Inorder</button>
+      <button id="preorderBtn" class="secondary">Preorder</button>
+      <button id="postorderBtn" class="secondary">Postorder</button>
+      <span id="traverseBadge" class="badgeLbl">not earned</span>
+    </div>
+    <div class="orderList" id="traverseOrder"></div>
+    <div class="note" id="traverseNote" style="margin-top:8px;">Run a traversal to see the visit order.</div>
+
+    <div class="tabs" style="margin-top:16px;">
+      <button class="tab on" data-target="bst-py" type="button">Python</button>
+      <button class="tab" data-target="bst-java" type="button">Java</button>
+    </div>
+    <div class="codeWrap on" id="bst-py">
+      <div class="code">
+        <div class="line"><span class="kw">def</span> <span class="fn">insert</span>(node, value):</div>
+        <div class="line">    <span class="kw">if</span> node <span class="kw">is None</span>: <span class="kw">return</span> {<span class="cm">'value'</span>: value, <span class="cm">'left'</span>: <span class="kw">None</span>, <span class="cm">'right'</span>: <span class="kw">None</span>}</div>
+        <div class="line">    <span class="kw">if</span> value &lt; node[<span class="cm">'value'</span>]: node[<span class="cm">'left'</span>] = insert(node[<span class="cm">'left'</span>], value)</div>
+        <div class="line">    <span class="kw">elif</span> value &gt; node[<span class="cm">'value'</span>]: node[<span class="cm">'right'</span>] = insert(node[<span class="cm">'right'</span>], value)</div>
+        <div class="line">    <span class="kw">return</span> node</div>
+        <div class="line"></div>
+        <div class="line"><span class="kw">def</span> <span class="fn">inorder</span>(node, out):</div>
+        <div class="line">    <span class="kw">if not</span> node: <span class="kw">return</span></div>
+        <div class="line">    inorder(node[<span class="cm">'left'</span>], out)</div>
+        <div class="line">    out.append(node[<span class="cm">'value'</span>])   <span class="cm"># visiting between the two subtrees</span></div>
+        <div class="line">    inorder(node[<span class="cm">'right'</span>], out)  <span class="cm"># always yields sorted order!</span></div>
+      </div>
+    </div>
+    <div class="codeWrap" id="bst-java">
+      <div class="code">
+        <div class="line">Node <span class="fn">insert</span>(Node node, <span class="kw">int</span> value) {</div>
+        <div class="line">    <span class="kw">if</span> (node == <span class="kw">null</span>) <span class="kw">return new</span> Node(value);</div>
+        <div class="line">    <span class="kw">if</span> (value &lt; node.value) node.left = insert(node.left, value);</div>
+        <div class="line">    <span class="kw">else if</span> (value &gt; node.value) node.right = insert(node.right, value);</div>
+        <div class="line">    <span class="kw">return</span> node;</div>
+        <div class="line">}</div>
+      </div>
+    </div>
+
+    <div style="overflow-x:auto; margin-top:16px;">
+      <table class="cmp">
+        <thead><tr><th>Shape</th><th>Height</th><th>Search / Insert / Delete</th></tr></thead>
+        <tbody>
+          <tr><td>Balanced (like the one above, built from a good insert order)</td><td class="num hl">O(log n)</td><td class="num hl">O(log n)</td></tr>
+          <tr><td>Skewed (inserting 1,2,3,4,5... in already-sorted order)</td><td class="num bad">O(n)</td><td class="num bad">O(n) — degrades into a linked list</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ================= HEAP ================= -->
+  <div class="card">
+    <h2 class="secH">⛰️ Min-Heap <span id="heapBadge" class="badgeLbl">not earned</span></h2>
+    <p class="subtitle">A complete binary tree stored flat in an <strong>array</strong>. The only rule: every parent is <strong>smaller than or equal to</strong> its children. That's weaker than a BST's rule — but it's exactly enough to guarantee the smallest item is always sitting at index 0.</p>
+    <div class="controls">
+      <label class="lbl" for="heapVal">Value</label>
+      <input type="text" id="heapVal" maxlength="5" placeholder="e.g. 7">
+      <button id="heapInsertBtn">➕ Insert</button>
+      <button id="heapExtractBtn" class="secondary">⬇ Extract-min</button>
+      <button id="heapPeekBtn" class="secondary">👁 Peek</button>
+      <button id="heapResetBtn" class="danger">Reset heap</button>
+    </div>
+    <p class="subtitle" style="margin-bottom:6px;">Array view — parent of index <b>i</b> is <b>⌊(i-1)/2⌋</b>, children are <b>2i+1</b> and <b>2i+2</b>:</p>
+    <div class="arrBox" id="heapArrBox"></div>
+    <div class="treeBox"><svg id="heapSvg" viewBox="0 0 620 240"></svg></div>
+    <div class="note" id="heapNote">Insert a few numbers to build the heap.</div>
+
+    <div class="tabs" style="margin-top:16px;">
+      <button class="tab on" data-target="heap-py" type="button">Python</button>
+      <button class="tab" data-target="heap-java" type="button">Java</button>
+    </div>
+    <div class="codeWrap on" id="heap-py">
+      <div class="code">
+        <div class="line"><span class="kw">def</span> <span class="fn">insert</span>(heap, value):</div>
+        <div class="line">    heap.append(value)</div>
+        <div class="line">    i = len(heap) - <span class="num2">1</span></div>
+        <div class="line">    <span class="kw">while</span> i &gt; <span class="num2">0</span> <span class="kw">and</span> heap[(i-<span class="num2">1</span>)//<span class="num2">2</span>] &gt; heap[i]:</div>
+        <div class="line">        parent = (i - <span class="num2">1</span>) // <span class="num2">2</span></div>
+        <div class="line">        heap[i], heap[parent] = heap[parent], heap[i]   <span class="cm"># bubble up</span></div>
+        <div class="line">        i = parent</div>
+        <div class="line"></div>
+        <div class="line"><span class="kw">def</span> <span class="fn">extract_min</span>(heap):</div>
+        <div class="line">    <span class="kw">if not</span> heap: <span class="kw">return None</span></div>
+        <div class="line">    top = heap[<span class="num2">0</span>]</div>
+        <div class="line">    heap[<span class="num2">0</span>] = heap[-<span class="num2">1</span>]; heap.pop()</div>
+        <div class="line">    <span class="cm"># then bubble that root value down until the heap property holds again</span></div>
+        <div class="line">    <span class="kw">return</span> top</div>
+      </div>
+    </div>
+    <div class="codeWrap" id="heap-java">
+      <div class="code">
+        <div class="line">PriorityQueue&lt;Integer&gt; heap = <span class="kw">new</span> PriorityQueue&lt;&gt;();  <span class="cm">// min-heap out of the box</span></div>
+        <div class="line">heap.add(value);         <span class="cm">// O(log n) insert</span></div>
+        <div class="line"><span class="kw">int</span> smallest = heap.poll(); <span class="cm">// O(log n) extract-min</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>📈 BST vs Heap</h3>
+    <div style="overflow-x:auto;">
+      <table class="cmp">
+        <thead><tr><th>Property</th><th>Binary Search Tree</th><th>Heap</th></tr></thead>
+        <tbody>
+          <tr><td>Ordering rule</td><td>Left &lt; node &lt; right, everywhere</td><td>Parent ≤ both children (min-heap)</td></tr>
+          <tr><td>Find the smallest value</td><td class="num bad">O(h) — walk all the way left</td><td class="num hl">O(1) — it's always the root</td></tr>
+          <tr><td>Find an arbitrary value</td><td class="num hl">O(log n) if balanced</td><td class="num bad">O(n) — no left/right rule to guide you</td></tr>
+          <tr><td>Typical use</td><td>Ordered maps/sets, range queries</td><td>Priority queues, scheduling, Heap Sort</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>🧠 Quick check</h3>
+    <div id="quizQ" style="font-size:15px; margin-bottom:12px;"></div>
+    <div id="quizOpts"></div>
+    <div id="quizFb" style="font-size:13.5px; margin-top:10px; color:var(--muted); min-height:20px; line-height:1.6;"></div>
+  </div>
+
+</div>
+
+<script>
+/* ================= BST ================= */
+let bstRoot = null;
+let bstInsertCount = 0, bstSearchCount = 0, bstDeleteCount = 0;
+let ranInorder = false, ranPreorder = false, ranPostorder = false;
+
+function bstInsert(root, value) {
+  if (!root) return { value, left:null, right:null };
+  if (value < root.value) root.left = bstInsert(root.left, value);
+  else if (value > root.value) root.right = bstInsert(root.right, value);
+  return root;
+}
+function bstContains(root, value) {
+  let node = root;
+  while (node) { if (value === node.value) return true; node = value < node.value ? node.left : node.right; }
+  return false;
+}
+function bstSearchPath(root, value) {
+  const path = [];
+  let node = root;
+  while (node) {
+    path.push(node.value);
+    if (value === node.value) return { found:true, path };
+    node = value < node.value ? node.left : node.right;
+  }
+  return { found:false, path };
+}
+function bstDelete(root, value) {
+  if (!root) return root;
+  if (value < root.value) { root.left = bstDelete(root.left, value); return root; }
+  if (value > root.value) { root.right = bstDelete(root.right, value); return root; }
+  // found the node to delete
+  if (!root.left) return root.right;
+  if (!root.right) return root.left;
+  let succParent = root, succ = root.right;
+  while (succ.left) { succParent = succ; succ = succ.left; }
+  root.value = succ.value;
+  if (succParent === root) succParent.right = succ.right;
+  else succParent.left = succ.right;
+  return root;
+}
+function bstInorder(node, out) { if (!node) return; bstInorder(node.left, out); out.push(node.value); bstInorder(node.right, out); }
+function bstPreorder(node, out) { if (!node) return; out.push(node.value); bstPreorder(node.left, out); bstPreorder(node.right, out); }
+function bstPostorder(node, out) { if (!node) return; bstPostorder(node.left, out); bstPostorder(node.right, out); out.push(node.value); }
+
+function layoutBST(root) {
+  const positions = {};
+  let x = 0;
+  function assign(node, depth) {
+    if (!node) return;
+    assign(node.left, depth + 1);
+    positions[node.value] = { x: x * 70 + 50, y: depth * 65 + 30 };
+    x++;
+    assign(node.right, depth + 1);
+  }
+  assign(root, 0);
+  return positions;
+}
+function renderBST(hiValue, foundValue) {
+  const svg = document.getElementById('bstSvg');
+  const positions = layoutBST(bstRoot);
+  let html = '';
+  function drawEdges(node) {
+    if (!node) return;
+    const p = positions[node.value];
+    if (node.left) { const c = positions[node.left.value]; html += `<line class="edge" x1="${p.x}" y1="${p.y}" x2="${c.x}" y2="${c.y}"></line>`; drawEdges(node.left); }
+    if (node.right) { const c = positions[node.right.value]; html += `<line class="edge" x1="${p.x}" y1="${p.y}" x2="${c.x}" y2="${c.y}"></line>`; drawEdges(node.right); }
+  }
+  drawEdges(bstRoot);
+  Object.entries(positions).forEach(([val, p]) => {
+    const v = Number(val);
+    let cls = 'tnode';
+    if (v === hiValue) cls += ' hi';
+    if (v === foundValue) cls += ' found';
+    html += `<g class="${cls}"><circle cx="${p.x}" cy="${p.y}" r="20"></circle><text x="${p.x}" y="${p.y}">${val}</text></g>`;
+  });
+  svg.innerHTML = html;
+}
+function maybeBstBadge() {
+  if (bstInsertCount >= 1 && bstSearchCount >= 1 && bstDeleteCount >= 1) { setFlag('mtre_badge_bst'); updateBadgeLabels(); }
+}
+document.getElementById('bstInsertBtn').onclick = () => {
+  const inp = document.getElementById('bstVal');
+  const v = Number(inp.value);
+  if (!inp.value.trim() || isNaN(v)) return;
+  if (bstContains(bstRoot, v)) {
+    document.getElementById('bstNote').innerHTML = `<b>${v}</b> is already in the tree — BSTs don't store duplicates here.`;
+    return;
+  }
+  bstRoot = bstInsert(bstRoot, v);
+  bstInsertCount++;
+  renderBST(v, null);
+  document.getElementById('bstNote').innerHTML = `Inserted <b>${v}</b> — walked down comparing at each node until an empty spot opened up.`;
+  inp.value = '';
+  maybeBstBadge();
+};
+document.getElementById('bstSearchBtn').onclick = () => {
+  const v = Number(document.getElementById('bstVal').value);
+  if (isNaN(v)) return;
+  const { found, path } = bstSearchPath(bstRoot, v);
+  bstSearchCount++;
+  renderBST(null, found ? v : null);
+  document.getElementById('bstNote').innerHTML = found
+    ? `Found <b>${v}</b> after comparing at <b>${path.length}</b> node(s): ${path.join(' → ')}.`
+    : `<b>${v}</b> not in the tree — compared at ${path.join(' → ') || 'the empty tree'} before running out of places to look.`;
+  maybeBstBadge();
+};
+document.getElementById('bstDeleteBtn').onclick = () => {
+  const v = Number(document.getElementById('bstVal').value);
+  if (isNaN(v)) return;
+  if (!bstContains(bstRoot, v)) {
+    document.getElementById('bstNote').innerHTML = `<b>${v}</b> isn't in the tree — nothing to delete.`;
+    return;
+  }
+  bstRoot = bstDelete(bstRoot, v);
+  bstDeleteCount++;
+  renderBST(null, null);
+  document.getElementById('bstNote').innerHTML = `Deleted <b>${v}</b> — if it had two children, its in-order successor (smallest value in its right subtree) moved up to replace it.`;
+  maybeBstBadge();
+};
+document.getElementById('bstResetBtn').onclick = () => {
+  bstRoot = null;
+  renderBST(null, null);
+  document.getElementById('bstNote').innerHTML = 'Tree cleared.';
+  document.getElementById('traverseOrder').innerHTML = '';
+  document.getElementById('traverseNote').innerHTML = 'Run a traversal to see the visit order.';
+};
+
+function maybeTraverseBadge() {
+  if (ranInorder && ranPreorder && ranPostorder) { setFlag('mtre_badge_traverse'); updateBadgeLabels(); }
+}
+function runTraversal(kind) {
+  const out = [];
+  if (kind === 'inorder') { bstInorder(bstRoot, out); ranInorder = true; }
+  else if (kind === 'preorder') { bstPreorder(bstRoot, out); ranPreorder = true; }
+  else { bstPostorder(bstRoot, out); ranPostorder = true; }
+  document.getElementById('traverseOrder').innerHTML = out.map(v => `<span class="orderChip">${v}</span>`).join('');
+  const label = kind === 'inorder' ? 'Inorder (left, node, right)' : kind === 'preorder' ? 'Preorder (node, left, right)' : 'Postorder (left, right, node)';
+  const extra = kind === 'inorder' ? ' Notice it comes out fully sorted — that always happens for a BST.' : '';
+  document.getElementById('traverseNote').innerHTML = `<b>${label}:</b> ${out.join(', ') || '(empty tree)'}.${extra}`;
+  maybeTraverseBadge();
+}
+document.getElementById('inorderBtn').onclick = () => runTraversal('inorder');
+document.getElementById('preorderBtn').onclick = () => runTraversal('preorder');
+document.getElementById('postorderBtn').onclick = () => runTraversal('postorder');
+
+/* ================= HEAP (min-heap, array-backed) ================= */
+let heapArr = [];
+let heapInsertCount = 0, heapExtractCount = 0;
+
+function heapSwap(a, i, j) { const t = a[i]; a[i] = a[j]; a[j] = t; }
+function heapInsert(arr, value) {
+  arr.push(value);
+  let i = arr.length - 1;
+  while (i > 0) {
+    const parent = Math.floor((i - 1) / 2);
+    if (arr[parent] <= arr[i]) break;
+    heapSwap(arr, i, parent);
+    i = parent;
+  }
+}
+function heapExtractMin(arr) {
+  if (arr.length === 0) return null;
+  const top = arr[0];
+  const last = arr.pop();
+  if (arr.length > 0) {
+    arr[0] = last;
+    let i = 0;
+    while (true) {
+      const l = 2 * i + 1, r = 2 * i + 2;
+      let smallest = i;
+      if (l < arr.length && arr[l] < arr[smallest]) smallest = l;
+      if (r < arr.length && arr[r] < arr[smallest]) smallest = r;
+      if (smallest === i) break;
+      heapSwap(arr, i, smallest);
+      i = smallest;
+    }
+  }
+  return top;
+}
+function isMinHeap(arr) {
+  for (let i = 0; i < arr.length; i++) {
+    const l = 2 * i + 1, r = 2 * i + 2;
+    if (l < arr.length && arr[i] > arr[l]) return false;
+    if (r < arr.length && arr[i] > arr[r]) return false;
+  }
+  return true;
+}
+function renderHeap(hiIdx) {
+  const box = document.getElementById('heapArrBox');
+  box.innerHTML = heapArr.map((v, i) =>
+    `<div class="arrCell${i === hiIdx ? ' hi' : ''}"><span class="idx">${i}</span>${v}</div>`).join('') || '<span style="color:var(--muted); font-size:12px;">empty</span>';
+
+  const svg = document.getElementById('heapSvg');
+  const positions = {};
+  heapArr.forEach((v, i) => {
+    const depth = Math.floor(Math.log2(i + 1));
+    const levelStart = Math.pow(2, depth) - 1;
+    const posInLevel = i - levelStart;
+    const levelWidth = Math.pow(2, depth);
+    const x = ((posInLevel + 0.5) / levelWidth) * 600 + 10;
+    const y = depth * 65 + 30;
+    positions[i] = { x, y };
+  });
+  let html = '';
+  heapArr.forEach((v, i) => {
+    const l = 2 * i + 1, r = 2 * i + 2;
+    if (l < heapArr.length) html += `<line class="edge" x1="${positions[i].x}" y1="${positions[i].y}" x2="${positions[l].x}" y2="${positions[l].y}"></line>`;
+    if (r < heapArr.length) html += `<line class="edge" x1="${positions[i].x}" y1="${positions[i].y}" x2="${positions[r].x}" y2="${positions[r].y}"></line>`;
+  });
+  heapArr.forEach((v, i) => {
+    const p = positions[i];
+    html += `<g class="tnode${i === hiIdx ? ' hi' : ''}"><circle cx="${p.x}" cy="${p.y}" r="18"></circle><text x="${p.x}" y="${p.y}">${v}</text></g>`;
+  });
+  svg.innerHTML = html;
+}
+function maybeHeapBadge() {
+  if (heapInsertCount >= 1 && heapExtractCount >= 1) { setFlag('mtre_badge_heap'); updateBadgeLabels(); }
+}
+document.getElementById('heapInsertBtn').onclick = () => {
+  const inp = document.getElementById('heapVal');
+  const v = Number(inp.value);
+  if (!inp.value.trim() || isNaN(v)) return;
+  heapInsert(heapArr, v);
+  heapInsertCount++;
+  renderHeap(heapArr.indexOf(v));
+  document.getElementById('heapNote').innerHTML = `Added <b>${v}</b> at the end, then bubbled it up while it was smaller than its parent.`;
+  inp.value = '';
+  maybeHeapBadge();
+};
+document.getElementById('heapExtractBtn').onclick = () => {
+  if (heapArr.length === 0) {
+    document.getElementById('heapNote').innerHTML = `Heap is empty — nothing to extract.`;
+    return;
+  }
+  const v = heapExtractMin(heapArr);
+  heapExtractCount++;
+  renderHeap(0);
+  document.getElementById('heapNote').innerHTML = `Extracted <b>${v}</b> — the last element moved to the root, then bubbled down until the heap property held again.`;
+  maybeHeapBadge();
+};
+document.getElementById('heapPeekBtn').onclick = () => {
+  if (heapArr.length === 0) {
+    document.getElementById('heapNote').innerHTML = `Heap is empty — nothing to peek.`;
+    return;
+  }
+  document.getElementById('heapNote').innerHTML = `Peek shows <b>${heapArr[0]}</b> — the minimum is always at index 0, no searching required.`;
+  renderHeap(0);
+};
+document.getElementById('heapResetBtn').onclick = () => {
+  heapArr = [];
+  renderHeap(-1);
+  document.getElementById('heapNote').innerHTML = 'Heap cleared.';
+};
+
+/* ================= BADGES ================= */
+function readFlag(key) { try { return localStorage.getItem(key) === '1'; } catch (e) { return false; } }
+function setFlag(key) { try { localStorage.setItem(key, '1'); } catch (e) {} }
+function updateBadgeLabels() {
+  const map = { bstBadge: 'mtre_badge_bst', traverseBadge: 'mtre_badge_traverse', heapBadge: 'mtre_badge_heap' };
+  Object.entries(map).forEach(([elId, key]) => {
+    const el = document.getElementById(elId);
+    const on = readFlag(key);
+    el.textContent = on ? 'earned ✓' : 'not earned';
+    el.classList.toggle('on', on);
+  });
+}
+
+/* ================= CODE TABS ================= */
+document.querySelectorAll('.tabs').forEach(group => {
+  const wraps = [];
+  let el = group.nextElementSibling;
+  while (el && el.classList.contains('codeWrap')) { wraps.push(el); el = el.nextElementSibling; }
+  group.querySelectorAll('.tab').forEach(tab => {
+    tab.onclick = () => {
+      group.querySelectorAll('.tab').forEach(t => t.classList.toggle('on', t === tab));
+      wraps.forEach(w => w.classList.toggle('on', w.id === tab.dataset.target));
+    };
+  });
+});
+
+/* ================= QUIZ ================= */
+const quiz = [
+  { q:'In a Binary Search Tree, where does a value smaller than the current node always go?',
+    opts:['To the left subtree','To the right subtree','Either side, it doesn\'t matter'],
+    ans:0, why:'That left-smaller, right-bigger rule holds at every single node in a BST — it\'s what makes search able to discard half the remaining tree at each step, just like binary search on an array.' },
+  { q:'Why does an inorder traversal of a BST always produce values in sorted order?',
+    opts:['It\'s a coincidence that only happens sometimes','Because it visits left subtree, then the node, then right subtree — and left is always smaller, right always bigger','Because BSTs sort their values automatically in the background'],
+    ans:1, why:'Inorder visits everything smaller (left subtree) before the node itself, then everything bigger (right subtree) after. Recursively applying that rule at every node guarantees strictly increasing output.' },
+  { q:'When you delete a BST node that has two children, what replaces it?',
+    opts:['The node just disappears, leaving a gap','A random node from anywhere in the tree','Its in-order successor — the smallest value in its right subtree'],
+    ans:2, why:'The in-order successor is guaranteed to be bigger than everything in the left subtree and smaller than everything else in the right subtree, so swapping it in is the only way to keep the BST property intact.' },
+  { q:'What is the worst-case height of a BST built by inserting already-sorted values (1, 2, 3, 4, 5...)?',
+    opts:['O(log n) — trees are always balanced','O(n) — it degenerates into a straight line, no better than a linked list','O(1) — height never depends on input'],
+    ans:1, why:'Each new value is always bigger than every existing one, so every insert goes to the rightmost spot. The tree becomes a single chain, and search/insert/delete all degrade to O(n).' },
+  { q:'A min-heap stores its smallest value where?',
+    opts:['At the root (index 0 in the array)','At the deepest leaf','It could be anywhere'],
+    ans:0, why:'The heap property (parent ≤ children) applied all the way up guarantees the smallest value can only be at the very top — giving O(1) access to the minimum, which is the whole point of a heap.' },
+];
+let qi = 0, qCorrect = 0;
+function showQuiz() {
+  const item = quiz[qi];
+  document.getElementById('quizQ').innerHTML = `<strong>Q${qi + 1}/${quiz.length}:</strong> ${item.q}`;
+  const box = document.getElementById('quizOpts');
+  box.innerHTML = '';
+  document.getElementById('quizFb').textContent = '';
+  item.opts.forEach((o, i) => {
+    const b = document.createElement('button');
+    b.className = 'secondary';
+    b.style.cssText = 'display:block; width:100%; text-align:left; margin-bottom:8px; font-weight:500;';
+    b.textContent = o;
+    b.onclick = () => {
+      box.querySelectorAll('button').forEach(x => x.disabled = true);
+      const ok = i === item.ans;
+      if (ok) qCorrect++;
+      b.style.borderColor = ok ? 'var(--green)' : 'var(--red)';
+      b.style.background = ok ? 'rgba(63,185,80,.15)' : 'rgba(248,81,73,.15)';
+      if (!ok) {
+        const right = box.children[item.ans];
+        right.style.borderColor = 'var(--green)';
+        right.style.background = 'rgba(63,185,80,.15)';
+      }
+      let tail = '';
+      if (qi < quiz.length - 1) tail = ' <a href="#" id="nq" style="color:var(--accent)">Next →</a>';
+      else {
+        tail = ` 🎉 Done — ${qCorrect}/${quiz.length} correct.` +
+          (qCorrect < quiz.length ? ' <a href="#" id="rq" style="color:var(--accent)">Try again</a>' : '');
+        if (qCorrect === quiz.length) { setFlag('mtre_badge_quiz'); updateBadgeLabels(); }
+      }
+      document.getElementById('quizFb').innerHTML = (ok ? '✅ Correct! ' : '❌ Not quite. ') + item.why + tail;
+      const nq = document.getElementById('nq');
+      if (nq) nq.onclick = e => { e.preventDefault(); qi++; showQuiz(); };
+      const rq = document.getElementById('rq');
+      if (rq) rq.onclick = e => { e.preventDefault(); qi = 0; qCorrect = 0; showQuiz(); };
+    };
+    box.appendChild(b);
+  });
+}
+
+renderBST(null, null);
+renderHeap(-1);
+updateBadgeLabels();
+showQuiz();
+</script>
+<script>
+/* ===== Offline support (works when served over http/https) ===== */
+if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
+  window.addEventListener('load', function () {
+    navigator.serviceWorker.register('sw.js').catch(function () { /* offline mode simply unavailable */ });
+  });
+}
+</script>
+<script src="firebase-config.js"></script>
+<script src="mindaicode-auth.js"></script>
+</body>
+</html>

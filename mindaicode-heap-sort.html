@@ -1,0 +1,1660 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MindAICode — Heap Sort Visualizer</title>
+<style>
+  :root {
+    --bg: #0d1117;
+    --panel: #161b22;
+    --panel2: #1c2333;
+    --accent: #58a6ff;
+    --accent2: #f78166;
+    --purple: #d2a8ff;
+    --green: #3fb950;
+    --yellow: #d29922;
+    --text: #e6edf3;
+    --muted: #8b949e;
+    --border: #30363d;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+  }
+  header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 14px 28px;
+    background: var(--panel);
+    border-bottom: 1px solid var(--border);
+  }
+  .logo { font-size: 22px; font-weight: 800; letter-spacing: .5px; }
+  .logo span { color: var(--accent); }
+  .tagline { color: var(--muted); font-size: 13px; }
+
+  .container {
+    max-width: 1360px; margin: 0 auto; padding: 24px;
+    display: grid; grid-template-columns: 1fr 440px; gap: 20px;
+  }
+  @media (max-width: 900px) { .container { grid-template-columns: 1fr; } }
+
+  .card {
+    background: var(--panel); border: 1px solid var(--border);
+    border-radius: 12px; padding: 20px;
+  }
+  h1 { font-size: 24px; margin-bottom: 6px; }
+  h3 { font-size: 15px; margin-bottom: 10px; }
+  .subtitle { color: var(--muted); font-size: 14px; margin-bottom: 16px; }
+  .full { grid-column: 1 / -1; }
+
+  .intro {
+    grid-column: 1 / -1;
+    background: linear-gradient(135deg, rgba(88,166,255,.10), rgba(63,185,80,.08));
+    border: 1px solid var(--border); border-radius: 12px;
+    padding: 22px 24px;
+  }
+  .intro h2 { font-size: 20px; margin-bottom: 8px; }
+  .intro p { font-size: 15px; line-height: 1.7; margin-bottom: 10px; }
+  .intro .analogy {
+    background: var(--panel2); border-left: 4px solid var(--green);
+    padding: 12px 16px; border-radius: 8px; margin: 12px 0;
+  }
+  .steps3 { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 12px; }
+  .step3 {
+    flex: 1; min-width: 180px; background: var(--panel2);
+    border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px;
+    font-size: 13.5px; line-height: 1.5; color: var(--muted);
+  }
+  .step3 b { color: var(--accent); display: block; margin-bottom: 4px; font-size: 14px; }
+
+  .badges { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+  .badge {
+    display: flex; align-items: center; gap: 6px;
+    background: var(--panel2); border: 1px solid var(--border);
+    border-radius: 20px; padding: 6px 14px;
+    font-size: 13px; color: var(--muted);
+    filter: grayscale(1); opacity: .55;
+    transition: all .4s;
+  }
+  .badge.earned {
+    filter: none; opacity: 1;
+    color: var(--text); border-color: var(--yellow);
+    background: rgba(210,153,34,.12);
+    box-shadow: 0 0 12px rgba(210,153,34,.25);
+  }
+
+  #stage {
+    position: relative; height: 380px;
+    background: var(--panel2);
+    border: 1px solid var(--border); border-radius: 10px;
+    overflow: hidden; margin-bottom: 16px;
+  }
+  #treeLines { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+  .ball {
+    position: absolute;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 700; color: #fff;
+    background: radial-gradient(circle at 32% 30%, #79b8ff, #1f6feb 70%);
+    box-shadow: 0 6px 14px rgba(0,0,0,.45), inset 0 -6px 10px rgba(0,0,0,.25);
+    transition: left .6s cubic-bezier(.34,1.56,.64,1), top .6s cubic-bezier(.34,1.56,.64,1), background .3s, transform .3s;
+    user-select: none; z-index: 2;
+  }
+  .ball.rootnode { box-shadow: 0 0 0 3px rgba(88,166,255,.6), 0 6px 14px rgba(0,0,0,.45); }
+  .ball.comparing {
+    background: radial-gradient(circle at 32% 30%, #ffd77a, #d29922 70%);
+    transform: scale(1.08);
+  }
+  .ball.swapping {
+    background: radial-gradient(circle at 32% 30%, #ffab91, #f4511e 70%);
+    transform: scale(1.12);
+  }
+  .ball.sorted {
+    background: radial-gradient(circle at 32% 30%, #7ee787, #2ea043 70%);
+  }
+  .ball.bar-mode {
+    border-radius: 8px;
+    background: linear-gradient(160deg, #79b8ff, #1f6feb 85%);
+    box-shadow: 0 4px 10px rgba(0,0,0,.4);
+  }
+  .ball.bar-mode.comparing { background: linear-gradient(160deg, #ffd77a, #d29922 85%); }
+  .ball.bar-mode.swapping { background: linear-gradient(160deg, #ffab91, #f4511e 85%); }
+  .ball.bar-mode.sorted { background: linear-gradient(160deg, #7ee787, #2ea043 85%); }
+  .ball.student-mode {
+    background: transparent; box-shadow: none;
+    flex-direction: column; justify-content: flex-end; align-items: center;
+    gap: 0; padding-bottom: 0; border: none; border-radius: 0;
+  }
+  .student-head {
+    width: 22px; height: 22px; border-radius: 50%; flex-shrink: 0;
+    background: radial-gradient(circle at 35% 30%, #ffe0b8, #e8a765 75%);
+    box-shadow: 0 2px 4px rgba(0,0,0,.35);
+    position: relative; margin-bottom: 2px; z-index: 1;
+    transition: box-shadow .3s;
+  }
+  .student-head::before {
+    content: ''; position: absolute; top: 10px; left: 5px;
+    width: 2.5px; height: 2.5px; border-radius: 50%;
+    background: #3a2a1a; box-shadow: 9px 0 0 #3a2a1a;
+  }
+  .student-body {
+    width: 100%; flex: 1; min-height: 16px;
+    background: linear-gradient(180deg, #79b8ff, #1f6feb 88%);
+    clip-path: polygon(10% 0%, 90% 0%, 78% 100%, 22% 100%);
+    display: flex; align-items: flex-start; justify-content: center;
+    padding-top: 4px; transition: background .3s; position: relative;
+  }
+  .student-tag { font-size: 10px; font-weight: 800; color: #fff; text-shadow: 0 1px 2px rgba(0,0,0,.4); }
+  .ball.student-mode.comparing .student-head { box-shadow: 0 0 0 3px var(--yellow); }
+  .ball.student-mode.comparing .student-body { background: linear-gradient(180deg, #ffd77a, #d29922 88%); }
+  .ball.student-mode.swapping .student-head { box-shadow: 0 0 0 3px var(--accent2); }
+  .ball.student-mode.swapping .student-body { background: linear-gradient(180deg, #ffab91, #f4511e 88%); }
+  .ball.student-mode.sorted .student-head { box-shadow: 0 0 0 3px var(--green); }
+  .ball.student-mode.sorted .student-body { background: linear-gradient(180deg, #7ee787, #2ea043 88%); }
+
+  #passBadge {
+    position: absolute; top: 12px; left: 14px; z-index: 3;
+    background: rgba(88,166,255,.12); color: var(--accent);
+    border: 1px solid rgba(88,166,255,.35);
+    padding: 4px 12px; border-radius: 20px; font-size: 13px; font-weight: 600;
+  }
+  #streakBadge {
+    position: absolute; top: 12px; right: 14px; z-index: 3;
+    background: rgba(210,153,34,.12); color: var(--yellow);
+    border: 1px solid rgba(210,153,34,.35);
+    padding: 4px 12px; border-radius: 20px; font-size: 13px; font-weight: 600;
+    display: none;
+  }
+  #exitDivider {
+    position: absolute; left: 0; right: 0; border-top: 1px dashed var(--border);
+    z-index: 1;
+  }
+  #exitLabel {
+    position: absolute; right: 10px; font-size: 10.5px; color: var(--muted);
+    z-index: 1; font-weight: 600;
+  }
+
+  .controls { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-bottom: 14px; }
+  button {
+    background: var(--accent); color: #0d1117; border: none;
+    padding: 9px 18px; border-radius: 8px; font-size: 14px; font-weight: 700;
+    cursor: pointer; transition: filter .15s, transform .1s;
+  }
+  button:hover { filter: brightness(1.15); }
+  button:active { transform: scale(.96); }
+  button.secondary { background: var(--panel2); color: var(--text); border: 1px solid var(--border); }
+  button.on { background: var(--yellow); color: #0d1117; border-color: var(--yellow); }
+  button:disabled { opacity: .4; cursor: not-allowed; }
+  .speed { display: flex; align-items: center; gap: 8px; color: var(--muted); font-size: 13px; margin-left: auto; }
+  input[type=range] { accent-color: var(--accent); width: 120px; }
+  input[type=text] {
+    background: var(--panel2); border: 1px solid var(--border); color: var(--text);
+    padding: 9px 12px; border-radius: 8px; font-size: 14px; width: 220px;
+  }
+  select {
+    background: var(--panel2); border: 1px solid var(--border); color: var(--text);
+    padding: 8px 10px; border-radius: 8px; font-size: 14px;
+  }
+  .lab-label { font-size: 13px; color: var(--muted); font-weight: 600; }
+
+  .toolbar { display: flex; flex-direction: column; gap: 10px; margin-bottom: 14px; }
+  .tgroup {
+    display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+    padding: 10px 14px; background: var(--panel2);
+    border: 1px solid var(--border); border-radius: 10px;
+  }
+  .tlabel {
+    font-size: 12px; font-weight: 700; color: var(--muted);
+    text-transform: uppercase; letter-spacing: .4px; min-width: 96px; flex-shrink: 0;
+  }
+  .tbtns { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; flex: 1; }
+  .tbtns.nowrap { flex-wrap: nowrap; overflow-x: auto; padding-bottom: 2px; }
+  .tbtns.nowrap button, .tbtns.nowrap select { flex-shrink: 0; }
+
+  #narration {
+    background: var(--panel2); border-left: 4px solid var(--accent);
+    padding: 12px 16px; border-radius: 8px; font-size: 15px; min-height: 48px;
+  }
+  #narration button { margin: 6px 8px 0 0; padding: 7px 16px; }
+
+  .code {
+    font-family: 'Cascadia Code', 'Fira Code', Consolas, monospace;
+    font-size: 13px; line-height: 1.5;
+    background: var(--panel2); border-radius: 10px;
+    padding: 14px 0; overflow-x: auto; max-width: 100%;
+  }
+  .code .line { padding: 3px 12px; white-space: pre; color: var(--text); border-left: 3px solid transparent; }
+  .code .line.active { background: rgba(88,166,255,.14); border-left-color: var(--accent); }
+
+  .vars { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+  .var {
+    font-family: Consolas, monospace; font-size: 12.5px;
+    background: var(--panel2); border: 1px solid var(--border);
+    border-radius: 6px; padding: 4px 10px; color: var(--muted);
+  }
+  .var b { color: var(--accent); }
+  .var.hi { border-color: var(--yellow); color: var(--text); background: rgba(210,153,34,.1); }
+
+  #arrayView {
+    display: flex; flex-wrap: wrap; gap: 6px; align-items: center;
+    background: var(--panel2); border: 1px solid var(--border);
+    border-radius: 8px; padding: 10px 14px; margin-bottom: 14px;
+    font-family: Consolas, monospace; font-size: 14px;
+  }
+  #arrayView .lbl { color: var(--muted); margin-right: 4px; }
+  .cell {
+    min-width: 38px; text-align: center; padding: 6px 8px;
+    background: var(--bg); border: 1.5px solid var(--border);
+    border-radius: 6px; font-weight: 700; transition: all .3s;
+  }
+  .cell .idx { display: block; font-size: 10px; font-weight: 400; color: var(--muted); }
+  .cell.comparing { border-color: var(--yellow); background: rgba(210,153,34,.15); transform: translateY(-3px); }
+  .cell.swapping { border-color: var(--accent2); background: rgba(247,129,102,.18); transform: translateY(-3px) scale(1.05); }
+  .cell.sorted { border-color: var(--green); background: rgba(63,185,80,.12); color: var(--green); }
+
+  #tourOverlay { position: fixed; inset: 0; background: rgba(0,0,0,.7); z-index: 100; display: none; }
+  .tour-target {
+    position: relative !important; z-index: 101 !important;
+    box-shadow: 0 0 0 4px var(--accent), 0 0 24px rgba(88,166,255,.5) !important;
+    border-radius: 8px;
+  }
+  #tourTip {
+    position: fixed; z-index: 102; max-width: 320px;
+    background: var(--panel); border: 1px solid var(--accent);
+    border-radius: 12px; padding: 16px 18px; display: none;
+    box-shadow: 0 12px 32px rgba(0,0,0,.6);
+  }
+  #tourTip h4 { font-size: 15px; margin-bottom: 6px; color: var(--accent); }
+  #tourTip p { font-size: 13.5px; line-height: 1.55; color: var(--text); margin-bottom: 12px; }
+  #tourTip .row { display: flex; gap: 8px; align-items: center; }
+  #tourTip .cnt { margin-left: auto; font-size: 12px; color: var(--muted); }
+
+  #aiOverlay { position: fixed; inset: 0; background: rgba(0,0,0,.65); z-index: 110; display: none; }
+  #aiPanel {
+    position: fixed; top: 6%; left: 50%; transform: translateX(-50%);
+    width: min(560px, 90vw); max-height: 84vh; overflow-y: auto;
+    background: var(--panel); border: 1px solid var(--accent);
+    border-radius: 14px; padding: 20px 22px; display: none;
+    box-shadow: 0 20px 50px rgba(0,0,0,.6); z-index: 111;
+  }
+  .ai-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px; }
+  .ai-header h4 { font-size: 17px; color: var(--accent); }
+  .ai-header button {
+    background: var(--panel2); color: var(--muted); border: 1px solid var(--border);
+    padding: 4px 10px; font-size: 13px; border-radius: 6px;
+  }
+  #aiNote { font-size: 11.5px; color: var(--muted); margin-bottom: 12px; padding-bottom: 10px; border-bottom: 1px dashed var(--border); }
+  #aiBody { font-size: 14.5px; line-height: 1.7; color: var(--text); }
+  #aiBody h5 { color: var(--accent); font-size: 14px; margin: 14px 0 4px; }
+  #aiBody code { font-family: Consolas, monospace; font-size: 13px; background: var(--panel2); padding: 1px 6px; border-radius: 4px; }
+  #aiChips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; }
+  .ai-chip {
+    background: var(--panel2); border: 1px solid var(--border); color: var(--text);
+    font-size: 12.5px; font-weight: 600; padding: 6px 12px; border-radius: 16px;
+  }
+  .ai-chip:hover { border-color: var(--accent); color: var(--accent); }
+
+  .tabs { display: flex; gap: 6px; margin-bottom: 10px; }
+  .tab {
+    background: var(--panel2); color: var(--muted); border: 1px solid var(--border);
+    padding: 6px 16px; border-radius: 8px 8px 0 0; font-size: 13px; font-weight: 700; cursor: pointer;
+  }
+  .tab.on { background: var(--accent); color: #0d1117; border-color: var(--accent); }
+  .codeWrap { display: none; }
+  .codeWrap.on { display: block; }
+  .kw { color: #ff7b72; } .fn { color: #d2a8ff; } .num { color: #79c0ff; } .cm { color: #6e7681; }
+
+  .stats { display: flex; gap: 14px; margin-top: 14px; }
+  .stat { flex: 1; background: var(--panel2); border: 1px solid var(--border); border-radius: 8px; padding: 10px; text-align: center; }
+  .stat .v { font-size: 22px; font-weight: 800; color: var(--accent); }
+  .stat .l { font-size: 12px; color: var(--muted); }
+
+  .learn { font-size: 14px; color: var(--muted); line-height: 1.6; }
+  .learn strong { color: var(--text); }
+  .complexity { display: flex; gap: 10px; margin-top: 10px; flex-wrap: wrap; }
+  .chip {
+    background: rgba(247,129,102,.12); color: var(--accent2); border: 1px solid rgba(247,129,102,.35);
+    padding: 3px 10px; border-radius: 14px; font-size: 12.5px; font-weight: 600;
+  }
+  .chip.g { background: rgba(63,185,80,.12); color: var(--green); border-color: rgba(63,185,80,.35); }
+
+  .quiz-opt {
+    display: block; width: 100%; text-align: left; margin-bottom: 8px;
+    background: var(--panel2); color: var(--text); border: 1px solid var(--border); font-weight: 500;
+  }
+  .quiz-opt.right { border-color: var(--green); background: rgba(63,185,80,.15); }
+  .quiz-opt.wrong { border-color: #f85149; background: rgba(248,81,73,.15); }
+  #quizFeedback { font-size: 13.5px; margin-top: 8px; color: var(--muted); min-height: 20px; }
+
+  .mistake { margin-bottom: 12px; font-size: 13.5px; line-height: 1.55; color: var(--muted); }
+  .mistake b { color: var(--accent2); }
+  .mistake code { font-family: Consolas, monospace; font-size: 12.5px; background: var(--panel2); padding: 1px 6px; border-radius: 4px; color: var(--text); }
+
+  .raceGrid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 12px; }
+  @media (max-width: 700px) { .raceGrid { grid-template-columns: 1fr; } }
+  .racer { background: var(--panel2); border: 1px solid var(--border); border-radius: 10px; padding: 14px; transition: border-color .3s, box-shadow .3s; }
+  .racer.finished { border-color: var(--green); box-shadow: 0 0 14px rgba(63,185,80,.25); }
+  .racerHead { display: flex; justify-content: space-between; margin-bottom: 6px; font-size: 14px; }
+  .racerSub { font-size: 12px; color: var(--muted); margin-bottom: 8px; }
+  .racerHead .ops { color: var(--muted); font-size: 13px; }
+  .bars { display: flex; align-items: flex-end; gap: 2px; height: 130px; }
+  .bar { flex: 1; border-radius: 2px 2px 0 0; background: var(--green); transition: height .1s linear; }
+  .racer.quick .bar { background: var(--purple); }
+  .bar.hot { background: var(--accent2) !important; }
+  #raceResult {
+    margin-top: 14px; padding: 12px 16px; border-radius: 8px;
+    background: rgba(63,185,80,.1); border: 1px solid rgba(63,185,80,.3);
+    font-size: 14.5px; display: none;
+  }
+
+  /* ===== MOBILE / SMALL SCREENS ===== */
+  @media (max-width: 640px) {
+    header { padding: 12px 16px; }
+    .logo { font-size: 19px; }
+    .tagline { font-size: 12px; }
+    .container { padding: 14px 12px 40px; gap: 14px; }
+    .card { padding: 15px; border-radius: 10px; }
+    h1 { font-size: 20px; }
+    h3 { font-size: 14px; }
+    .subtitle { font-size: 13px; margin-bottom: 12px; }
+    .intro { padding: 18px 16px; }
+    .intro h2 { font-size: 17px; }
+    .intro p { font-size: 14px; line-height: 1.6; }
+    .intro .analogy { padding: 10px 12px; font-size: 13.5px; }
+    .steps3 { gap: 8px; }
+    .step3 { min-width: 100%; font-size: 13px; }
+    .badges { gap: 6px; }
+    .badge { font-size: 11.5px; padding: 5px 10px; }
+    #stage { height: 350px; }
+    .toolbar { gap: 8px; }
+    .tgroup { flex-direction: column; align-items: stretch; gap: 8px; padding: 10px; }
+    .tlabel { min-width: 0; }
+    .tbtns { width: 100%; }
+    .tbtns.nowrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    button { padding: 8px 14px; font-size: 13.5px; }
+    input[type=text] { width: 100%; }
+    select { width: 100%; }
+    .tbtns.nowrap select { width: auto; }
+    .speed { margin-left: 0; }
+    #narration { font-size: 14px; padding: 10px 12px; }
+    #arrayView { font-size: 12.5px; padding: 8px 10px; gap: 4px; }
+    .cell { min-width: 30px; padding: 5px 6px; }
+    .cell .idx { font-size: 9px; }
+    .stats { gap: 8px; }
+    .stat { padding: 8px 6px; }
+    .stat .v { font-size: 18px; }
+    .stat .l { font-size: 11px; }
+    .code { font-size: 11.5px; }
+    .code .line { padding: 2px 10px; }
+    .vars { gap: 6px; }
+    .var { font-size: 11.5px; padding: 3px 8px; }
+    .learn { font-size: 13.5px; }
+    .mistake { font-size: 13px; }
+    .raceGrid { grid-template-columns: 1fr; }
+    .bars { height: 100px; }
+    #aiPanel { top: 3%; width: 94vw; padding: 16px 15px; max-height: 90vh; }
+    #aiBody { font-size: 14px; }
+    .ai-chip { font-size: 12px; }
+    #tourTip { max-width: calc(100vw - 24px); padding: 14px 15px; }
+    #tourTip p { font-size: 13px; }
+  }
+
+  /* ===== CLASSROOM / PROJECTOR MODE ===== */
+  body.classroom .intro,
+  body.classroom .card.full,
+  body.classroom .sidebar { display: none !important; }
+  body.classroom .container { grid-template-columns: 1fr !important; max-width: 1500px; }
+  body.classroom #stage { height: 58vh !important; min-height: 340px; }
+  body.classroom h1 { font-size: 34px; }
+  body.classroom #narration { font-size: 22px; line-height: 1.5; padding: 18px 22px; }
+  body.classroom #arrayView { font-size: 19px; }
+  body.classroom #arrayView .cell { min-width: 52px; padding: 9px 11px; font-size: 19px; }
+  body.classroom #arrayView .cell .idx { font-size: 12px; }
+  body.classroom .stat .v { font-size: 32px; }
+  body.classroom .stat .l { font-size: 15px; }
+  body.classroom .tgroup { padding: 12px 16px; }
+  body.classroom button, body.classroom select { font-size: 16px; padding: 11px 20px; }
+  body.classroom .subtitle { font-size: 17px; }
+  body.classroom #passBadge, body.classroom #streakBadge { font-size: 17px; padding: 6px 16px; }
+  body.classroom .ball { font-weight: 800 !important; }
+  #classBtn.on { background: var(--yellow); color: #0d1117; border-color: var(--yellow); }
+</style>
+<script>if(location.protocol.startsWith("http")){var m=document.createElement("link");m.rel="manifest";m.href="manifest.json";document.head.appendChild(m);}</script>
+<meta name="theme-color" content="#0d1117">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+</head>
+<body>
+
+<header>
+  <a href="mindaicode-home.html" style="display:flex; align-items:center; text-decoration:none; color:inherit;">
+    <div class="logo">🧠 MindAI<span>Code</span></div>
+  </a>
+  <div class="tagline" style="display:flex; gap:14px; align-items:center; flex-wrap:wrap;"><a href="mindaicode-race-all.html" style="color:var(--purple); text-decoration:none; font-weight:600;">🏁 Race all six</a><a href="mindaicode-home.html" style="color:var(--muted); text-decoration:none;">🏠 All algorithms</a></div>
+</header>
+
+<div class="container">
+
+  <!-- INTRO -->
+  <div class="intro">
+    <h2>👋 New here? Start with this (30 seconds)</h2>
+    <p><strong>Heap Sort</strong> arranges values into a <strong>binary tree</strong> shape (stored in a plain array!) where every parent is greater than or equal to its children — called a <strong>max-heap</strong>. The largest value always ends up at the very top. Pull it off, put the last leaf in its place, let it "sink" back down to restore the shape, and repeat.</p>
+    <div class="analogy">
+      🎓 <strong>Real-life example:</strong> Arrange students into a pyramid photo formation where everyone must be at least as tall as the two people standing below them — the tallest student ends up at the very top. Send that top student to the back of the sorted line, move the last student in the pyramid up to fill the gap, and let them "sink" downward by swapping with whichever child is taller, until the height order is valid again. Repeat until the pyramid is empty.
+    </div>
+    <div class="steps3">
+      <div class="step3"><b>1️⃣ Watch</b> Press ▶ Play. Watch the actual tree shape — the array below is the SAME data, just laid out in a row.</div>
+      <div class="step3"><b>2️⃣ Predict</b> Turn on 🎯 Predict mode and guess which child is larger during a sift-down.</div>
+      <div class="step3"><b>3️⃣ Compare</b> Try the ⚡ Race — Heap Sort has NO worst case, unlike Quick Sort's.</div>
+    </div>
+  </div>
+
+  <!-- BADGES -->
+  <div class="card full">
+    <div class="badges">
+      <strong style="margin-right: 6px;">🏆 Your badges:</strong>
+      <span class="badge" data-badge="sort">🏅 First Sort</span>
+      <span class="badge" data-badge="predict">🎯 Predictor ×5</span>
+      <span class="badge" data-badge="quiz">🧠 Quiz Master</span>
+      <span class="badge" data-badge="race">⚡ Race Watcher</span>
+      <span class="badge" data-badge="lab">🧪 Scientist</span>
+    </div>
+  </div>
+
+  <!-- MAIN VISUALIZER -->
+  <div class="card">
+    <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap;">
+      <h1 style="margin-bottom:0;">Heap Sort 🌲</h1>
+      <div style="display:flex; gap:8px; flex-wrap:wrap;">
+        <button id="explainBtn" class="secondary">🤖 Explain step</button>
+        <button id="classBtn" class="secondary">🎥 Classroom</button>
+        <button id="tourBtn" class="secondary">❓ Take the tour</button>
+      </div>
+    </div>
+    <p class="subtitle" id="stageSubtitle">The array is really a tree in disguise. Watch it as a tree here, and as a row in the array below.</p>
+
+    <div id="stage">
+      <div id="passBadge">Pass 0</div>
+      <div id="streakBadge">🎯 Streak: 0</div>
+      <svg id="treeLines"></svg>
+      <div id="exitDivider"></div>
+      <div id="exitLabel">✅ sorted (final position)</div>
+    </div>
+
+    <div id="arrayView"></div>
+
+    <div class="toolbar">
+      <div class="tgroup">
+        <div class="tbtns nowrap">
+          <button id="playBtn">▶ Play</button>
+          <button id="stepBtn" class="secondary">⏭ Step</button>
+          <button id="predictBtn" class="secondary">🎯 Predict: Off</button>
+          <button id="shuffleBtn" class="secondary">🔀 Shuffle</button>
+          <button id="resetBtn" class="secondary">↺ Reset</button>
+          <select id="shapeSel" title="Visualization style">
+            <option value="circle">⚪ Balls</option>
+            <option value="bar">📊 Bars</option>
+            <option value="student">🧑‍🎓 Students</option>
+          </select>
+          <div class="speed" style="margin-left:0; flex-shrink:0;">
+            <span>🐢</span><input type="range" id="speed" min="1" max="10" value="5" style="width:80px;"><span>🐇</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="tgroup">
+        <span class="tlabel">🔊 Audio</span>
+        <div class="tbtns">
+          <button id="soundBtn" class="secondary">🔊 Sound: On</button>
+          <button id="voiceBtn" class="secondary">🗣 Voice: Off</button>
+          <select id="voiceSpeed" title="Voice speed">
+            <option value="0.65">🐢 Voice: Slow</option>
+            <option value="0.9" selected>🚶 Voice: Normal</option>
+            <option value="1.2">🐇 Voice: Fast</option>
+          </select>
+          <select id="langSel" title="Narration language">
+            <option value="en">🌐 English</option>
+            <option value="ta">🌐 தமிழ்</option>
+            <option value="hi">🌐 हिंदी</option>
+            <option value="te">🌐 తెలుగు</option>
+            <option value="kn">🌐 ಕನ್ನಡ</option>
+            <option value="bn">🌐 বাংলা</option>
+            <option value="mr">🌐 मराठी</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="tgroup">
+        <span class="tlabel">⌨️ Your data</span>
+        <div class="tbtns">
+          <input type="text" id="customInput" placeholder="e.g. 34, 7, 91, 12">
+          <button id="loadBtn" class="secondary">Load</button>
+        </div>
+      </div>
+
+      <div class="tgroup">
+        <span class="tlabel">🧪 Experiments</span>
+        <div class="tbtns">
+          <button id="expCorrect" class="secondary">✅ Correct code</button>
+          <button id="expOnlyleft" class="secondary">❌ Only check left child</button>
+          <button id="expNoshrink" class="secondary">❌ Never shrink the heap</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="narration">Press <strong>Play</strong> to start, or <strong>Step</strong> to go one comparison at a time.</div>
+
+    <div class="stats">
+      <div class="stat"><div class="v" id="cmpCount">0</div><div class="l">Comparisons</div></div>
+      <div class="stat"><div class="v" id="swapCount">0</div><div class="l">Swaps</div></div>
+      <div class="stat"><div class="v" id="passCount">0</div><div class="l">Extractions</div></div>
+    </div>
+  </div>
+
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+    <div class="card">
+      <h3>💻 The Code</h3>
+      <div class="tabs">
+        <button class="tab on" data-lang="py" type="button">Python</button>
+        <button class="tab" data-lang="java" type="button">Java</button>
+      </div>
+      <div class="codeWrap on" id="code-py">
+        <div class="code">
+          <div class="line" data-l="0"><span class="kw">def</span> <span class="fn">heap_sort</span>(arr):</div>
+          <div class="line" data-l="0">    n = <span class="fn">len</span>(arr)</div>
+          <div class="line" data-l="1">    <span class="kw">for</span> i <span class="kw">in</span> <span class="fn">range</span>(n // <span class="num">2</span> - <span class="num">1</span>, -<span class="num">1</span>, -<span class="num">1</span>):</div>
+          <div class="line" data-l="1">        sift_down(arr, n, i)</div>
+          <div class="line" data-l="9">    <span class="kw">for</span> end <span class="kw">in</span> <span class="fn">range</span>(n - <span class="num">1</span>, <span class="num">0</span>, -<span class="num">1</span>):</div>
+          <div class="line" data-l="10">        arr[<span class="num">0</span>], arr[end] = arr[end], arr[<span class="num">0</span>]</div>
+          <div class="line" data-l="11">        sift_down(arr, end, <span class="num">0</span>)</div>
+          <div class="line" data-l=""><span class="fn">&nbsp;</span></div>
+          <div class="line" data-l="2"><span class="kw">def</span> <span class="fn">sift_down</span>(arr, size, i):</div>
+          <div class="line" data-l="3">    <span class="kw">while</span> <span class="kw">True</span>:</div>
+          <div class="line" data-l="3">        largest = i</div>
+          <div class="line" data-l="4">        l, r = <span class="num">2</span>*i+<span class="num">1</span>, <span class="num">2</span>*i+<span class="num">2</span></div>
+          <div class="line" data-l="5">        <span class="kw">if</span> l &lt; size <span class="kw">and</span> arr[l] &gt; arr[largest]: largest = l</div>
+          <div class="line" data-l="6">        <span class="kw">if</span> r &lt; size <span class="kw">and</span> arr[r] &gt; arr[largest]: largest = r</div>
+          <div class="line" data-l="7">        <span class="kw">if</span> largest == i: <span class="kw">break</span></div>
+          <div class="line" data-l="8">        arr[i], arr[largest] = arr[largest], arr[i]</div>
+          <div class="line" data-l="8">        i = largest</div>
+        </div>
+      </div>
+      <div class="codeWrap" id="code-java">
+        <div class="code">
+          <div class="line" data-l="0"><span class="kw">void</span> <span class="fn">heapSort</span>(<span class="kw">int</span>[] arr) {</div>
+          <div class="line" data-l="0">    <span class="kw">int</span> n = arr.length;</div>
+          <div class="line" data-l="1">    <span class="kw">for</span> (<span class="kw">int</span> i = n/<span class="num">2</span> - <span class="num">1</span>; i &gt;= <span class="num">0</span>; i--)</div>
+          <div class="line" data-l="1">        siftDown(arr, n, i);</div>
+          <div class="line" data-l="9">    <span class="kw">for</span> (<span class="kw">int</span> end = n - <span class="num">1</span>; end &gt; <span class="num">0</span>; end--) {</div>
+          <div class="line" data-l="10">        swap(arr, <span class="num">0</span>, end);</div>
+          <div class="line" data-l="11">        siftDown(arr, end, <span class="num">0</span>);</div>
+          <div class="line" data-l="11">    }</div>
+          <div class="line" data-l="11">}</div>
+          <div class="line" data-l=""><span class="fn">&nbsp;</span></div>
+          <div class="line" data-l="2"><span class="kw">void</span> <span class="fn">siftDown</span>(<span class="kw">int</span>[] arr, <span class="kw">int</span> size, <span class="kw">int</span> i) {</div>
+          <div class="line" data-l="3">    <span class="kw">while</span> (<span class="kw">true</span>) {</div>
+          <div class="line" data-l="3">        <span class="kw">int</span> largest = i;</div>
+          <div class="line" data-l="4">        <span class="kw">int</span> l = <span class="num">2</span>*i+<span class="num">1</span>, r = <span class="num">2</span>*i+<span class="num">2</span>;</div>
+          <div class="line" data-l="5">        <span class="kw">if</span> (l &lt; size &amp;&amp; arr[l] &gt; arr[largest]) largest = l;</div>
+          <div class="line" data-l="6">        <span class="kw">if</span> (r &lt; size &amp;&amp; arr[r] &gt; arr[largest]) largest = r;</div>
+          <div class="line" data-l="7">        <span class="kw">if</span> (largest == i) <span class="kw">break</span>;</div>
+          <div class="line" data-l="8">        swap(arr, i, largest);</div>
+          <div class="line" data-l="8">        i = largest;</div>
+          <div class="line" data-l="8">    }</div>
+          <div class="line" data-l="8">}</div>
+        </div>
+      </div>
+      <div class="vars">
+        <span class="var" id="varPhase">phase = <b>–</b></span>
+        <span class="var" id="varHeapSize">heapSize = <b>–</b></span>
+        <span class="var" id="varI">i = <b>–</b></span>
+        <span class="var" id="varLargest">largest = <b>–</b></span>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top: 16px;">
+      <h3>📚 How it works</h3>
+      <div class="learn">
+        A binary heap stored in an array uses simple index math: for node <code>i</code>, its children live at <code>2i+1</code> and <code>2i+2</code>. No pointers needed! Heap Sort builds a max-heap in O(n), then extracts the max n times, each costing O(log n) — giving a <strong>guaranteed</strong> O(n log n) with no bad-input worst case.
+        <div class="complexity">
+          <span class="chip g">Worst: O(n log n)</span>
+          <span class="chip g">Average: O(n log n)</span>
+          <span class="chip g">Best: O(n log n)</span>
+          <span class="chip">Stable: No</span>
+          <span class="chip g">Space: O(1)</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top: 16px;">
+      <h3>🧠 Quick check</h3>
+      <div id="quizQ" style="font-size: 14px; margin-bottom: 10px;"></div>
+      <div id="quizOpts"></div>
+      <div id="quizFeedback"></div>
+    </div>
+
+    <div class="card" style="margin-top: 16px;">
+      <h3>⚠️ Common mistakes</h3>
+      <div class="mistake"><b>Only checking one child.</b> Sift-down must compare BOTH children to find the true largest — checking only the left child misses cases where the right child is bigger.</div>
+      <div class="mistake"><b>Forgetting to shrink the heap size.</b> After each extraction, already-sorted values at the end must be excluded from future sift-downs, or they get pulled back in and corrupt the result.</div>
+      <div class="mistake"><b>Off-by-one in child index formulas.</b> Children of index <code>i</code> are at <code>2i+1</code> and <code>2i+2</code> — easy to mix up with 1-indexed heap formulas from textbooks.</div>
+      <div class="mistake"><b>Building the heap from the wrong index.</b> Start from the last non-leaf parent (<code>n//2 - 1</code>), not from a leaf or from index 0.</div>
+    </div>
+  </div>
+
+  <!-- RACE -->
+  <div class="card full">
+    <h3>⚡ The Race: Heap Sort vs Quick Sort</h3>
+    <p class="subtitle" style="margin-bottom: 4px;">On <strong>already-sorted</strong> data — the exact input that breaks Quick Sort's last-element pivot.</p>
+    <div class="controls" style="margin: 10px 0 0;">
+      <button id="raceBtn">🏁 Start Race</button>
+    </div>
+    <div class="raceGrid">
+      <div class="racer heap" id="racerH">
+        <div class="racerHead"><strong>🌲 Heap Sort — always O(n log n)</strong><span class="ops">Comparisons: <b id="opsH">0</b></span></div>
+        <div class="racerSub">Swaps so far: <b id="writesH">0</b></div>
+        <div class="bars" id="barsH"></div>
+      </div>
+      <div class="racer quick" id="racerQ">
+        <div class="racerHead"><strong>⚡ Quick Sort — last-element pivot</strong><span class="ops">Comparisons: <b id="opsQ">0</b></span></div>
+        <div class="racerSub">Swaps so far: <b id="writesQ">0</b></div>
+        <div class="bars" id="barsQ"></div>
+      </div>
+    </div>
+    <div id="raceResult"></div>
+  </div>
+
+</div>
+
+<div id="aiOverlay"></div>
+<div id="aiPanel">
+  <div class="ai-header">
+    <h4>🤖 AI Explainer</h4>
+    <button id="aiClose">✕ Close</button>
+  </div>
+  <div id="aiNote">Playback is paused. This breaks down exactly what just happened — read it, then hit Close and Step to continue, or click a question below for more depth.</div>
+  <div id="aiBody"></div>
+  <div id="aiChips"></div>
+</div>
+
+<div id="tourOverlay"></div>
+<div id="tourTip">
+  <h4 id="tourTitle"></h4>
+  <p id="tourText"></p>
+  <div class="row">
+    <button id="tourNext">Next →</button>
+    <button id="tourSkip" class="secondary">Skip</button>
+    <span class="cnt" id="tourCnt"></span>
+  </div>
+</div>
+
+<script>
+/* ================= LANGUAGES ================= */
+const L = {
+  en: {
+    start: 'Press <strong>Play</strong> to start, or <strong>Step</strong> to go one comparison at a time.',
+    buildEnter: '🏗️ <strong>Building the max-heap</strong> — every parent will become greater than or equal to its children.',
+    buildDone: '✅ Max-heap built! The largest value is now at the top (index 0).',
+    siftStart: (i, phase) => phase === 'build' ? `🔧 Sifting down from index ${i} to fix the heap shape.` : `🔧 The new top value needs to sink down to its correct spot.`,
+    compareChild: (rv, cv, side) => `🔍 Comparing current largest (<strong>${rv}</strong>) with the ${side === 'l' ? 'left' : 'right'} child (<strong>${cv}</strong>).`,
+    swapDown: (a, b) => `🔄 <strong>${a}</strong> is smaller than its child <strong>${b}</strong> — swapping them down.`,
+    siftDone: () => `✅ This node is now ≥ both its children — heap property restored here.`,
+    extractSwap: (rv, ev) => `🎯 Moving the top value <strong>${rv}</strong> to its final sorted position, and pulling the last leaf <strong>${ev}</strong> up to the top.`,
+    done: (c, s, e) => `🎉 <strong>Sorted!</strong> ${c} comparisons, ${s} swaps, ${e} extraction(s).`,
+    doneOnlyleft: '😅 <strong>The result is wrong.</strong> We only ever checked the left child — whenever the right child was actually bigger, the heap property broke and never got fixed.',
+    doneNoshrink: '🤔 <strong>The result is wrong.</strong> We never shrank the active heap size after extracting — already-sorted values at the end kept getting pulled back into consideration.',
+    predictQ: (l, r) => `🎯 Which child is bigger: left (<strong>${l}</strong>) or right (<strong>${r}</strong>)?`,
+    right: '✅ Correct prediction! ', wrong: '❌ Wrong — watch: ',
+    minNums: '⚠️ Enter at least 2 numbers separated by commas.',
+  },
+  ta: {
+    start: 'தொடங்க <strong>Play</strong> அழுத்தவும், ஒவ்வொரு ஒப்பீடாக பார்க்க <strong>Step</strong> அழுத்தவும்.',
+    buildEnter: '🏗️ <strong>Max-heap</strong> கட்டப்படுகிறது.',
+    buildDone: '✅ Max-heap தயார்! மிகப்பெரிய மதிப்பு மேலே உள்ளது.',
+    siftStart: (i, phase) => `🔧 குறியீடு ${i} இலிருந்து சரிசெய்கிறோம்.`,
+    compareChild: (rv, cv, side) => `🔍 <strong>${rv}</strong> vs <strong>${cv}</strong> (${side === 'l' ? 'இடது' : 'வலது'} குழந்தை).`,
+    swapDown: (a, b) => `🔄 <strong>${a}</strong> மற்றும் <strong>${b}</strong> மாற்றப்படுகிறது.`,
+    siftDone: () => `✅ Heap பண்பு இங்கே சரிசெய்யப்பட்டது.`,
+    extractSwap: (rv, ev) => `🎯 <strong>${rv}</strong> இறுதி இடத்திற்கு நகர்த்தப்படுகிறது.`,
+    done: (c, s, e) => `🎉 <strong>வரிசையானது!</strong> ${c} ஒப்பீடுகள், ${s} மாற்றங்கள், ${e} பிரித்தெடுப்புகள்.`,
+    doneOnlyleft: '😅 <strong>முடிவு தவறானது.</strong>',
+    doneNoshrink: '🤔 <strong>முடிவு தவறானது.</strong>',
+    predictQ: (l, r) => `🎯 எது பெரியது: இடது (<strong>${l}</strong>) அல்லது வலது (<strong>${r}</strong>)?`,
+    right: '✅ சரியான கணிப்பு! ', wrong: '❌ தவறு — பாருங்கள்: ',
+    minNums: '⚠️ குறைந்தது 2 எண்களை கமாவால் பிரித்து உள்ளிடவும்.',
+  },
+  hi: {
+    start: 'शुरू करने के लिए <strong>Play</strong> दबाएँ, या <strong>Step</strong> दबाएँ।',
+    buildEnter: '🏗️ <strong>Max-heap</strong> बनाया जा रहा है।',
+    buildDone: '✅ Max-heap तैयार! सबसे बड़ा मान अब सबसे ऊपर है।',
+    siftStart: (i, phase) => `🔧 इंडेक्स ${i} से ठीक कर रहे हैं।`,
+    compareChild: (rv, cv, side) => `🔍 <strong>${rv}</strong> बनाम <strong>${cv}</strong> (${side === 'l' ? 'बायाँ' : 'दायाँ'})।`,
+    swapDown: (a, b) => `🔄 <strong>${a}</strong> और <strong>${b}</strong> बदले जा रहे हैं।`,
+    siftDone: () => `✅ यहाँ heap गुण बहाल हो गया।`,
+    extractSwap: (rv, ev) => `🎯 <strong>${rv}</strong> अंतिम स्थान पर जा रहा है।`,
+    done: (c, s, e) => `🎉 <strong>क्रमबद्ध!</strong> ${c} तुलनाएँ, ${s} अदला-बदली, ${e} निष्कर्षण।`,
+    doneOnlyleft: '😅 <strong>परिणाम गलत है।</strong>',
+    doneNoshrink: '🤔 <strong>परिणाम गलत है।</strong>',
+    predictQ: (l, r) => `🎯 कौन बड़ा है: बायाँ (<strong>${l}</strong>) या दायाँ (<strong>${r}</strong>)?`,
+    right: '✅ सही अनुमान! ', wrong: '❌ ग़लत — देखिए: ',
+    minNums: '⚠️ कम से कम 2 संख्याएँ कॉमा से अलग करके लिखें।',
+  },
+  te: {
+    start: 'ప్రారంభించడానికి <strong>Play</strong> నొక్కండి, లేదా <strong>Step</strong> నొక్కండి.',
+    buildEnter: '🏗️ <strong>Max-heap</strong> నిర్మిస్తున్నాం — ప్రతి తల్లి తన పిల్లల కంటే పెద్దదవుతుంది.',
+    buildDone: '✅ Max-heap సిద్ధం! అతిపెద్ద విలువ ఇప్పుడు పైన ఉంది.',
+    siftStart: (i, phase) => `🔧 ${i} స్థానం నుండి heap ఆకారాన్ని సరిచేస్తున్నాం.`,
+    compareChild: (rv, cv, side) => `🔍 <strong>${rv}</strong> మరియు <strong>${cv}</strong> (${side === 'l' ? 'ఎడమ' : 'కుడి'} బిడ్డ) పోలిక.`,
+    swapDown: (a, b) => `🔄 <strong>${a}</strong> తన బిడ్డ <strong>${b}</strong> కంటే చిన్నది — కిందికి మార్చుతున్నాం.`,
+    siftDone: () => `✅ ఇక్కడ heap నియమం పునరుద్ధరించబడింది.`,
+    extractSwap: (rv, ev) => `🎯 పైన ఉన్న <strong>${rv}</strong> తన తుది స్థానానికి వెళ్తోంది.`,
+    done: (c, s, e) => `🎉 <strong>క్రమబద్ధం అయ్యింది!</strong> ${c} పోలికలు, ${s} మార్పిడులు, ${e} వెలికితీతలు.`,
+    doneOnlyleft: '😅 <strong>ఫలితం తప్పు.</strong> కుడి బిడ్డను ఎప్పుడూ చూడలేదు.',
+    doneNoshrink: '🤔 <strong>ఫలితం తప్పు.</strong> heap పరిమాణాన్ని తగ్గించలేదు.',
+    predictQ: (l, r) => `🎯 ఏ బిడ్డ పెద్దది: ఎడమ (<strong>${l}</strong>) లేదా కుడి (<strong>${r}</strong>)?`,
+    right: '✅ సరైన అంచనా! ', wrong: '❌ తప్పు — చూడండి: ',
+    minNums: '⚠️ కనీసం 2 సంఖ్యలను కామాతో వేరు చేసి ఇవ్వండి.',
+  },
+  kn: {
+    start: 'ಪ್ರಾರಂಭಿಸಲು <strong>Play</strong> ಒತ್ತಿರಿ, ಅಥವಾ <strong>Step</strong> ಒತ್ತಿರಿ.',
+    buildEnter: '🏗️ <strong>Max-heap</strong> ನಿರ್ಮಿಸುತ್ತಿದ್ದೇವೆ — ಪ್ರತಿ ಪೋಷಕ ತನ್ನ ಮಕ್ಕಳಿಗಿಂತ ದೊಡ್ಡದಾಗುತ್ತದೆ.',
+    buildDone: '✅ Max-heap ಸಿದ್ಧ! ಅತಿ ದೊಡ್ಡ ಮೌಲ್ಯ ಈಗ ಮೇಲಿದೆ.',
+    siftStart: (i, phase) => `🔧 ${i} ಸ್ಥಾನದಿಂದ heap ಆಕಾರವನ್ನು ಸರಿಪಡಿಸುತ್ತಿದ್ದೇವೆ.`,
+    compareChild: (rv, cv, side) => `🔍 <strong>${rv}</strong> ಮತ್ತು <strong>${cv}</strong> (${side === 'l' ? 'ಎಡ' : 'ಬಲ'} ಮಗು) ಹೋಲಿಕೆ.`,
+    swapDown: (a, b) => `🔄 <strong>${a}</strong> ತನ್ನ ಮಗು <strong>${b}</strong> ಗಿಂತ ಚಿಕ್ಕದು — ಕೆಳಕ್ಕೆ ಬದಲಾಯಿಸುತ್ತಿದ್ದೇವೆ.`,
+    siftDone: () => `✅ ಇಲ್ಲಿ heap ನಿಯಮ ಮರುಸ್ಥಾಪನೆಯಾಯಿತು.`,
+    extractSwap: (rv, ev) => `🎯 ಮೇಲಿನ <strong>${rv}</strong> ತನ್ನ ಅಂತಿಮ ಸ್ಥಾನಕ್ಕೆ ಹೋಗುತ್ತಿದೆ.`,
+    done: (c, s, e) => `🎉 <strong>ವಿಂಗಡಿಸಲಾಗಿದೆ!</strong> ${c} ಹೋಲಿಕೆಗಳು, ${s} ಅದಲುಬದಲುಗಳು, ${e} ಹೊರತೆಗೆಯುವಿಕೆಗಳು.`,
+    doneOnlyleft: '😅 <strong>ಫಲಿತಾಂಶ ತಪ್ಪು.</strong> ಬಲ ಮಗುವನ್ನು ಎಂದೂ ನೋಡಲಿಲ್ಲ.',
+    doneNoshrink: '🤔 <strong>ಫಲಿತಾಂಶ ತಪ್ಪು.</strong> heap ಗಾತ್ರವನ್ನು ಕಡಿಮೆ ಮಾಡಲಿಲ್ಲ.',
+    predictQ: (l, r) => `🎯 ಯಾವ ಮಗು ದೊಡ್ಡದು: ಎಡ (<strong>${l}</strong>) ಅಥವಾ ಬಲ (<strong>${r}</strong>)?`,
+    right: '✅ ಸರಿಯಾದ ಊಹೆ! ', wrong: '❌ ತಪ್ಪು — ನೋಡಿ: ',
+    minNums: '⚠️ ಕನಿಷ್ಠ 2 ಸಂಖ್ಯೆಗಳನ್ನು ಅಲ್ಪವಿರಾಮದಿಂದ ಬೇರ್ಪಡಿಸಿ ಬರೆಯಿರಿ.',
+  },
+  bn: {
+    start: 'শুরু করতে <strong>Play</strong> চাপুন, বা <strong>Step</strong> চাপুন।',
+    buildEnter: '🏗️ <strong>Max-heap</strong> তৈরি করছি — প্রতিটি অভিভাবক তার সন্তানদের চেয়ে বড় হবে।',
+    buildDone: '✅ Max-heap তৈরি! সবচেয়ে বড় মান এখন সবার উপরে।',
+    siftStart: (i, phase) => `🔧 ${i} স্থান থেকে heap আকৃতি ঠিক করছি।`,
+    compareChild: (rv, cv, side) => `🔍 <strong>${rv}</strong> ও <strong>${cv}</strong> (${side === 'l' ? 'বাঁ' : 'ডান'} সন্তান) তুলনা।`,
+    swapDown: (a, b) => `🔄 <strong>${a}</strong> তার সন্তান <strong>${b}</strong> থেকে ছোট — নিচে নামাচ্ছি।`,
+    siftDone: () => `✅ এখানে heap নিয়ম পুনরুদ্ধার হল।`,
+    extractSwap: (rv, ev) => `🎯 উপরের <strong>${rv}</strong> তার চূড়ান্ত স্থানে যাচ্ছে।`,
+    done: (c, s, e) => `🎉 <strong>সাজানো হয়ে গেছে!</strong> ${c} তুলনা, ${s} অদলবদল, ${e} নিষ্কাশন।`,
+    doneOnlyleft: '😅 <strong>ফলাফল ভুল।</strong> ডান সন্তানকে কখনো দেখিনি।',
+    doneNoshrink: '🤔 <strong>ফলাফল ভুল।</strong> heap এর আকার কমাইনি।',
+    predictQ: (l, r) => `🎯 কোন সন্তান বড়: বাঁ (<strong>${l}</strong>) নাকি ডান (<strong>${r}</strong>)?`,
+    right: '✅ সঠিক অনুমান! ', wrong: '❌ ভুল — দেখুন: ',
+    minNums: '⚠️ অন্তত ২টি সংখ্যা কমা দিয়ে আলাদা করে লিখুন।',
+  },
+  mr: {
+    start: 'सुरू करण्यासाठी <strong>Play</strong> दाबा, किंवा <strong>Step</strong> दाबा.',
+    buildEnter: '🏗️ <strong>Max-heap</strong> तयार करत आहोत — प्रत्येक पालक त्याच्या मुलांपेक्षा मोठा होईल.',
+    buildDone: '✅ Max-heap तयार! सर्वात मोठे मूल्य आता सर्वात वर आहे.',
+    siftStart: (i, phase) => `🔧 ${i} स्थानापासून heap आकार दुरुस्त करत आहोत.`,
+    compareChild: (rv, cv, side) => `🔍 <strong>${rv}</strong> आणि <strong>${cv}</strong> (${side === 'l' ? 'डावे' : 'उजवे'} मूल) तुलना.`,
+    swapDown: (a, b) => `🔄 <strong>${a}</strong> त्याच्या मुलापेक्षा <strong>${b}</strong> लहान आहे — खाली सरकवत आहोत.`,
+    siftDone: () => `✅ इथे heap नियम पुन्हा प्रस्थापित झाला.`,
+    extractSwap: (rv, ev) => `🎯 वरचे <strong>${rv}</strong> त्याच्या अंतिम स्थानी जात आहे.`,
+    done: (c, s, e) => `🎉 <strong>क्रमवारी पूर्ण!</strong> ${c} तुलना, ${s} अदलाबदल, ${e} बाहेर काढणे.`,
+    doneOnlyleft: '😅 <strong>निकाल चुकीचा आहे.</strong> उजव्या मुलाला कधीच पाहिले नाही.',
+    doneNoshrink: '🤔 <strong>निकाल चुकीचा आहे.</strong> heap चा आकार कमी केला नाही.',
+    predictQ: (l, r) => `🎯 कोणते मूल मोठे: डावे (<strong>${l}</strong>) की उजवे (<strong>${r}</strong>)?`,
+    right: '✅ बरोबर अंदाज! ', wrong: '❌ चूक — पाहा: ',
+    minNums: '⚠️ किमान 2 संख्या स्वल्पविरामाने वेगळ्या करून लिहा.',
+  },
+};
+let lang = 'en';
+const voiceLang = { en: 'en-US', ta: 'ta-IN', hi: 'hi-IN', te: 'te-IN', kn: 'kn-IN', bn: 'bn-IN', mr: 'mr-IN' };
+function T() { return L[lang]; }
+document.getElementById('langSel').onchange = function () { lang = this.value; };
+
+/* ================= BADGES ================= */
+function award(id) {
+  const el = document.querySelector(`.badge[data-badge="${id}"]`);
+  if (!el || el.classList.contains('earned')) return;
+  el.classList.add('earned');
+  try { localStorage.setItem('mhp_badge_' + id, '1'); } catch (e) {}
+  tone(880, .2, 'triangle', .12); setTimeout(() => tone(1320, .3, 'triangle', .12), 180);
+}
+try {
+  ['sort','predict','quiz','race','lab'].forEach(id => {
+    if (localStorage.getItem('mhp_badge_' + id))
+      document.querySelector(`.badge[data-badge="${id}"]`).classList.add('earned');
+  });
+} catch (e) {}
+
+/* ================= AUDIO ================= */
+let soundOn = true, voiceOn = false, actx = null;
+function ctx() {
+  if (!actx) actx = new (window.AudioContext || window.webkitAudioContext)();
+  if (actx.state === 'suspended') actx.resume();
+  return actx;
+}
+function tone(freq, dur, type, vol) {
+  if (!soundOn) return;
+  try {
+    const c = ctx(), o = c.createOscillator(), g = c.createGain();
+    o.type = type || 'sine'; o.frequency.value = freq;
+    g.gain.setValueAtTime(vol || 0.15, c.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.001, c.currentTime + dur);
+    o.connect(g); g.connect(c.destination);
+    o.start(); o.stop(c.currentTime + dur);
+  } catch (e) {}
+}
+function sfxCompare(v) { tone(300 + v * 4, .18, 'sine'); }
+function sfxSwap() { tone(220, .12, 'square', .1); setTimeout(() => tone(440, .15, 'square', .1), 110); }
+function sfxExtract() { tone(720, .25, 'triangle', .13); }
+function sfxDone() { [523, 659, 784, 1047].forEach((f, i) => setTimeout(() => tone(f, .3, 'triangle', .14), i * 160)); }
+let lastSpeechPromise = null;
+function speak(text) {
+  lastSpeechPromise = null;
+  if (!voiceOn || !window.speechSynthesis) return null;
+  speechSynthesis.cancel();
+  const clean = text.replace(/[🔁🔍🔄✅⚡🎉⚠️🎯😅🤔🏗️🌲]/g, '');
+  const u = new SpeechSynthesisUtterance(clean);
+  const rate = parseFloat(document.getElementById('voiceSpeed').value);
+  u.rate = rate; u.lang = voiceLang[lang];
+  const p = new Promise(resolve => {
+    let done = false;
+    const finish = () => { if (!done) { done = true; resolve(); } };
+    u.onend = finish;
+    u.onerror = finish;
+    const estMs = Math.max(1000, (clean.length * 65) / rate) + 700;
+    setTimeout(finish, estMs);
+  });
+  lastSpeechPromise = p;
+  speechSynthesis.speak(u);
+  return p;
+}
+document.getElementById('soundBtn').onclick = function () {
+  soundOn = !soundOn;
+  this.textContent = soundOn ? '🔊 Sound: On' : '🔇 Sound: Off';
+};
+document.getElementById('voiceBtn').onclick = function () {
+  voiceOn = !voiceOn;
+  this.textContent = voiceOn ? '🗣 Voice: On' : '🗣 Voice: Off';
+  if (!voiceOn) speechSynthesis.cancel();
+};
+
+/* ================= MAIN VISUALIZER ================= */
+const stage = document.getElementById('stage');
+const narration = document.getElementById('narration');
+const passBadge = document.getElementById('passBadge');
+const streakBadge = document.getElementById('streakBadge');
+const playBtn = document.getElementById('playBtn');
+
+let values = [34, 7, 91, 12, 55, 28, 76, 3];
+// balls[] is indexed by physical array SLOT, exactly like Quick Sort. Positions
+// are computed either as a TREE node (while idx < heapSize) or as a fixed
+// EXIT ROW slot at its final sorted index (once extracted, idx >= heapSize).
+let balls = [], steps = [], stepIdx = 0;
+let playing = false, timer = null;
+let stats = { cmp: 0, swap: 0, extract: 0 };
+let variant = 'correct';
+let predictOn = false, waitingPredict = false, streak = 0;
+let cur = [];
+let heapSize = 0;
+let cmpIdx = null, cmpRootIdx = null, swapA = null, swapB = null, curRootIdx = null;
+let locked = [];
+let sortedAll = false;
+let curPhase = null, curI = null, curLargest = null;
+let shapeMode = 'circle';
+
+const stageSubtitle = document.getElementById('stageSubtitle');
+const subtitles = {
+  circle: 'The array is really a tree in disguise. Watch it as a tree here, and as a row in the array below.',
+  bar: 'Same tree shape, drawn as bars — colour still shows what\'s being compared or swapped.',
+  student: 'Students arranged in a height pyramid — the tallest always rises to the top.',
+};
+document.getElementById('shapeSel').onchange = function () {
+  shapeMode = this.value;
+  stageSubtitle.textContent = subtitles[shapeMode];
+  buildBalls();
+  applyBallStates();
+  updateTreeLines();
+};
+
+function applyBallStates() {
+  balls.forEach((b, idx) => {
+    if (!b) return;
+    b.classList.remove('comparing', 'swapping', 'sorted', 'rootnode');
+    if (sortedAll || locked[idx]) { b.classList.add('sorted'); return; }
+    if (idx === swapA || idx === swapB) b.classList.add('swapping');
+    else if (idx === cmpIdx || idx === cmpRootIdx) b.classList.add('comparing');
+    if (idx === curRootIdx) b.classList.add('rootnode');
+  });
+}
+
+function ballSize() {
+  const n = Math.max(1, values.length);
+  const maxLevel = Math.max(0, Math.floor(Math.log2(n)));
+  const leavesInDeepest = Math.pow(2, maxLevel);
+  const w = stage.clientWidth;
+  return Math.min(42, Math.max(24, Math.floor(w / leavesInDeepest) - 10));
+}
+function treeX(i, size) {
+  const level = Math.floor(Math.log2(i + 1));
+  const posInLevel = i - (Math.pow(2, level) - 1);
+  const nodesInLevel = Math.pow(2, level);
+  const w = stage.clientWidth;
+  const slotW = w / nodesInLevel;
+  return posInLevel * slotW + slotW / 2 - size / 2;
+}
+function treeY(i, size) {
+  const level = Math.floor(Math.log2(i + 1));
+  return 14 + level * (size + 26);
+}
+function rowX(i, size) {
+  const w = stage.clientWidth;
+  const n = values.length;
+  const gap = (w - n * size) / (n + 1);
+  return gap + i * (size + gap);
+}
+function exitRowY(size) {
+  return stage.clientHeight - size - 14;
+}
+function positionBall(b, idx, size) {
+  if (idx < heapSize) {
+    b.style.left = treeX(idx, size) + 'px';
+    b.style.top = treeY(idx, size) + 'px';
+  } else {
+    b.style.left = rowX(idx, size) + 'px';
+    b.style.top = exitRowY(size) + 'px';
+  }
+}
+function updateTreeLines() {
+  const svg = document.getElementById('treeLines');
+  const size = ballSize();
+  svg.innerHTML = '';
+  for (let i = 0; i < heapSize; i++) {
+    const l = 2 * i + 1, r = 2 * i + 2;
+    [l, r].forEach(c => {
+      if (c < heapSize) {
+        const x1 = treeX(i, size) + size / 2, y1 = treeY(i, size) + size / 2;
+        const x2 = treeX(c, size) + size / 2, y2 = treeY(c, size) + size / 2;
+        const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+        line.setAttribute('x1', x1); line.setAttribute('y1', y1);
+        line.setAttribute('x2', x2); line.setAttribute('y2', y2);
+        line.style.stroke = '#30363d';
+        line.style.strokeWidth = '2';
+        svg.appendChild(line);
+      }
+    });
+  }
+  document.getElementById('exitDivider').style.top = (exitRowY(size) - 10) + 'px';
+  document.getElementById('exitLabel').style.top = (exitRowY(size) - 24) + 'px';
+}
+
+function renderArray() {
+  const box = document.getElementById('arrayView');
+  box.innerHTML = '<span class="lbl">arr =</span>';
+  cur.forEach((v, pos) => {
+    const c = document.createElement('span');
+    c.className = 'cell';
+    if (sortedAll || locked[pos]) c.classList.add('sorted');
+    else if (pos === swapA || pos === swapB) c.classList.add('swapping');
+    else if (pos === cmpIdx || pos === cmpRootIdx) c.classList.add('comparing');
+    c.innerHTML = `${v}<span class="idx">[${pos}]</span>`;
+    box.appendChild(c);
+  });
+}
+function renderVars() {
+  document.getElementById('varPhase').innerHTML = 'phase = <b>' + (curPhase || '–') + '</b>';
+  document.getElementById('varHeapSize').innerHTML = 'heapSize = <b>' + heapSize + '</b>';
+  document.getElementById('varI').innerHTML = 'i = <b>' + (curI === null ? '–' : curI) + '</b>';
+  document.getElementById('varLargest').innerHTML = 'largest = <b>' + (curLargest === null ? '–' : curLargest) + '</b>';
+}
+
+function buildBalls() {
+  balls.forEach(b => { if (b) b.remove(); });
+  balls = [];
+  const size = ballSize();
+  values.forEach((v, i) => {
+    const b = document.createElement('div');
+    if (shapeMode === 'bar') {
+      b.textContent = v;
+      b.className = 'ball bar-mode';
+      b.style.width = size + 'px'; b.style.height = size + 'px';
+      b.style.fontSize = Math.max(10, Math.round(size * 0.32)) + 'px';
+    } else if (shapeMode === 'student') {
+      b.className = 'ball student-mode';
+      const w = size, h = Math.round(size * 1.3);
+      b.style.width = w + 'px'; b.style.height = h + 'px';
+      b.innerHTML = `<div class="student-head"></div><div class="student-body"><span class="student-tag">${v}</span></div>`;
+    } else {
+      b.textContent = v;
+      b.className = 'ball';
+      b.style.width = size + 'px'; b.style.height = size + 'px';
+      b.style.fontSize = Math.max(10, Math.round(size * 0.34)) + 'px';
+    }
+    positionBall(b, i, size);
+    stage.appendChild(b);
+    balls.push(b);
+  });
+  updateTreeLines();
+}
+
+function computeSteps() {
+  steps = [];
+  const a = [...values];
+  const n = a.length;
+
+  function siftDown(size, i, phase) {
+    steps.push({ t: 'siftStart', i, size, phase });
+    let root = i;
+    while (true) {
+      let largest = root;
+      const l = 2 * root + 1, r = 2 * root + 2;
+      if (l < size) {
+        steps.push({ t: 'compareChild', root, largest, child: l, rootVal: a[largest], childVal: a[l], which: 'l' });
+        if (a[l] > a[largest]) largest = l;
+      }
+      if (r < size && variant !== 'onlyleft') {
+        steps.push({ t: 'compareChild', root, largest, child: r, rootVal: a[largest], childVal: a[r], which: 'r', leftValRaw: a[l] });
+        if (a[r] > a[largest]) largest = r;
+      }
+      if (largest === root) { steps.push({ t: 'siftDone', i: root }); break; }
+      steps.push({ t: 'swapDown', i: root, largest, iv: a[root], lv: a[largest] });
+      [a[root], a[largest]] = [a[largest], a[root]];
+      root = largest;
+    }
+  }
+
+  if (n > 1) {
+    steps.push({ t: 'buildEnter' });
+    for (let i = Math.floor(n / 2) - 1; i >= 0; i--) {
+      siftDown(n, i, 'build');
+    }
+    steps.push({ t: 'buildDone' });
+
+    for (let end = n - 1; end > 0; end--) {
+      steps.push({ t: 'extractSwap', root: 0, end, rv: a[0], ev: a[end] });
+      [a[0], a[end]] = [a[end], a[0]];
+      steps.push({ t: 'extractLock', pos: end });
+      const sizeForSift = variant === 'noshrink' ? n : end;
+      siftDown(sizeForSift, 0, 'extract');
+    }
+  } else if (n === 1) {
+    steps.push({ t: 'extractLock', pos: 0 });
+  }
+  steps.push({ t: 'done', variant });
+}
+
+function highlight(lines) {
+  document.querySelectorAll('.codeWrap .line').forEach(el =>
+    el.classList.toggle('active', lines.includes(el.dataset.l)));
+}
+document.querySelectorAll('.tab').forEach(tab => {
+  tab.onclick = () => {
+    document.querySelectorAll('.tab').forEach(t => t.classList.toggle('on', t === tab));
+    document.querySelectorAll('.codeWrap').forEach(w =>
+      w.classList.toggle('on', w.id === 'code-' + tab.dataset.lang));
+  };
+});
+function updateStats() {
+  document.getElementById('cmpCount').textContent = stats.cmp;
+  document.getElementById('swapCount').textContent = stats.swap;
+  document.getElementById('passCount').textContent = stats.extract;
+}
+function delay() { return 4000 - document.getElementById('speed').value * 300; }
+
+function doSwap(i, j) {
+  const size = ballSize();
+  const b1 = balls[i], b2 = balls[j];
+  positionBall(b1, j, size);
+  positionBall(b2, i, size);
+  [balls[i], balls[j]] = [balls[j], balls[i]];
+  [cur[i], cur[j]] = [cur[j], cur[i]];
+}
+
+function execStep(prefix) {
+  if (stepIdx >= steps.length) return false;
+  const s = steps[stepIdx++];
+  cmpIdx = null; cmpRootIdx = null; swapA = null; swapB = null;
+  if (s.t === 'buildEnter') {
+    curPhase = 'build';
+    narration.innerHTML = T().buildEnter;
+    highlight(['1']);
+  } else if (s.t === 'buildDone') {
+    narration.innerHTML = T().buildDone;
+    highlight(['1']);
+  } else if (s.t === 'siftStart') {
+    curPhase = s.phase; curI = s.i; curLargest = s.i; curRootIdx = s.i;
+    narration.innerHTML = T().siftStart(s.i, s.phase);
+    highlight(['2', '3']);
+  } else if (s.t === 'compareChild') {
+    stats.cmp++;
+    curI = s.root; curLargest = s.largest;
+    cmpIdx = s.child; cmpRootIdx = s.largest;
+    narration.innerHTML = (prefix || '') + T().compareChild(s.rootVal, s.childVal, s.which);
+    highlight([s.which === 'l' ? '5' : '6']);
+    sfxCompare(s.childVal);
+  } else if (s.t === 'swapDown') {
+    stats.swap++;
+    swapA = s.i; swapB = s.largest;
+    curRootIdx = s.largest;
+    doSwap(s.i, s.largest);
+    narration.innerHTML = T().swapDown(s.iv, s.lv);
+    highlight(['8']);
+    sfxSwap();
+  } else if (s.t === 'siftDone') {
+    curRootIdx = null;
+    narration.innerHTML = T().siftDone();
+    highlight(['7']);
+  } else if (s.t === 'extractSwap') {
+    swapA = s.root; swapB = s.end;
+    doSwap(s.root, s.end);
+    narration.innerHTML = T().extractSwap(s.rv, s.ev);
+    highlight(['10']);
+    sfxExtract();
+  } else if (s.t === 'extractLock') {
+    stats.extract++;
+    locked[s.pos] = true;
+    heapSize = s.pos;
+    // reposition every remaining ball since crossing the heapSize boundary
+    // changes whether idx<heapSize (tree) or idx>=heapSize (exit row)
+    const size = ballSize();
+    balls.forEach((b, idx) => { if (b) positionBall(b, idx, size); });
+    updateTreeLines();
+  } else if (s.t === 'done') {
+    curPhase = null; curI = null; curLargest = null; curRootIdx = null;
+    if (s.variant === 'correct') {
+      sortedAll = true;
+      heapSize = 0;
+      // the last remaining heap element (index 0) never gets an explicit
+      // extractLock step, so it's still sitting in the tree-root visual
+      // position — force every ball into its exit-row slot now.
+      const size = ballSize();
+      balls.forEach((b, idx) => { if (b) positionBall(b, idx, size); });
+      updateTreeLines();
+      narration.innerHTML = T().done(stats.cmp, stats.swap, stats.extract);
+      sfxDone();
+      award('sort');
+    } else if (s.variant === 'onlyleft') {
+      narration.innerHTML = T().doneOnlyleft;
+    } else if (s.variant === 'noshrink') {
+      narration.innerHTML = T().doneNoshrink;
+    }
+    highlight([]);
+    stopPlay();
+  }
+  applyBallStates();
+  renderArray();
+  renderVars();
+  speak(narration.textContent);
+  updateStats();
+  return stepIdx < steps.length;
+}
+
+function doStep() {
+  if (stepIdx >= steps.length) return false;
+  const s = steps[stepIdx];
+  if (predictOn && s.t === 'compareChild' && s.which === 'r' && !waitingPredict) {
+    // predict which child (left vs right) is larger, asked once both are known (at the right-child comparison point we have both values)
+    waitingPredict = true;
+    cmpIdx = s.child; cmpRootIdx = s.largest;
+    applyBallStates();
+    narration.innerHTML = T().predictQ(s.leftValRaw, s.childVal) +
+      `<br><button id="pLeft">Left wins</button><button id="pRight" class="secondary">Right wins</button>`;
+    speak(narration.textContent);
+    document.getElementById('pLeft').onclick = () => answerPredict('left', s);
+    document.getElementById('pRight').onclick = () => answerPredict('right', s);
+    return true;
+  }
+  return execStep();
+}
+function answerPredict(choice, s) {
+  waitingPredict = false;
+  const correct = (choice === 'left') === (s.leftValRaw >= s.childVal);
+  if (correct) { streak++; tone(780, .15, 'triangle', .12); }
+  else { streak = 0; tone(180, .25, 'sawtooth', .08); }
+  streakBadge.textContent = '🎯 Streak: ' + streak;
+  if (streak >= 5) award('predict');
+  const more = execStep(correct ? T().right : T().wrong);
+  if (playing) scheduleNext(more);
+}
+
+function scheduleNext(more) {
+  if (!more) { stopPlay(); return; }
+  const baseDelay = delay();
+  const speechP = lastSpeechPromise;
+  const start = Date.now();
+  if (voiceOn && speechP) {
+    speechP.then(() => {
+      if (!playing) return;
+      const remaining = Math.max(0, baseDelay - (Date.now() - start));
+      timer = setTimeout(playLoop, remaining);
+    });
+  } else {
+    timer = setTimeout(playLoop, baseDelay);
+  }
+}
+
+function playLoop() {
+  if (!playing) return;
+  const more = doStep();
+  if (waitingPredict) return;
+  scheduleNext(more);
+}
+function stopPlay() {
+  playing = false;
+  clearTimeout(timer);
+  playBtn.textContent = '▶ Play';
+}
+playBtn.onclick = () => {
+  if (playing) { stopPlay(); return; }
+  if (stepIdx >= steps.length) reset(false);
+  playing = true;
+  playBtn.textContent = '⏸ Pause';
+  playLoop();
+};
+document.getElementById('stepBtn').onclick = () => { if (!waitingPredict) { stopPlay(); doStep(); } };
+document.getElementById('predictBtn').onclick = function () {
+  predictOn = !predictOn;
+  this.textContent = '🎯 Predict: ' + (predictOn ? 'On' : 'Off');
+  this.classList.toggle('on', predictOn);
+  streakBadge.style.display = predictOn ? 'block' : 'none';
+};
+
+function reset(newOrder) {
+  stopPlay();
+  waitingPredict = false;
+  if (newOrder) values = values.map(() => Math.floor(Math.random() * 97) + 3);
+  stepIdx = 0;
+  stats = { cmp: 0, swap: 0, extract: 0 };
+  cur = [...values];
+  heapSize = values.length;
+  locked = new Array(values.length).fill(false);
+  cmpIdx = null; cmpRootIdx = null; swapA = null; swapB = null; curRootIdx = null;
+  sortedAll = false;
+  curPhase = null; curI = null; curLargest = null;
+  updateStats();
+  passBadge.textContent = 'Pass 0';
+  narration.innerHTML = T().start;
+  highlight([]);
+  buildBalls();
+  computeSteps();
+  applyBallStates();
+  renderArray();
+  renderVars();
+}
+document.getElementById('shuffleBtn').onclick = () => { variant = 'correct'; reset(true); };
+document.getElementById('resetBtn').onclick = () => { variant = 'correct'; reset(false); };
+document.getElementById('loadBtn').onclick = () => {
+  const nums = document.getElementById('customInput').value
+    .split(/[\s,]+/).map(Number).filter(v => !isNaN(v)).slice(0, 12);
+  if (nums.length >= 2) { values = nums; variant = 'correct'; reset(false); }
+  else narration.innerHTML = T().minNums;
+};
+
+/* Experiments */
+function runExperiment(v) {
+  variant = v;
+  reset(false);
+  if (v !== 'correct') award('lab');
+  playing = true;
+  playBtn.textContent = '⏸ Pause';
+  playLoop();
+}
+document.getElementById('expCorrect').onclick = () => runExperiment('correct');
+document.getElementById('expOnlyleft').onclick = () => runExperiment('onlyleft');
+document.getElementById('expNoshrink').onclick = () => runExperiment('noshrink');
+
+window.addEventListener('resize', () => {
+  const size = ballSize();
+  balls.forEach((b, i) => { if (b) positionBall(b, i, size); });
+  updateTreeLines();
+});
+
+reset(false);
+
+/* ================= QUIZ ================= */
+const quiz = [
+  { q: 'In a max-heap, what must be true about every parent node?',
+    opts: ['It must be smaller than both its children', 'It must be greater than or equal to both its children', 'It must equal the sum of its children'],
+    ans: 1, why: 'That single rule, applied everywhere, guarantees the largest value in the whole structure ends up at the root.' },
+  { q: 'After building the max-heap, where is the largest value in the array?',
+    opts: ['At the last index', 'At index 0 (the root)', 'It could be anywhere'],
+    ans: 1, why: 'The heap property forces the single largest value to bubble up to the root — index 0 — every time.' },
+  { q: 'Why does Heap Sort shrink its "active heap size" after each extraction?',
+    opts: ['To save memory', 'So already-sorted values at the end are excluded from future sift-downs', 'It doesn\'t need to — this is optional'],
+    ans: 1, why: 'Without shrinking, sift-down would keep comparing against already-finalized values and could pull them back into the heap, corrupting the result.' },
+];
+let qi = 0, quizCorrect = 0;
+function showQuiz() {
+  const item = quiz[qi];
+  document.getElementById('quizQ').innerHTML = `<strong>Q${qi + 1}/${quiz.length}:</strong> ${item.q}`;
+  const box = document.getElementById('quizOpts');
+  box.innerHTML = '';
+  document.getElementById('quizFeedback').textContent = '';
+  item.opts.forEach((o, i) => {
+    const b = document.createElement('button');
+    b.className = 'quiz-opt'; b.textContent = o;
+    b.onclick = () => {
+      box.querySelectorAll('button').forEach(x => x.disabled = true);
+      const ok = i === item.ans;
+      if (ok) quizCorrect++;
+      b.classList.add(ok ? 'right' : 'wrong');
+      if (!ok) box.children[item.ans].classList.add('right');
+      let tail;
+      if (qi < quiz.length - 1) tail = ' <a href="#" id="nextQ" style="color:var(--accent)">Next →</a>';
+      else {
+        tail = ` 🎉 Quiz done — ${quizCorrect}/${quiz.length} correct!`;
+        if (quizCorrect === quiz.length) award('quiz');
+        else tail += ' <a href="#" id="retryQ" style="color:var(--accent)">Try again</a>';
+      }
+      document.getElementById('quizFeedback').innerHTML =
+        (ok ? '✅ Correct! ' : '❌ Not quite. ') + item.why + tail;
+      const n = document.getElementById('nextQ');
+      if (n) n.onclick = e => { e.preventDefault(); qi++; showQuiz(); };
+      const r = document.getElementById('retryQ');
+      if (r) r.onclick = e => { e.preventDefault(); qi = 0; quizCorrect = 0; showQuiz(); };
+    };
+    box.appendChild(b);
+  });
+}
+showQuiz();
+
+/* ================= RACE ================= */
+const RN = 60;
+let raceTimer = null;
+function buildRaceBars(id, vals) {
+  const box = document.getElementById(id);
+  box.innerHTML = '';
+  vals.forEach(v => {
+    const b = document.createElement('div');
+    b.className = 'bar';
+    b.style.height = v + '%';
+    box.appendChild(b);
+  });
+  return [...box.children];
+}
+function heapOpsRace(vals) {
+  const a = [...vals], ops = [];
+  const n = a.length;
+  function siftDown(size, i) {
+    while (true) {
+      let largest = i;
+      const l = 2 * i + 1, r = 2 * i + 2;
+      if (l < size) { ops.push({ t: 'c', i: l }); if (a[l] > a[largest]) largest = l; }
+      if (r < size) { ops.push({ t: 'c', i: r }); if (a[r] > a[largest]) largest = r; }
+      if (largest === i) break;
+      [a[i], a[largest]] = [a[largest], a[i]];
+      ops.push({ t: 'w', i, v: a[i] }); ops.push({ t: 'w', i: largest, v: a[largest] });
+      i = largest;
+    }
+  }
+  for (let i = Math.floor(n / 2) - 1; i >= 0; i--) siftDown(n, i);
+  for (let end = n - 1; end > 0; end--) {
+    [a[0], a[end]] = [a[end], a[0]];
+    ops.push({ t: 'w', i: 0, v: a[0] }); ops.push({ t: 'w', i: end, v: a[end] });
+    siftDown(end, 0);
+  }
+  return ops;
+}
+function quickOpsRace(vals) {
+  const a = [...vals], ops = [];
+  function qs(lo, hi) {
+    if (lo >= hi) return;
+    const pivot = a[hi];
+    let i = lo - 1;
+    for (let j = lo; j < hi; j++) {
+      ops.push({ t: 'c', i: j });
+      if (a[j] <= pivot) {
+        i++;
+        if (i !== j) {
+          [a[i], a[j]] = [a[j], a[i]];
+          ops.push({ t: 'w', i, v: a[i] });
+          ops.push({ t: 'w', i: j, v: a[j] });
+        }
+      }
+    }
+    [a[i + 1], a[hi]] = [a[hi], a[i + 1]];
+    ops.push({ t: 'w', i: i + 1, v: a[i + 1] });
+    ops.push({ t: 'w', i: hi, v: a[hi] });
+    qs(lo, i);
+    qs(i + 2, hi);
+  }
+  qs(0, a.length - 1);
+  return ops;
+}
+function sortedAsc(n) {
+  return Array.from({ length: n }, (_, i) => Math.round(3 + (i * 94) / (n - 1)));
+}
+document.getElementById('raceBtn').onclick = () => {
+  clearInterval(raceTimer);
+  document.getElementById('raceResult').style.display = 'none';
+  document.getElementById('racerH').classList.remove('finished');
+  document.getElementById('racerQ').classList.remove('finished');
+  const vals = sortedAsc(RN);
+  const barsH = buildRaceBars('barsH', vals);
+  const barsQ = buildRaceBars('barsQ', vals);
+  const opsH = heapOpsRace(vals), opsQ = quickOpsRace(vals);
+  let hi_ = 0, qi_ = 0, writesH = 0, writesQ = 0;
+  const apply = (ops, idx, bars) => {
+    const op = ops[idx];
+    bars.forEach(b => b.classList.remove('hot'));
+    if (op.t === 'w') bars[op.i].style.height = op.v + '%';
+    if (bars[op.i]) bars[op.i].classList.add('hot');
+    return op.t === 'w';
+  };
+  raceTimer = setInterval(() => {
+    if (hi_ < opsH.length) {
+      if (apply(opsH, hi_, barsH)) writesH++;
+      hi_++;
+      document.getElementById('opsH').textContent = hi_;
+      document.getElementById('writesH').textContent = writesH;
+      if (hi_ >= opsH.length) {
+        document.getElementById('racerH').classList.add('finished');
+        barsH.forEach(b => b.classList.remove('hot'));
+      }
+    }
+    for (let k = 0; k < 6 && qi_ < opsQ.length; k++) {
+      if (apply(opsQ, qi_, barsQ)) writesQ++;
+      qi_++;
+    }
+    document.getElementById('opsQ').textContent = qi_;
+    document.getElementById('writesQ').textContent = writesQ;
+    if (qi_ >= opsQ.length) {
+      document.getElementById('racerQ').classList.add('finished');
+      barsQ.forEach(b => b.classList.remove('hot'));
+    }
+    if (hi_ >= opsH.length && qi_ >= opsQ.length) {
+      clearInterval(raceTimer);
+      const r = document.getElementById('raceResult');
+      r.style.display = 'block';
+      r.innerHTML = `🏆 <strong>Heap Sort stayed fast — Quick Sort didn't.</strong> On this already-sorted data: Heap Sort needed ${hi_} operations, Quick Sort needed ${qi_}. Quick Sort's last-element pivot strategy hits its O(n²) worst case here. Heap Sort has NO input that can trigger a worse-than-O(n log n) case — its tree shape guarantees a balanced structure no matter what the data looks like. That guarantee is Heap Sort's whole reason to exist, even though Quick Sort is often faster on average, unsorted data.`;
+      sfxDone();
+      award('race');
+    }
+  }, 14);
+};
+
+/* ================= GUIDED TOUR ================= */
+const tourSteps = [
+  { sel: '#playBtn', title: '▶ Play / Pause', text: 'Starts the animation automatically. Press again to pause any time.' },
+  { sel: '#stepBtn', title: '⏭ Step', text: 'Moves one comparison at a time — watch the tree shape build, then watch it shrink as values get extracted.' },
+  { sel: '#predictBtn', title: '🎯 Predict mode', text: 'Guess which child is larger during a sift-down. 5 in a row earns a badge!' },
+  { sel: '#speed', title: '🐢 Animation speed', text: 'Drag left for slow, right for fast.' },
+  { sel: '#soundBtn', title: '🔊 Sound effects', text: 'A distinct chime plays whenever a value is extracted to its final position.' },
+  { sel: '#voiceBtn', title: '🗣 Voice narration', text: 'Reads every explanation aloud, with a speed dropdown next to it.' },
+  { sel: '#langSel', title: '🌐 Language', text: 'Switch narration to Tamil or Hindi.' },
+  { sel: '#customInput', title: '⌨️ Your own numbers', text: 'Sort your own list by typing numbers and pressing Load.' },
+  { sel: '#expOnlyleft', title: '🧪 Experiments', text: 'Run broken versions — only check the left child, or never shrink the heap — and see exactly why each step matters.' },
+  { sel: '#explainBtn', title: '🤖 AI Explainer', text: 'Pause any time for a deep explanation of exactly what just happened, using this run\'s real values.' },
+  { sel: '#arrayView', title: '🔢 Live array', text: 'The SAME data as the tree above, laid out as a flat array with index labels — this is what\'s actually stored in memory.' },
+  { sel: '#code-py', title: '💻 Live code', text: 'Two functions: heap_sort (build + extract loop) and sift_down (the tree-fixing logic). The exact running line lights up.' },
+  { sel: '#quizOpts', title: '🧠 Quiz', text: 'Test yourself on the max-heap property and why the active heap size must shrink.' },
+  { sel: '#raceBtn', title: '⚡ The Race', text: 'Heap Sort vs Quick Sort on ALREADY-SORTED data — see why Heap Sort\'s guaranteed O(n log n) matters.' },
+];
+let tourIdx = -1, tourEl = null;
+const tourOverlay = document.getElementById('tourOverlay');
+const tourTip = document.getElementById('tourTip');
+function tourShow(i) {
+  if (tourEl) tourEl.classList.remove('tour-target');
+  if (i >= tourSteps.length) { tourEnd(); return; }
+  tourIdx = i;
+  const st = tourSteps[i];
+  tourEl = document.querySelector(st.sel);
+  if (!tourEl) { tourShow(i + 1); return; }
+  tourOverlay.style.display = 'block';
+  tourEl.classList.add('tour-target');
+  tourEl.scrollIntoView({ block: 'center', behavior: 'instant' });
+  document.getElementById('tourTitle').textContent = st.title;
+  document.getElementById('tourText').textContent = st.text;
+  document.getElementById('tourCnt').textContent = (i + 1) + '/' + tourSteps.length;
+  document.getElementById('tourNext').textContent = i === tourSteps.length - 1 ? 'Finish ✓' : 'Next →';
+  const r = tourEl.getBoundingClientRect();
+  tourTip.style.display = 'block';
+  const tw = 320, th = tourTip.offsetHeight || 140;
+  let top = r.bottom + 12;
+  if (top + th > window.innerHeight - 10) top = Math.max(10, r.top - th - 12);
+  let left = Math.min(Math.max(10, r.left), window.innerWidth - tw - 10);
+  tourTip.style.top = top + 'px';
+  tourTip.style.left = left + 'px';
+}
+function tourEnd() {
+  if (tourEl) tourEl.classList.remove('tour-target');
+  tourEl = null; tourIdx = -1;
+  tourOverlay.style.display = 'none';
+  tourTip.style.display = 'none';
+  try { localStorage.setItem('mhp_toured', '1'); } catch (e) {}
+}
+document.getElementById('tourBtn').onclick = () => tourShow(0);
+document.getElementById('tourNext').onclick = () => tourShow(tourIdx + 1);
+document.getElementById('tourSkip').onclick = tourEnd;
+tourOverlay.onclick = tourEnd;
+try { if (!localStorage.getItem('mhp_toured')) setTimeout(() => tourShow(0), 800); } catch (e) {}
+
+/* ================= AI EXPLAINER ================= */
+const aiOverlay = document.getElementById('aiOverlay');
+const aiPanel = document.getElementById('aiPanel');
+const aiBody = document.getElementById('aiBody');
+const aiChips = document.getElementById('aiChips');
+
+function explainForStep() {
+  const s = steps[stepIdx - 1];
+  if (!s) return `<p>Nothing has run yet. Press <strong>Step</strong> or <strong>Play</strong> once, then click this button again.</p>`;
+  let html = '';
+  if (s.t === 'buildEnter') {
+    html = `
+      <p>Building a max-heap out of the raw array. This works by calling sift-down on every non-leaf node, starting from the LAST one and working back to the root.</p>
+      <h5>Why start from the last non-leaf node?</h5>
+      <p>Leaf nodes (indices ≥ n/2) have no children, so they're already trivially valid 1-node heaps. Working backward from the last parent to the root guarantees every subtree is already heap-valid before its parent gets processed.</p>`;
+  } else if (s.t === 'siftStart') {
+    html = `<p>Sift-down starting at index ${s.i}. This repeatedly compares a node against its children and swaps downward until the node is ≥ both children (or it has none left).</p>`;
+  } else if (s.t === 'compareChild') {
+    html = `<p>Comparing the current largest known value (<code>${s.rootVal}</code>) against the ${s.which === 'l' ? 'left' : 'right'} child (<code>${s.childVal}</code>) to find the true largest of the three.</p>`;
+  } else if (s.t === 'swapDown' || s.t === 'siftDone') {
+    html = s.t === 'swapDown'
+      ? `<p>The parent was smaller than one of its children, so they're swapped. The value that moved down will now be compared against ITS children next — sifting can cascade multiple levels down.</p>`
+      : `<p>The current node is now ≥ both its children. No more swaps needed at this position — the heap property holds here.</p>`;
+  } else if (s.t === 'extractSwap' || s.t === 'extractLock') {
+    html = `
+      <p>The root (always the current largest) is swapped with the last active leaf, then EXCLUDED from the heap by shrinking <code>heapSize</code>. It now sits in its correct final sorted position, permanently.</p>
+      <h5>Why this guarantees a sorted array</h5>
+      <p>Each extraction pulls out the CURRENT maximum of whatever's left in the heap. Doing that n times, in order, produces a fully sorted array — largest values land at the end first, working down to the smallest.</p>`;
+  } else if (s.t === 'done') {
+    if (s.variant === 'correct') {
+      html = `
+        <p>🎉 Sorted: <strong>${stats.cmp}</strong> comparisons, <strong>${stats.swap}</strong> swaps, across <strong>${stats.extract}</strong> extraction(s).</p>
+        <h5>Why this is ALWAYS O(n log n)</h5>
+        <p>Building the heap is O(n) total (a neat mathematical fact — most nodes are near the bottom and need very little work). Each of the n extractions costs O(log n) for its sift-down, since the tree height is always log n. No input arrangement can make this worse.</p>`;
+    } else if (s.variant === 'onlyleft') {
+      html = `<p>This was the <strong>"Only check left child"</strong> experiment. Whenever the right child was actually the bigger one, it never got compared, so the max-heap property silently broke — and stayed broken, corrupting the final order.</p>`;
+    } else if (s.variant === 'noshrink') {
+      html = `<p>This was the <strong>"Never shrink the heap"</strong> experiment. Every sift-down kept considering the FULL array, including already-extracted, correctly-placed values at the end — pulling them back into consideration and overwriting their correct positions.</p>`;
+    }
+  }
+  return html || `<p>Step through the animation and I'll explain exactly what happened.</p>`;
+}
+
+const AI_FAQ = {
+  guarantee: {
+    label: 'Why is Heap Sort O(n log n) in ALL cases — best, average, AND worst?',
+    body: `<h5>No input can unbalance the tree</h5>
+      <p>Unlike Quick Sort, where a bad pivot choice can create a lopsided partition, a heap's shape is determined purely by its SIZE, not the values in it. Building costs O(n), and each of the n extractions costs O(log n) — that arithmetic never changes, regardless of the input order.</p>`,
+  },
+  stable: {
+    label: 'Is Heap Sort stable?',
+    body: `<h5>No</h5>
+      <p>Swaps during sift-down can reorder equal values relative to each other, the same issue Quick Sort has. If you need stability, Merge Sort (with a ≤ comparison) is the standard choice among the O(n log n) sorts.</p>`,
+  },
+  space: {
+    label: 'Does Heap Sort need extra memory?',
+    body: `<h5>No — O(1) extra space</h5>
+      <p>Everything happens by swapping values within the original array. Combined with the guaranteed O(n log n) worst case, this makes Heap Sort attractive in memory-constrained systems or anywhere a guaranteed time bound matters more than average-case speed.</p>`,
+  },
+  whystart: {
+    label: 'Why build the heap starting from the middle, not the start?',
+    body: `<h5>Leaves need no work</h5>
+      <p>Any index ≥ n/2 has no children — it's automatically a valid 1-node heap. Starting from the last actual PARENT node (<code>n//2 - 1</code>) and working backward to the root ensures that whenever sift-down runs on a node, both of its subtrees are already valid heaps.</p>`,
+  },
+};
+
+function renderAiChips() {
+  aiChips.innerHTML = '';
+  Object.entries(AI_FAQ).forEach(([key, item]) => {
+    const chip = document.createElement('button');
+    chip.className = 'ai-chip';
+    chip.textContent = '❓ ' + item.label;
+    chip.onclick = () => {
+      aiBody.innerHTML += `<hr style="border-color:var(--border); margin:16px 0;">` + item.body;
+      aiPanel.scrollTop = aiPanel.scrollHeight;
+    };
+    aiChips.appendChild(chip);
+  });
+}
+
+function openAiExplainer() {
+  stopPlay();
+  aiBody.innerHTML = explainForStep();
+  renderAiChips();
+  aiOverlay.style.display = 'block';
+  aiPanel.style.display = 'block';
+}
+function closeAiExplainer() {
+  aiOverlay.style.display = 'none';
+  aiPanel.style.display = 'none';
+}
+document.getElementById('explainBtn').onclick = openAiExplainer;
+document.getElementById('aiClose').onclick = closeAiExplainer;
+aiOverlay.onclick = closeAiExplainer;
+
+/* ===== Classroom mode: hide everything except the animation ===== */
+(function () {
+  var btn = document.getElementById('classBtn');
+  if (!btn) return;
+  function apply(on) {
+    document.body.classList.toggle('classroom', on);
+    btn.classList.toggle('on', on);
+    btn.textContent = on ? '\u2715 Exit classroom' : '\U0001F3A5 Classroom';
+    try { localStorage.setItem('mac_classroom', on ? '1' : '0'); } catch (e) {}
+    window.dispatchEvent(new Event('resize'));
+  }
+  btn.onclick = function () { apply(!document.body.classList.contains('classroom')); };
+  var want = false;
+  try {
+    want = localStorage.getItem('mac_classroom') === '1' ||
+           /[?&]classroom=1/.test(location.search);
+  } catch (e) { want = /[?&]classroom=1/.test(location.search); }
+  if (want) apply(true);
+})();
+</script>
+<script>
+/* ===== Offline support (works when served over http/https) ===== */
+if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
+  window.addEventListener('load', function () {
+    navigator.serviceWorker.register('sw.js').catch(function () { /* offline mode simply unavailable */ });
+  });
+}
+</script>
+<script src="firebase-config.js"></script>
+<script src="mindaicode-auth.js"></script>
+</body>
+</html>

@@ -1,0 +1,21 @@
+{
+  "name": "MindAICode — Learn. Visualize. Code. Master.",
+  "short_name": "MindAICode",
+  "description": "Animated, interactive lessons on sorting and searching algorithms, with an AI explainer, quizzes and a code sandbox.",
+  "start_url": "mindaicode-home.html",
+  "scope": ".",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#0d1117",
+  "theme_color": "#0d1117",
+  "categories": ["education"],
+  "lang": "en",
+  "icons": [
+    {
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

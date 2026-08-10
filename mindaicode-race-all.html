@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MindAICode — All Six Sorts, One Race</title>
+<style>
+  :root {
+    --bg: #0d1117;
+    --panel: #161b22;
+    --panel2: #1c2333;
+    --accent: #58a6ff;
+    --accent2: #f78166;
+    --purple: #d2a8ff;
+    --green: #3fb950;
+    --yellow: #d29922;
+    --text: #e6edf3;
+    --muted: #8b949e;
+    --border: #30363d;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    background: var(--bg); color: var(--text); min-height: 100vh;
+  }
+  header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 14px 28px; background: var(--panel);
+    border-bottom: 1px solid var(--border); flex-wrap: wrap; gap: 8px;
+  }
+  .logo { font-size: 22px; font-weight: 800; }
+  .logo span { color: var(--accent); }
+  .tagline { color: var(--muted); font-size: 13px; }
+  .container { max-width: 1300px; margin: 0 auto; padding: 24px 20px 60px; }
+
+  .hero {
+    background: linear-gradient(135deg, rgba(88,166,255,.12), rgba(210,168,255,.08));
+    border: 1px solid var(--border); border-radius: 16px;
+    padding: 26px 24px; margin-bottom: 20px; text-align: center;
+  }
+  .hero h1 { font-size: 26px; margin-bottom: 8px; }
+  .hero h1 span { color: var(--accent); }
+  .hero p { color: var(--muted); font-size: 15px; max-width: 680px; margin: 0 auto; line-height: 1.65; }
+
+  .panel {
+    background: var(--panel); border: 1px solid var(--border);
+    border-radius: 12px; padding: 18px; margin-bottom: 18px;
+  }
+  .ctrlRow { display: flex; flex-wrap: wrap; gap: 14px; align-items: flex-end; }
+  .field { display: flex; flex-direction: column; gap: 6px; }
+  .field label { font-size: 12px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .4px; }
+  select, button {
+    font-family: inherit; font-size: 14px; border-radius: 8px; padding: 10px 14px;
+  }
+  select {
+    background: var(--panel2); border: 1px solid var(--border); color: var(--text); font-weight: 600;
+  }
+  button {
+    background: var(--accent); color: #0d1117; border: none; font-weight: 700; cursor: pointer;
+    transition: filter .15s, transform .1s;
+  }
+  button:hover { filter: brightness(1.12); }
+  button:active { transform: scale(.97); }
+  button.secondary { background: var(--panel2); color: var(--text); border: 1px solid var(--border); }
+  .hint { font-size: 13px; color: var(--muted); margin-top: 12px; line-height: 1.6; }
+  .hint b { color: var(--text); }
+
+  .grid {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 16px; margin-bottom: 20px;
+  }
+  .racer {
+    background: var(--panel); border: 1px solid var(--border);
+    border-radius: 12px; padding: 16px; position: relative;
+    transition: border-color .3s, box-shadow .3s;
+  }
+  .racer.done { border-color: var(--green); box-shadow: 0 0 16px rgba(63,185,80,.2); }
+  .racer .medal {
+    position: absolute; top: -10px; right: 12px; font-size: 22px;
+    opacity: 0; transform: scale(.4); transition: opacity .3s, transform .3s;
+  }
+  .racer.done .medal { opacity: 1; transform: scale(1); }
+  .rHead { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; margin-bottom: 2px; }
+  .rName { font-size: 15px; font-weight: 800; }
+  .rBig { font-size: 11.5px; font-weight: 700; padding: 2px 8px; border-radius: 10px; white-space: nowrap; }
+  .rBig.n2 { background: rgba(247,129,102,.12); color: var(--accent2); border: 1px solid rgba(247,129,102,.3); }
+  .rBig.nlogn { background: rgba(63,185,80,.12); color: var(--green); border: 1px solid rgba(63,185,80,.3); }
+  .rStats { font-size: 12px; color: var(--muted); margin-bottom: 10px; font-variant-numeric: tabular-nums; }
+  .rStats b { color: var(--text); }
+  .bars { display: flex; align-items: flex-end; gap: 1.5px; height: 120px; }
+  .bar { flex: 1; border-radius: 2px 2px 0 0; background: var(--accent); transition: height .08s linear; }
+  .bar.hot { background: var(--accent2) !important; }
+  .racer.done .bar { background: var(--green); }
+  .progWrap { height: 5px; background: var(--panel2); border-radius: 3px; margin-top: 10px; overflow: hidden; }
+  .prog { height: 100%; width: 0%; background: var(--accent); transition: width .1s linear; }
+  .racer.done .prog { background: var(--green); }
+
+  #results { display: none; }
+  #podium { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 14px; }
+  .pod {
+    flex: 1; min-width: 140px; background: var(--panel2); border: 1px solid var(--border);
+    border-radius: 10px; padding: 12px 14px;
+  }
+  .pod .pos { font-size: 13px; color: var(--muted); font-weight: 700; }
+  .pod .nm { font-size: 15px; font-weight: 800; margin: 3px 0; }
+  .pod .ops { font-size: 12.5px; color: var(--muted); font-variant-numeric: tabular-nums; }
+  #takeaway {
+    background: rgba(88,166,255,.08); border: 1px solid rgba(88,166,255,.3);
+    border-radius: 10px; padding: 14px 16px; font-size: 14.5px; line-height: 1.7;
+  }
+  #takeaway h4 { font-size: 15px; margin-bottom: 6px; color: var(--accent); }
+
+  table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+  th, td { text-align: left; padding: 9px 10px; border-bottom: 1px solid var(--border); }
+  th { color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: .4px; }
+  td.num { font-variant-numeric: tabular-nums; }
+  .tagGood { color: var(--green); font-weight: 700; }
+  .tagBad { color: var(--accent2); font-weight: 700; }
+  a.back { color: var(--muted); text-decoration: none; font-size: 13px; }
+
+  @media (max-width: 620px) {
+    header { padding: 12px 16px; }
+    .container { padding: 16px 14px 44px; }
+    .hero { padding: 20px 16px; }
+    .hero h1 { font-size: 21px; }
+    .hero p { font-size: 14px; }
+    .grid { grid-template-columns: 1fr; }
+    .ctrlRow { flex-direction: column; align-items: stretch; }
+    .field, select, button { width: 100%; }
+    .bars { height: 96px; }
+  }
+</style>
+<script>if(location.protocol.startsWith("http")){var m=document.createElement("link");m.rel="manifest";m.href="manifest.json";document.head.appendChild(m);}</script>
+<meta name="theme-color" content="#0d1117">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+</head>
+<body>
+
+<header>
+  <a href="mindaicode-home.html" style="text-decoration:none; color:inherit;">
+    <div class="logo">🧠 MindAI<span>Code</span></div>
+  </a>
+  <a class="back" href="mindaicode-home.html">🏠 All algorithms</a>
+</header>
+
+<div class="container">
+
+  <div class="hero">
+    <h1>All six sorts. <span>Same data. One race.</span></h1>
+    <p>Every algorithm gets the exact same numbers at the same moment. Change the <strong>starting data</strong> below and watch the winner change — because there is no single "fastest" sorting algorithm, only the right one for your data.</p>
+  </div>
+
+  <div class="panel">
+    <div class="ctrlRow">
+      <div class="field">
+        <label for="shapeSel">Starting data</label>
+        <select id="shapeSel">
+          <option value="random">🎲 Random jumble</option>
+          <option value="sorted">📈 Already sorted</option>
+          <option value="reverse">📉 Reverse sorted</option>
+          <option value="nearly">🩹 Nearly sorted</option>
+          <option value="few">🎯 Few unique values</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="sizeSel">How many items</label>
+        <select id="sizeSel">
+          <option value="20">20 items</option>
+          <option value="40" selected>40 items</option>
+          <option value="60">60 items</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="speedSel">Speed</label>
+        <select id="speedSel">
+          <option value="28">🐢 Slow</option>
+          <option value="10" selected>🚶 Normal</option>
+          <option value="3">🐇 Fast</option>
+        </select>
+      </div>
+      <button id="startBtn">🏁 Start the race</button>
+      <button id="resetBtn" class="secondary">↺ Reset</button>
+    </div>
+    <div class="hint" id="shapeHint"></div>
+  </div>
+
+  <div class="grid" id="grid"></div>
+
+  <div class="panel" id="results">
+    <h3 style="font-size:16px; margin-bottom:12px;">🏆 Results</h3>
+    <div id="podium"></div>
+    <div id="takeaway"></div>
+  </div>
+
+  <div class="panel">
+    <h3 style="font-size:16px; margin-bottom:4px;">📋 Cheat sheet</h3>
+    <p style="font-size:13px; color:var(--muted); margin-bottom:12px;">What each algorithm costs, and when you'd actually reach for it.</p>
+    <div style="overflow-x:auto;">
+      <table>
+        <thead>
+          <tr><th>Algorithm</th><th>Average</th><th>Worst</th><th>Extra memory</th><th>Stable</th><th>Use it when…</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>🫧 Bubble</td><td>O(n²)</td><td class="tagBad">O(n²)</td><td>O(1)</td><td class="tagGood">Yes</td><td>Teaching only — never in real code.</td></tr>
+          <tr><td>🔎 Selection</td><td>O(n²)</td><td class="tagBad">O(n²)</td><td>O(1)</td><td>No</td><td>Writing to memory is very expensive.</td></tr>
+          <tr><td>🃏 Insertion</td><td>O(n²)</td><td class="tagBad">O(n²)</td><td>O(1)</td><td class="tagGood">Yes</td><td>Data is small or nearly sorted.</td></tr>
+          <tr><td>🪄 Merge</td><td class="tagGood">O(n log n)</td><td class="tagGood">O(n log n)</td><td>O(n)</td><td class="tagGood">Yes</td><td>You need stability or linked lists.</td></tr>
+          <tr><td>⚡ Quick</td><td class="tagGood">O(n log n)</td><td class="tagBad">O(n²)</td><td>O(log n)</td><td>No</td><td>General purpose, fastest in practice.</td></tr>
+          <tr><td>🌲 Heap</td><td class="tagGood">O(n log n)</td><td class="tagGood">O(n log n)</td><td>O(1)</td><td>No</td><td>You need a guaranteed time limit.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+
+<script>
+/* ============ OPERATION GENERATORS ============
+   Each returns a list of ops: {t:'c'} compare, {t:'w', i, v} write.
+   Total ops = comparisons + writes, used as the fair "work" measure. */
+
+function bubbleOps(src) {
+  const a = [...src], ops = [], n = a.length;
+  for (let i = 0; i < n - 1; i++) {
+    for (let j = 0; j < n - 1 - i; j++) {
+      ops.push({ t: 'c', i: j });
+      if (a[j] > a[j + 1]) {
+        const tmp = a[j]; a[j] = a[j + 1]; a[j + 1] = tmp;
+        ops.push({ t: 'w', i: j, v: a[j] });
+        ops.push({ t: 'w', i: j + 1, v: a[j + 1] });
+      }
+    }
+  }
+  return ops;
+}
+function selectionOps(src) {
+  const a = [...src], ops = [], n = a.length;
+  for (let i = 0; i < n - 1; i++) {
+    let min = i;
+    for (let j = i + 1; j < n; j++) {
+      ops.push({ t: 'c', i: j });
+      if (a[j] < a[min]) min = j;
+    }
+    if (min !== i) {
+      const tmp = a[i]; a[i] = a[min]; a[min] = tmp;
+      ops.push({ t: 'w', i, v: a[i] });
+      ops.push({ t: 'w', i: min, v: a[min] });
+    }
+  }
+  return ops;
+}
+function insertionOps(src) {
+  const a = [...src], ops = [], n = a.length;
+  for (let i = 1; i < n; i++) {
+    const key = a[i];
+    let j = i - 1;
+    while (j >= 0) {
+      ops.push({ t: 'c', i: j });
+      if (a[j] > key) { a[j + 1] = a[j]; ops.push({ t: 'w', i: j + 1, v: a[j + 1] }); j--; }
+      else break;
+    }
+    a[j + 1] = key;
+    ops.push({ t: 'w', i: j + 1, v: key });
+  }
+  return ops;
+}
+function mergeOps(src) {
+  const a = [...src], ops = [];
+  function ms(lo, hi) {
+    if (hi - lo < 2) return;
+    const mid = (lo + hi) >> 1;
+    ms(lo, mid); ms(mid, hi);
+    const merged = [];
+    let i = lo, j = mid;
+    while (i < mid && j < hi) {
+      ops.push({ t: 'c', i });
+      merged.push(a[i] <= a[j] ? a[i++] : a[j++]);
+    }
+    while (i < mid) merged.push(a[i++]);
+    while (j < hi) merged.push(a[j++]);
+    for (let k = 0; k < merged.length; k++) {
+      a[lo + k] = merged[k];
+      ops.push({ t: 'w', i: lo + k, v: merged[k] });
+    }
+  }
+  ms(0, a.length);
+  return ops;
+}
+function quickOps(src) {
+  const a = [...src], ops = [];
+  function qs(lo, hi) {
+    if (lo >= hi) return;
+    const pivot = a[hi];
+    let i = lo - 1;
+    for (let j = lo; j < hi; j++) {
+      ops.push({ t: 'c', i: j });
+      if (a[j] <= pivot) {
+        i++;
+        if (i !== j) {
+          const tmp = a[i]; a[i] = a[j]; a[j] = tmp;
+          ops.push({ t: 'w', i, v: a[i] });
+          ops.push({ t: 'w', i: j, v: a[j] });
+        }
+      }
+    }
+    const tmp = a[i + 1]; a[i + 1] = a[hi]; a[hi] = tmp;
+    ops.push({ t: 'w', i: i + 1, v: a[i + 1] });
+    ops.push({ t: 'w', i: hi, v: a[hi] });
+    qs(lo, i); qs(i + 2, hi);
+  }
+  qs(0, a.length - 1);
+  return ops;
+}
+function heapOps(src) {
+  const a = [...src], ops = [], n = a.length;
+  function sift(size, i) {
+    while (true) {
+      let largest = i;
+      const l = 2 * i + 1, r = 2 * i + 2;
+      if (l < size) { ops.push({ t: 'c', i: l }); if (a[l] > a[largest]) largest = l; }
+      if (r < size) { ops.push({ t: 'c', i: r }); if (a[r] > a[largest]) largest = r; }
+      if (largest === i) break;
+      const tmp = a[i]; a[i] = a[largest]; a[largest] = tmp;
+      ops.push({ t: 'w', i, v: a[i] });
+      ops.push({ t: 'w', i: largest, v: a[largest] });
+      i = largest;
+    }
+  }
+  for (let i = Math.floor(n / 2) - 1; i >= 0; i--) sift(n, i);
+  for (let end = n - 1; end > 0; end--) {
+    const tmp = a[0]; a[0] = a[end]; a[end] = tmp;
+    ops.push({ t: 'w', i: 0, v: a[0] });
+    ops.push({ t: 'w', i: end, v: a[end] });
+    sift(end, 0);
+  }
+  return ops;
+}
+
+const ALGOS = [
+  { key: 'bubble',    name: '🫧 Bubble Sort',    big: 'O(n²)',      cls: 'n2',    gen: bubbleOps,    href: 'mindaicode-bubble-sort.html' },
+  { key: 'selection', name: '🔎 Selection Sort', big: 'O(n²)',      cls: 'n2',    gen: selectionOps, href: 'mindaicode-selection-sort.html' },
+  { key: 'insertion', name: '🃏 Insertion Sort', big: 'O(n²)',      cls: 'n2',    gen: insertionOps, href: 'mindaicode-insertion-sort.html' },
+  { key: 'merge',     name: '🪄 Merge Sort',     big: 'O(n log n)', cls: 'nlogn', gen: mergeOps,     href: 'mindaicode-merge-sort.html' },
+  { key: 'quick',     name: '⚡ Quick Sort',      big: 'O(n log n)', cls: 'nlogn', gen: quickOps,     href: 'mindaicode-quick-sort.html' },
+  { key: 'heap',      name: '🌲 Heap Sort',      big: 'O(n log n)', cls: 'nlogn', gen: heapOps,      href: 'mindaicode-heap-sort.html' },
+];
+
+/* ============ DATA SHAPES ============ */
+const SHAPE_HINTS = {
+  random: 'A normal shuffled list — the everyday case. Expect the three O(n log n) sorts to win comfortably.',
+  sorted: 'The data is <b>already in order</b>. Watch what happens to Quick Sort here: its last-element pivot turns this into its worst case.',
+  reverse: 'Every value is in the <b>exact wrong order</b>. This is the worst case for Bubble and Insertion Sort — every comparison leads to a move.',
+  nearly: 'Almost sorted, with a few values out of place. This is <b>Insertion Sort\'s best case</b> — it can beat the "faster" algorithms here.',
+  few: 'Only a handful of distinct values, repeated many times. Notice how few swaps Selection Sort needs compared to how many Bubble Sort makes.',
+};
+function makeData(shape, n) {
+  const base = i => Math.round(6 + (i * 92) / (n - 1));
+  let a;
+  if (shape === 'sorted') a = Array.from({ length: n }, (_, i) => base(i));
+  else if (shape === 'reverse') a = Array.from({ length: n }, (_, i) => base(n - 1 - i));
+  else if (shape === 'nearly') {
+    a = Array.from({ length: n }, (_, i) => base(i));
+    for (let k = 0; k < Math.max(2, Math.round(n / 12)); k++) {
+      const x = Math.floor(Math.random() * n), y = Math.floor(Math.random() * n);
+      const t = a[x]; a[x] = a[y]; a[y] = t;
+    }
+  } else if (shape === 'few') {
+    const opts = [15, 40, 65, 90];
+    a = Array.from({ length: n }, () => opts[Math.floor(Math.random() * opts.length)]);
+  } else {
+    a = Array.from({ length: n }, () => Math.floor(Math.random() * 94) + 6);
+  }
+  return a;
+}
+
+/* ============ UI ============ */
+const grid = document.getElementById('grid');
+const shapeSel = document.getElementById('shapeSel');
+const sizeSel = document.getElementById('sizeSel');
+const speedSel = document.getElementById('speedSel');
+const shapeHint = document.getElementById('shapeHint');
+const resultsBox = document.getElementById('results');
+let timer = null;
+let state = [];
+
+function updateHint() { shapeHint.innerHTML = SHAPE_HINTS[shapeSel.value]; }
+shapeSel.onchange = () => { updateHint(); buildRacers(); };
+sizeSel.onchange = () => buildRacers();
+updateHint();
+
+function buildRacers() {
+  clearInterval(timer);
+  resultsBox.style.display = 'none';
+  const n = parseInt(sizeSel.value, 10);
+  const data = makeData(shapeSel.value, n);
+  grid.innerHTML = '';
+  state = ALGOS.map(algo => {
+    const el = document.createElement('div');
+    el.className = 'racer';
+    el.innerHTML = `
+      <span class="medal"></span>
+      <div class="rHead">
+        <a class="rName" href="${algo.href}" style="color:inherit; text-decoration:none;">${algo.name}</a>
+        <span class="rBig ${algo.cls}">${algo.big}</span>
+      </div>
+      <div class="rStats">Comparisons <b class="c">0</b> · Writes <b class="w">0</b> · Total <b class="tot">0</b></div>
+      <div class="bars"></div>
+      <div class="progWrap"><div class="prog"></div></div>`;
+    const barsEl = el.querySelector('.bars');
+    const bars = data.map(v => {
+      const b = document.createElement('div');
+      b.className = 'bar';
+      b.style.height = v + '%';
+      barsEl.appendChild(b);
+      return b;
+    });
+    grid.appendChild(el);
+    return {
+      algo, el, bars,
+      ops: algo.gen(data),
+      idx: 0, comps: 0, writes: 0, done: false, rank: null,
+      cEl: el.querySelector('.c'), wEl: el.querySelector('.w'),
+      totEl: el.querySelector('.tot'), progEl: el.querySelector('.prog'),
+      medalEl: el.querySelector('.medal'),
+    };
+  });
+}
+
+function startRace() {
+  buildRacers();
+  let finished = 0;
+  const tick = parseInt(speedSel.value, 10);
+  timer = setInterval(() => {
+    let allDone = true;
+    state.forEach(s => {
+      if (s.done) return;
+      const op = s.ops[s.idx];
+      s.bars.forEach(b => b.classList.remove('hot'));
+      if (op.t === 'w') { s.bars[op.i].style.height = op.v + '%'; s.writes++; }
+      else s.comps++;
+      if (s.bars[op.i]) s.bars[op.i].classList.add('hot');
+      s.idx++;
+      s.cEl.textContent = s.comps;
+      s.wEl.textContent = s.writes;
+      s.totEl.textContent = s.idx;
+      s.progEl.style.width = (s.idx / s.ops.length * 100) + '%';
+      if (s.idx >= s.ops.length) {
+        s.done = true;
+        s.rank = ++finished;
+        s.el.classList.add('done');
+        s.bars.forEach(b => b.classList.remove('hot'));
+        s.medalEl.textContent = s.rank === 1 ? '🥇' : s.rank === 2 ? '🥈' : s.rank === 3 ? '🥉' : '✅';
+      } else allDone = false;
+    });
+    if (allDone) { clearInterval(timer); showResults(); }
+  }, tick);
+}
+
+function showResults() {
+  const ranked = [...state].sort((a, b) => a.ops.length - b.ops.length);
+  const podium = document.getElementById('podium');
+  podium.innerHTML = '';
+  ranked.forEach((s, i) => {
+    const medal = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : (i + 1) + 'th';
+    const d = document.createElement('div');
+    d.className = 'pod';
+    d.innerHTML = `<div class="pos">${medal}</div>
+      <div class="nm">${s.algo.name}</div>
+      <div class="ops">${s.ops.length.toLocaleString()} operations<br>${s.comps.toLocaleString()} comparisons · ${s.writes.toLocaleString()} writes</div>`;
+    podium.appendChild(d);
+  });
+
+  const win = ranked[0], last = ranked[ranked.length - 1];
+  const ratio = (last.ops.length / Math.max(1, win.ops.length)).toFixed(1);
+  const shape = shapeSel.value;
+  const byKey = k => state.find(s => s.algo.key === k);
+  let extra = '';
+  if (shape === 'sorted') {
+    const q = byKey('quick'), ins = byKey('insertion');
+    extra = `Look at <b>Quick Sort</b>: ${q.ops.length.toLocaleString()} operations. On sorted data its last-element pivot always picks the largest remaining value, so every partition removes just one item — the O(n²) worst case. Meanwhile <b>Insertion Sort</b> needed only ${ins.ops.length.toLocaleString()}, because it never has to shift anything. A Bubble Sort written with an early-exit flag would finish this in a single pass too — try adding that yourself.`;
+  } else if (shape === 'nearly') {
+    const ins = byKey('insertion'), mg = byKey('merge');
+    extra = `<b>Insertion Sort</b> (${ins.ops.length.toLocaleString()} ops) can beat <b>Merge Sort</b> (${mg.ops.length.toLocaleString()} ops) here despite having a "worse" Big-O. Big-O describes how an algorithm scales, not which one wins on a specific input — and real data is often nearly sorted. This is exactly why Python and Java use Timsort, which switches to Insertion Sort on small, nearly-ordered chunks.`;
+  } else if (shape === 'reverse') {
+    const bub = byKey('bubble'), ins = byKey('insertion');
+    extra = `Reverse order is the nightmare case for the simple sorts: <b>Bubble</b> needed ${bub.ops.length.toLocaleString()} operations and <b>Insertion</b> ${ins.ops.length.toLocaleString()}, because literally every comparison triggers a move. The three O(n log n) sorts barely noticed the difference.`;
+  } else if (shape === 'few') {
+    const sel = byKey('selection'), bub = byKey('bubble');
+    extra = `With only a few distinct values, notice the <b>writes</b> column: <b>Selection Sort</b> made just ${sel.writes.toLocaleString()} writes versus Bubble Sort's ${bub.writes.toLocaleString()}. Selection Sort does one swap per round no matter what. If writing data is expensive — flash memory, network, disk — that column matters more than the total.`;
+  } else {
+    extra = `On random data the three O(n log n) algorithms pull clearly ahead, and the gap widens fast as the list grows. At 40 items the difference is noticeable; at a million items, an O(n²) sort would still be running long after the others had finished.`;
+  }
+
+  document.getElementById('takeaway').innerHTML =
+    `<h4>${win.algo.name} won this round</h4>
+     <p>It needed ${win.ops.length.toLocaleString()} operations against ${last.algo.name}'s ${last.ops.length.toLocaleString()} — about <b>${ratio}× less work</b>. ${extra}</p>
+     <p style="margin-top:10px; color:var(--muted); font-size:13.5px;">Now change the starting data above and race again — the winner will change.</p>`;
+  resultsBox.style.display = 'block';
+}
+
+document.getElementById('startBtn').onclick = startRace;
+document.getElementById('resetBtn').onclick = buildRacers;
+buildRacers();
+</script>
+<script>
+/* ===== Offline support (works when served over http/https) ===== */
+if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
+  window.addEventListener('load', function () {
+    navigator.serviceWorker.register('sw.js').catch(function () { /* offline mode simply unavailable */ });
+  });
+}
+</script>
+<script src="firebase-config.js"></script>
+<script src="mindaicode-auth.js"></script>
+</body>
+</html>

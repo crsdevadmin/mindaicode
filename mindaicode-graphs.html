@@ -1,0 +1,682 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MindAICode — Graphs: BFS, DFS &amp; Dijkstra</title>
+<style>
+  :root {
+    --bg:#0d1117; --panel:#161b22; --panel2:#1c2333; --accent:#58a6ff; --accent2:#f78166;
+    --purple:#d2a8ff; --green:#3fb950; --yellow:#d29922; --red:#f85149;
+    --text:#e6edf3; --muted:#8b949e; --border:#30363d;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family:'Segoe UI', system-ui, sans-serif; background:var(--bg); color:var(--text); min-height:100vh; }
+  header {
+    display:flex; align-items:center; justify-content:space-between;
+    padding:14px 28px; background:var(--panel); border-bottom:1px solid var(--border); flex-wrap:wrap; gap:8px;
+  }
+  .logo { font-size:22px; font-weight:800; }
+  .logo span { color:var(--accent); }
+  .tagline { display:flex; gap:14px; align-items:center; flex-wrap:wrap; font-size:13px; }
+  .tagline a { text-decoration:none; color:var(--muted); }
+  .container { max-width:1080px; margin:0 auto; padding:24px 20px 60px; }
+
+  .card { background:var(--panel); border:1px solid var(--border); border-radius:12px; padding:20px; margin-bottom:18px; }
+  h1 { font-size:24px; margin-bottom:6px; }
+  h2.secH { font-size:19px; margin-bottom:4px; }
+  h3 { font-size:16px; margin-bottom:10px; }
+  .subtitle { color:var(--muted); font-size:14px; margin-bottom:16px; }
+
+  .intro {
+    background:linear-gradient(135deg, rgba(88,166,255,.10), rgba(63,185,80,.08));
+    border:1px solid var(--border); border-radius:12px; padding:22px 24px; margin-bottom:18px;
+  }
+  .intro h1 { font-size:24px; margin-bottom:8px; }
+  .intro p { font-size:15px; line-height:1.7; margin-bottom:10px; }
+
+  .controls { display:flex; flex-wrap:wrap; gap:10px; align-items:center; margin-bottom:14px; }
+  button {
+    background:var(--accent); color:#0d1117; border:none; padding:9px 16px;
+    border-radius:8px; font-size:13.5px; font-weight:700; cursor:pointer; font-family:inherit;
+    transition:filter .15s, transform .1s;
+  }
+  button:hover { filter:brightness(1.14); }
+  button:active { transform:scale(.97); }
+  button.secondary { background:var(--panel2); color:var(--text); border:1px solid var(--border); }
+  button:disabled { opacity:.4; cursor:not-allowed; }
+  select { background:var(--panel2); border:1px solid var(--border); color:var(--text);
+    padding:8px 12px; border-radius:8px; font-size:13.5px; font-family:inherit; }
+  label.lbl { font-size:12.5px; color:var(--muted); font-weight:700; }
+
+  .badgeLbl {
+    display:inline-block; font-size:11px; font-weight:700; padding:3px 10px; border-radius:10px;
+    background:rgba(210,168,255,.12); color:var(--purple); border:1px solid rgba(210,168,255,.35); margin-left:8px;
+  }
+  .badgeLbl.on { background:rgba(63,185,80,.14); color:var(--green); border-color:rgba(63,185,80,.4); }
+
+  .graphWrap { display:flex; gap:16px; flex-wrap:wrap; margin-bottom:12px; }
+  .mapBox { flex:1 1 380px; background:var(--bg); border:1px dashed var(--border); border-radius:10px; padding:8px; }
+  .mapBox svg { width:100%; height:auto; display:block; }
+  .edge { stroke:var(--border); stroke-width:2; transition:stroke .25s, stroke-width .25s; }
+  .edge.used { stroke:var(--accent); stroke-width:3; }
+  .edge.path { stroke:var(--green); stroke-width:4; }
+  .edgeLabel { fill:var(--muted); font-size:11px; font-family:Consolas, monospace; }
+  .node circle { fill:var(--panel2); stroke:var(--border); stroke-width:2; transition:all .25s; }
+  .node text.lbl { fill:var(--text); font-size:14px; font-weight:700; text-anchor:middle; dominant-baseline:central; font-family:Consolas, monospace; }
+  .node text.dist { fill:var(--yellow); font-size:11px; text-anchor:middle; font-family:Consolas, monospace; }
+  .node.start circle { stroke:var(--green); stroke-width:3; }
+  .node.visited circle { fill:rgba(88,166,255,.22); stroke:var(--accent); }
+  .node.current circle { fill:rgba(210,153,34,.35); stroke:var(--yellow); stroke-width:3; }
+  .node.settled circle { fill:rgba(63,185,80,.22); stroke:var(--green); }
+  .node.target circle { stroke:var(--accent2); stroke-width:3; }
+
+  .sidePanel { flex:1 1 220px; min-width:200px; }
+  .infoBox { background:var(--panel2); border:1px solid var(--border); border-radius:10px; padding:12px; font-size:12.5px; margin-bottom:10px; }
+  .infoBox b { color:var(--text); }
+  .orderList { display:flex; flex-wrap:wrap; gap:5px; margin-top:6px; }
+  .orderChip { background:var(--bg); border:1px solid var(--border); border-radius:6px; padding:2px 8px; font-family:Consolas, monospace; font-size:12px; }
+  .orderChip.hi { border-color:var(--yellow); color:var(--yellow); }
+  .distTable { width:100%; font-size:12px; border-collapse:collapse; }
+  .distTable td { padding:3px 4px; border-bottom:1px solid var(--border); font-family:Consolas, monospace; }
+  .distTable td.settledRow { color:var(--green); }
+
+  .note { font-size:13.5px; color:var(--muted); min-height:22px; margin-bottom:10px; line-height:1.55; }
+  .note b { color:var(--text); }
+
+  .tabs { display:flex; gap:6px; margin-bottom:10px; }
+  .tab { background:var(--panel2); color:var(--muted); border:1px solid var(--border); padding:6px 16px;
+    border-radius:8px 8px 0 0; font-size:13px; font-weight:700; cursor:pointer; font-family:inherit; }
+  .tab.on { background:var(--accent); color:#0d1117; border-color:var(--accent); }
+  .codeWrap { display:none; } .codeWrap.on { display:block; }
+  .code { font-family:'Cascadia Code', Consolas, monospace; font-size:12.5px; line-height:1.55;
+    background:var(--panel2); border-radius:10px; padding:14px 0; overflow-x:auto; }
+  .code .line { padding:3px 14px; white-space:pre; }
+  .kw { color:#ff7b72; } .fn { color:#d2a8ff; } .num2 { color:#79c0ff; } .cm { color:#6e7681; }
+
+  table.cmp { width:100%; border-collapse:collapse; font-size:13.5px; }
+  table.cmp th, table.cmp td { text-align:left; padding:9px 10px; border-bottom:1px solid var(--border); }
+  table.cmp th { color:var(--muted); font-size:12px; text-transform:uppercase; letter-spacing:.4px; }
+  .hl { color:var(--green); font-weight:700; }
+  .bad { color:var(--accent2); font-weight:700; }
+
+  @media (max-width:640px) {
+    header { padding:12px 16px; } .logo { font-size:19px; }
+    .container { padding:16px 14px 40px; }
+    .card, .intro { padding:16px; }
+    h1, .intro h1 { font-size:20px; }
+    .controls { flex-direction:column; align-items:stretch; }
+    button, select { width:100%; }
+  }
+</style>
+<script>if(location.protocol.startsWith("http")){var m=document.createElement("link");m.rel="manifest";m.href="manifest.json";document.head.appendChild(m);}</script>
+<meta name="theme-color" content="#0d1117">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+</head>
+<body>
+
+<header>
+  <a href="mindaicode-home.html" style="text-decoration:none; color:inherit;">
+    <div class="logo">🧠 MindAI<span>Code</span></div>
+  </a>
+  <div class="tagline">
+    <a href="mindaicode-course-path.html" style="color:var(--purple); font-weight:600;">🗺️ Course path</a>
+    <a href="mindaicode-home.html">🏠 All algorithms</a>
+  </div>
+</header>
+
+<div class="container">
+
+  <div class="intro">
+    <h1>🗺️ Graphs: BFS, DFS &amp; Dijkstra</h1>
+    <p>Cities connected by roads. <strong>BFS</strong> floods outward one ring at a time, like water finding every room the same distance away before moving further. <strong>DFS</strong> is a person exploring a maze — all the way down one corridor before backtracking. <strong>Dijkstra</strong> asks a sharper question: not "how many roads?" but "what's the cheapest total distance?"</p>
+    <p style="margin-bottom:0; color:var(--muted); font-size:14px;">Module 6 · Same 8-city road map used in all three sections below, so you can compare how differently each algorithm explores it.</p>
+  </div>
+
+  <!-- ================= BFS ================= -->
+  <div class="card">
+    <h2 class="secH">🌊 Breadth-First Search <span id="bfsBadge" class="badgeLbl">not earned</span></h2>
+    <p class="subtitle">Visits everything 1 road away, then everything 2 roads away, then 3 — level by level. Finds the path with the <strong>fewest roads</strong>, not necessarily the shortest distance.</p>
+    <div class="controls">
+      <label class="lbl" for="bfsStart">Start city</label>
+      <select id="bfsStart"></select>
+      <button id="bfsPlayBtn">▶ Play</button>
+      <button id="bfsStepBtn" class="secondary">⏭ Step</button>
+      <button id="bfsResetBtn" class="secondary">↺ Reset</button>
+    </div>
+    <div class="graphWrap">
+      <div class="mapBox"><svg id="bfsSvg" viewBox="0 0 620 400"></svg></div>
+      <div class="sidePanel">
+        <div class="infoBox"><b>Visit order</b><div class="orderList" id="bfsOrder"></div></div>
+        <div class="infoBox"><b>Frontier (queue)</b><div class="orderList" id="bfsFrontier"></div></div>
+      </div>
+    </div>
+    <div class="note" id="bfsNote">Pick a start city and press Play or Step.</div>
+
+    <div class="tabs" style="margin-top:16px;">
+      <button class="tab on" data-target="bfs-py" type="button">Python</button>
+      <button class="tab" data-target="bfs-java" type="button">Java</button>
+    </div>
+    <div class="codeWrap on" id="bfs-py">
+      <div class="code">
+        <div class="line"><span class="kw">from</span> collections <span class="kw">import</span> deque</div>
+        <div class="line"><span class="kw">def</span> <span class="fn">bfs</span>(graph, start):</div>
+        <div class="line">    visited = {start}</div>
+        <div class="line">    queue = deque([start])</div>
+        <div class="line">    order = []</div>
+        <div class="line">    <span class="kw">while</span> queue:</div>
+        <div class="line">        node = queue.popleft()        <span class="cm"># FIFO — oldest discovered first</span></div>
+        <div class="line">        order.append(node)</div>
+        <div class="line">        <span class="kw">for</span> neighbor, _ <span class="kw">in</span> graph[node]:</div>
+        <div class="line">            <span class="kw">if</span> neighbor <span class="kw">not in</span> visited:</div>
+        <div class="line">                visited.add(neighbor)</div>
+        <div class="line">                queue.append(neighbor)</div>
+        <div class="line">    <span class="kw">return</span> order</div>
+      </div>
+    </div>
+    <div class="codeWrap" id="bfs-java">
+      <div class="code">
+        <div class="line">Queue&lt;String&gt; queue = <span class="kw">new</span> LinkedList&lt;&gt;();</div>
+        <div class="line">Set&lt;String&gt; visited = <span class="kw">new</span> HashSet&lt;&gt;();</div>
+        <div class="line">queue.add(start); visited.add(start);</div>
+        <div class="line"><span class="kw">while</span> (!queue.isEmpty()) {</div>
+        <div class="line">    String node = queue.poll();</div>
+        <div class="line">    <span class="kw">for</span> (String next : graph.get(node))</div>
+        <div class="line">        <span class="kw">if</span> (visited.add(next)) queue.add(next);</div>
+        <div class="line">}</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= DFS ================= -->
+  <div class="card">
+    <h2 class="secH">🧭 Depth-First Search <span id="dfsBadge" class="badgeLbl">not earned</span></h2>
+    <p class="subtitle">Follows one road as far as it possibly can before backtracking — like a person in a maze taking corridors one at a time until they hit a dead end.</p>
+    <div class="controls">
+      <label class="lbl" for="dfsStart">Start city</label>
+      <select id="dfsStart"></select>
+      <button id="dfsPlayBtn">▶ Play</button>
+      <button id="dfsStepBtn" class="secondary">⏭ Step</button>
+      <button id="dfsResetBtn" class="secondary">↺ Reset</button>
+    </div>
+    <div class="graphWrap">
+      <div class="mapBox"><svg id="dfsSvg" viewBox="0 0 620 400"></svg></div>
+      <div class="sidePanel">
+        <div class="infoBox"><b>Visit order</b><div class="orderList" id="dfsOrder"></div></div>
+        <div class="infoBox"><b>Call stack</b><div class="orderList" id="dfsStack"></div></div>
+      </div>
+    </div>
+    <div class="note" id="dfsNote">Pick a start city and press Play or Step.</div>
+
+    <div class="tabs" style="margin-top:16px;">
+      <button class="tab on" data-target="dfs-py" type="button">Python</button>
+      <button class="tab" data-target="dfs-java" type="button">Java</button>
+    </div>
+    <div class="codeWrap on" id="dfs-py">
+      <div class="code">
+        <div class="line"><span class="kw">def</span> <span class="fn">dfs</span>(graph, node, visited=<span class="kw">None</span>, order=<span class="kw">None</span>):</div>
+        <div class="line">    <span class="kw">if</span> visited <span class="kw">is None</span>: visited, order = set(), []</div>
+        <div class="line">    visited.add(node)</div>
+        <div class="line">    order.append(node)</div>
+        <div class="line">    <span class="kw">for</span> neighbor, _ <span class="kw">in</span> graph[node]:</div>
+        <div class="line">        <span class="kw">if</span> neighbor <span class="kw">not in</span> visited:</div>
+        <div class="line">            dfs(graph, neighbor, visited, order)  <span class="cm"># go deep first</span></div>
+        <div class="line">    <span class="kw">return</span> order</div>
+      </div>
+    </div>
+    <div class="codeWrap" id="dfs-java">
+      <div class="code">
+        <div class="line"><span class="kw">void</span> <span class="fn">dfs</span>(String node, Set&lt;String&gt; visited) {</div>
+        <div class="line">    <span class="kw">if</span> (!visited.add(node)) <span class="kw">return</span>;</div>
+        <div class="line">    order.add(node);</div>
+        <div class="line">    <span class="kw">for</span> (String next : graph.get(node)) dfs(next, visited);</div>
+        <div class="line">}</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= DIJKSTRA ================= -->
+  <div class="card">
+    <h2 class="secH">🚚 Dijkstra's Shortest Path <span id="dijkBadge" class="badgeLbl">not earned</span></h2>
+    <p class="subtitle">Always settles the closest un-settled city next. Guarantees the <strong>cheapest total distance</strong>, even if that route uses more roads than a "shorter-looking" one.</p>
+    <div class="controls">
+      <label class="lbl" for="dijkStart">Start city</label>
+      <select id="dijkStart"></select>
+      <label class="lbl" for="dijkTarget">Target city</label>
+      <select id="dijkTarget"></select>
+      <button id="dijkPlayBtn">▶ Play</button>
+      <button id="dijkStepBtn" class="secondary">⏭ Step</button>
+      <button id="dijkResetBtn" class="secondary">↺ Reset</button>
+    </div>
+    <div class="graphWrap">
+      <div class="mapBox"><svg id="dijkSvg" viewBox="0 0 620 400"></svg></div>
+      <div class="sidePanel">
+        <div class="infoBox"><b>Distances</b><table class="distTable" id="dijkTable"></table></div>
+      </div>
+    </div>
+    <div class="note" id="dijkNote">Pick a start and target city, then press Play or Step.</div>
+    <div class="note" id="dijkVerdict" style="display:none;"></div>
+
+    <div class="tabs" style="margin-top:16px;">
+      <button class="tab on" data-target="dijk-py" type="button">Python</button>
+      <button class="tab" data-target="dijk-java" type="button">Java</button>
+    </div>
+    <div class="codeWrap on" id="dijk-py">
+      <div class="code">
+        <div class="line"><span class="kw">def</span> <span class="fn">dijkstra</span>(graph, start):</div>
+        <div class="line">    dist = {node: float(<span class="cm">'inf'</span>) <span class="kw">for</span> node <span class="kw">in</span> graph}</div>
+        <div class="line">    dist[start] = <span class="num2">0</span>; settled = set()</div>
+        <div class="line">    <span class="kw">while</span> len(settled) &lt; len(graph):</div>
+        <div class="line">        node = min((n <span class="kw">for</span> n <span class="kw">in</span> graph <span class="kw">if</span> n <span class="kw">not in</span> settled), key=<span class="kw">lambda</span> n: dist[n])</div>
+        <div class="line">        settled.add(node)                <span class="cm"># closest unsettled city, finalized</span></div>
+        <div class="line">        <span class="kw">for</span> neighbor, weight <span class="kw">in</span> graph[node]:</div>
+        <div class="line">            <span class="kw">if</span> dist[node] + weight &lt; dist[neighbor]:</div>
+        <div class="line">                dist[neighbor] = dist[node] + weight   <span class="cm"># relax the edge</span></div>
+        <div class="line">    <span class="kw">return</span> dist</div>
+      </div>
+    </div>
+    <div class="codeWrap" id="dijk-java">
+      <div class="code">
+        <div class="line">PriorityQueue&lt;Node&gt; pq = <span class="kw">new</span> PriorityQueue&lt;&gt;(Comparator.comparingInt(n -&gt; n.dist));</div>
+        <div class="line">dist.put(start, <span class="num2">0</span>); pq.add(<span class="kw">new</span> Node(start, <span class="num2">0</span>));</div>
+        <div class="line"><span class="kw">while</span> (!pq.isEmpty()) {</div>
+        <div class="line">    Node cur = pq.poll();</div>
+        <div class="line">    <span class="kw">if</span> (settled.contains(cur.id)) <span class="kw">continue</span>;</div>
+        <div class="line">    settled.add(cur.id);</div>
+        <div class="line">    <span class="cm">// relax every neighbor edge, push improvements onto pq</span></div>
+        <div class="line">}</div>
+      </div>
+    </div>
+
+    <div class="warn" style="background:rgba(210,153,34,.1); border:1px solid rgba(210,153,34,.35); border-radius:10px; padding:13px 16px; font-size:14px; line-height:1.65; margin-top:14px;">
+      <b style="color:var(--yellow);">⚠️ Watch out:</b> Dijkstra assumes every road weight is <b>zero or positive</b>. A negative weight can make the algorithm settle a city too early and never revisit it — for graphs with negative edges, use Bellman-Ford instead.
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>📈 Which one to reach for</h3>
+    <div style="overflow-x:auto;">
+      <table class="cmp">
+        <thead><tr><th>Algorithm</th><th>Data structure</th><th>Finds</th><th>Time complexity</th></tr></thead>
+        <tbody>
+          <tr><td>BFS</td><td>Queue</td><td>Fewest-road path (unweighted shortest path)</td><td class="num hl">O(V + E)</td></tr>
+          <tr><td>DFS</td><td>Stack / recursion</td><td>Any path, all reachable nodes, cycle detection</td><td class="num hl">O(V + E)</td></tr>
+          <tr><td>Dijkstra</td><td>Priority queue</td><td>Cheapest-weight path (non-negative weights)</td><td class="num bad">O((V+E) log V)</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>🧠 Quick check</h3>
+    <div id="quizQ" style="font-size:15px; margin-bottom:12px;"></div>
+    <div id="quizOpts"></div>
+    <div id="quizFb" style="font-size:13.5px; margin-top:10px; color:var(--muted); min-height:20px; line-height:1.6;"></div>
+  </div>
+
+</div>
+
+<script>
+/* ================= GRAPH DATA (shared "city map") ================= */
+const NODES = {
+  A:{x:80,y:200}, B:{x:220,y:80}, C:{x:220,y:320}, D:{x:380,y:60},
+  E:{x:380,y:200}, F:{x:380,y:340}, G:{x:540,y:120}, H:{x:540,y:280},
+};
+const NODE_IDS = Object.keys(NODES); // A..H, canonical order
+const EDGES = [
+  ['A','B',4], ['A','C',2], ['B','D',5], ['B','E',10], ['C','E',3], ['C','F',8],
+  ['D','G',6], ['E','G',2], ['E','F',4], ['F','H',5], ['G','H',3],
+];
+const ADJ = {};
+NODE_IDS.forEach(n => ADJ[n] = []);
+EDGES.forEach(([u, v, w]) => { ADJ[u].push([v, w]); ADJ[v].push([u, w]); });
+function edgeId(u, v) { return [u, v].sort().join('-'); }
+
+/* ================= ALGORITHMS (pure, precompute full run) ================= */
+function bfsRunDetailed(start) {
+  const visited = new Set([start]);
+  const queue = [{ node: start, via: null }];
+  const order = [];
+  while (queue.length) {
+    const { node, via } = queue.shift();
+    order.push({ node, via, frontier: queue.map(q => q.node) });
+    ADJ[node].forEach(([next]) => {
+      if (!visited.has(next)) { visited.add(next); queue.push({ node: next, via: node }); }
+    });
+  }
+  return order;
+}
+function dfsRunDetailed(start) {
+  const visited = new Set();
+  const order = [];
+  function go(node, via, stackSnapshot) {
+    visited.add(node);
+    order.push({ node, via, stack: [...stackSnapshot] });
+    for (const [next] of ADJ[node]) {
+      if (!visited.has(next)) go(next, node, [...stackSnapshot, node]);
+    }
+  }
+  go(start, null, []);
+  return order;
+}
+function dijkstraRun(start) {
+  const dist = {}; NODE_IDS.forEach(n => dist[n] = Infinity);
+  dist[start] = 0;
+  const prev = {}; NODE_IDS.forEach(n => prev[n] = null);
+  const settled = new Set();
+  const order = []; // {node, dist, via, distSnapshot}
+  while (settled.size < NODE_IDS.length) {
+    let best = null;
+    NODE_IDS.forEach(n => { if (!settled.has(n) && dist[n] < Infinity && (best === null || dist[n] < dist[best])) best = n; });
+    if (best === null) break; // remaining nodes unreachable
+    settled.add(best);
+    order.push({ node: best, dist: dist[best], via: prev[best], distSnapshot: { ...dist } });
+    ADJ[best].forEach(([next, w]) => {
+      if (!settled.has(next) && dist[best] + w < dist[next]) { dist[next] = dist[best] + w; prev[next] = best; }
+    });
+  }
+  return { order, dist, prev };
+}
+function pathTo(prev, target) {
+  const path = [];
+  let cur = target;
+  while (cur) { path.unshift(cur); cur = prev[cur]; }
+  return path;
+}
+
+/* ================= SVG MAP RENDERING ================= */
+function buildMap(svgId) {
+  const svg = document.getElementById(svgId);
+  let html = '';
+  EDGES.forEach(([u, v, w]) => {
+    const a = NODES[u], b = NODES[v];
+    html += `<line class="edge" id="${svgId}-e-${edgeId(u,v)}" x1="${a.x}" y1="${a.y}" x2="${b.x}" y2="${b.y}"></line>`;
+    const mx = (a.x + b.x) / 2, my = (a.y + b.y) / 2;
+    html += `<text class="edgeLabel" x="${mx}" y="${my - 6}">${w}</text>`;
+  });
+  NODE_IDS.forEach(n => {
+    const p = NODES[n];
+    html += `<g class="node" id="${svgId}-n-${n}">
+      <circle cx="${p.x}" cy="${p.y}" r="22"></circle>
+      <text class="lbl" x="${p.x}" y="${p.y - 3}">${n}</text>
+      <text class="dist" id="${svgId}-d-${n}" x="${p.x}" y="${p.y + 14}"></text>
+    </g>`;
+  });
+  svg.innerHTML = html;
+}
+function fillSelect(selId, defaultVal) {
+  const sel = document.getElementById(selId);
+  sel.innerHTML = NODE_IDS.map(n => `<option value="${n}"${n === defaultVal ? ' selected' : ''}>${n}</option>`).join('');
+}
+
+/* ================= BFS PLAYER ================= */
+let bfsSteps = [], bfsIdx = 0, bfsTimer = null;
+function bfsReset() {
+  clearInterval(bfsTimer);
+  const start = document.getElementById('bfsStart').value;
+  bfsSteps = bfsRunDetailed(start);
+  bfsIdx = 0;
+  buildMap('bfsSvg');
+  document.getElementById(`bfsSvg-n-${start}`).classList.add('start');
+  document.getElementById('bfsOrder').innerHTML = '';
+  document.getElementById('bfsFrontier').innerHTML = `<span class="orderChip">${start}</span>`;
+  document.getElementById('bfsNote').innerHTML = `Starting BFS from <b>${start}</b>. Press Step or Play.`;
+}
+function bfsStep() {
+  if (bfsIdx >= bfsSteps.length) { clearInterval(bfsTimer); return true; }
+  const { node, via, frontier } = bfsSteps[bfsIdx];
+  document.getElementById(`bfsSvg-n-${node}`).classList.add('visited');
+  if (via) document.getElementById(`bfsSvg-e-${edgeId(via, node)}`).classList.add('used');
+  const orderBox = document.getElementById('bfsOrder');
+  const chip = document.createElement('span');
+  chip.className = 'orderChip hi';
+  chip.textContent = node;
+  orderBox.appendChild(chip);
+  [...orderBox.children].forEach(c => c.classList.remove('hi'));
+  chip.classList.add('hi');
+  document.getElementById('bfsFrontier').innerHTML = frontier.length
+    ? frontier.map(n => `<span class="orderChip">${n}</span>`).join('') : '<span class="orderChip">empty</span>';
+  document.getElementById('bfsNote').innerHTML = via
+    ? `Visited <b>${node}</b>, discovered via <b>${via}</b>. Its unvisited neighbors join the back of the queue.`
+    : `Visited <b>${node}</b> — the starting city.`;
+  bfsIdx++;
+  if (bfsIdx >= bfsSteps.length) {
+    document.getElementById('bfsNote').innerHTML += ` <b>All reachable cities visited.</b>`;
+    try { localStorage.setItem('mgph_badge_bfs', '1'); } catch (e) {}
+    updateBadgeLabels();
+    clearInterval(bfsTimer);
+    return true;
+  }
+  return false;
+}
+document.getElementById('bfsPlayBtn').onclick = () => {
+  clearInterval(bfsTimer);
+  if (bfsIdx >= bfsSteps.length) bfsReset();
+  bfsTimer = setInterval(() => { if (bfsStep()) clearInterval(bfsTimer); }, 700);
+};
+document.getElementById('bfsStepBtn').onclick = () => { clearInterval(bfsTimer); bfsStep(); };
+document.getElementById('bfsResetBtn').onclick = bfsReset;
+document.getElementById('bfsStart').onchange = bfsReset;
+
+/* ================= DFS PLAYER ================= */
+let dfsSteps = [], dfsIdx = 0, dfsTimer = null;
+function dfsReset() {
+  clearInterval(dfsTimer);
+  const start = document.getElementById('dfsStart').value;
+  dfsSteps = dfsRunDetailed(start);
+  dfsIdx = 0;
+  buildMap('dfsSvg');
+  document.getElementById(`dfsSvg-n-${start}`).classList.add('start');
+  document.getElementById('dfsOrder').innerHTML = '';
+  document.getElementById('dfsStack').innerHTML = `<span class="orderChip">${start}</span>`;
+  document.getElementById('dfsNote').innerHTML = `Starting DFS from <b>${start}</b>. Press Step or Play.`;
+}
+function dfsStep() {
+  if (dfsIdx >= dfsSteps.length) { clearInterval(dfsTimer); return true; }
+  const { node, via, stack } = dfsSteps[dfsIdx];
+  document.getElementById(`dfsSvg-n-${node}`).classList.add('visited');
+  [...document.querySelectorAll('#dfsSvg .node.current')].forEach(n => n.classList.remove('current'));
+  document.getElementById(`dfsSvg-n-${node}`).classList.add('current');
+  if (via) document.getElementById(`dfsSvg-e-${edgeId(via, node)}`).classList.add('used');
+  const orderBox = document.getElementById('dfsOrder');
+  const chip = document.createElement('span');
+  chip.className = 'orderChip hi';
+  chip.textContent = node;
+  orderBox.appendChild(chip);
+  [...orderBox.children].forEach(c => c.classList.remove('hi'));
+  chip.classList.add('hi');
+  const stackNow = [...stack, node];
+  document.getElementById('dfsStack').innerHTML = stackNow.map(n => `<span class="orderChip">${n}</span>`).join('');
+  document.getElementById('dfsNote').innerHTML = via
+    ? `Went deeper: <b>${via} → ${node}</b>. Will keep going until this corridor dead-ends, then backtrack.`
+    : `Visited <b>${node}</b> — the starting city.`;
+  dfsIdx++;
+  if (dfsIdx >= dfsSteps.length) {
+    document.getElementById('dfsNote').innerHTML += ` <b>All reachable cities visited.</b>`;
+    try { localStorage.setItem('mgph_badge_dfs', '1'); } catch (e) {}
+    updateBadgeLabels();
+    clearInterval(dfsTimer);
+    return true;
+  }
+  return false;
+}
+document.getElementById('dfsPlayBtn').onclick = () => {
+  clearInterval(dfsTimer);
+  if (dfsIdx >= dfsSteps.length) dfsReset();
+  dfsTimer = setInterval(() => { if (dfsStep()) clearInterval(dfsTimer); }, 700);
+};
+document.getElementById('dfsStepBtn').onclick = () => { clearInterval(dfsTimer); dfsStep(); };
+document.getElementById('dfsResetBtn').onclick = dfsReset;
+document.getElementById('dfsStart').onchange = dfsReset;
+
+/* ================= DIJKSTRA PLAYER ================= */
+let dijkResult = null, dijkIdx = 0, dijkTimer = null;
+function renderDijkTable(snapshot, settledSoFar) {
+  const t = document.getElementById('dijkTable');
+  t.innerHTML = NODE_IDS.map(n => {
+    const v = snapshot[n];
+    const txt = v === Infinity || v === undefined ? '∞' : v;
+    const cls = settledSoFar.has(n) ? 'settledRow' : '';
+    return `<tr><td>${n}</td><td class="${cls}">${txt}</td></tr>`;
+  }).join('');
+}
+function dijkReset() {
+  clearInterval(dijkTimer);
+  const start = document.getElementById('dijkStart').value;
+  dijkResult = dijkstraRun(start);
+  dijkIdx = 0;
+  buildMap('dijkSvg');
+  document.getElementById(`dijkSvg-n-${start}`).classList.add('start');
+  const target = document.getElementById('dijkTarget').value;
+  if (target !== start) document.getElementById(`dijkSvg-n-${target}`).classList.add('target');
+  const initSnap = {}; NODE_IDS.forEach(n => initSnap[n] = n === start ? 0 : Infinity);
+  renderDijkTable(initSnap, new Set());
+  document.getElementById('dijkNote').innerHTML = `Starting Dijkstra from <b>${start}</b>. Press Step or Play.`;
+  document.getElementById('dijkVerdict').style.display = 'none';
+}
+function dijkStep() {
+  if (dijkIdx >= dijkResult.order.length) { clearInterval(dijkTimer); return true; }
+  const { node, dist, via, distSnapshot } = dijkResult.order[dijkIdx];
+  document.getElementById(`dijkSvg-n-${node}`).classList.add('settled');
+  document.getElementById(`dijkSvg-d-${node}`).textContent = dist;
+  if (via) document.getElementById(`dijkSvg-e-${edgeId(via, node)}`).classList.add('used');
+  const settledSoFar = new Set(dijkResult.order.slice(0, dijkIdx + 1).map(o => o.node));
+  renderDijkTable(distSnapshot, settledSoFar);
+  document.getElementById('dijkNote').innerHTML = via
+    ? `Settled <b>${node}</b> at distance <b>${dist}</b> (cheapest known route so far, via ${via}).`
+    : `Settled <b>${node}</b> at distance <b>0</b> — the starting city.`;
+  dijkIdx++;
+  const target = document.getElementById('dijkTarget').value;
+  if (node === target) {
+    const path = pathTo(dijkResult.prev, target);
+    path.forEach((n, i) => {
+      if (i > 0) document.getElementById(`dijkSvg-e-${edgeId(path[i - 1], n)}`).classList.add('path');
+    });
+    document.getElementById('dijkVerdict').style.display = 'block';
+    document.getElementById('dijkVerdict').innerHTML =
+      `🏁 Cheapest route to <b>${target}</b>: <b>${path.join(' → ')}</b> — total distance <b>${dist}</b>.`;
+    try { localStorage.setItem('mgph_badge_dijkstra', '1'); } catch (e) {}
+    updateBadgeLabels();
+    clearInterval(dijkTimer);
+    return true;
+  }
+  if (dijkIdx >= dijkResult.order.length) { clearInterval(dijkTimer); return true; }
+  return false;
+}
+document.getElementById('dijkPlayBtn').onclick = () => {
+  clearInterval(dijkTimer);
+  if (dijkIdx >= dijkResult.order.length) dijkReset();
+  dijkTimer = setInterval(() => { if (dijkStep()) clearInterval(dijkTimer); }, 700);
+};
+document.getElementById('dijkStepBtn').onclick = () => { clearInterval(dijkTimer); dijkStep(); };
+document.getElementById('dijkResetBtn').onclick = dijkReset;
+document.getElementById('dijkStart').onchange = dijkReset;
+document.getElementById('dijkTarget').onchange = dijkReset;
+
+/* ================= BADGES ================= */
+function readFlag(key) { try { return localStorage.getItem(key) === '1'; } catch (e) { return false; } }
+function updateBadgeLabels() {
+  const map = { bfsBadge: 'mgph_badge_bfs', dfsBadge: 'mgph_badge_dfs', dijkBadge: 'mgph_badge_dijkstra' };
+  Object.entries(map).forEach(([elId, key]) => {
+    const el = document.getElementById(elId);
+    const on = readFlag(key);
+    el.textContent = on ? 'earned ✓' : 'not earned';
+    el.classList.toggle('on', on);
+  });
+}
+
+/* ================= CODE TABS ================= */
+document.querySelectorAll('.tabs').forEach(group => {
+  const wraps = [];
+  let el = group.nextElementSibling;
+  while (el && el.classList.contains('codeWrap')) { wraps.push(el); el = el.nextElementSibling; }
+  group.querySelectorAll('.tab').forEach(tab => {
+    tab.onclick = () => {
+      group.querySelectorAll('.tab').forEach(t => t.classList.toggle('on', t === tab));
+      wraps.forEach(w => w.classList.toggle('on', w.id === tab.dataset.target));
+    };
+  });
+});
+
+/* ================= QUIZ ================= */
+const quiz = [
+  { q:'BFS uses which data structure to decide what to visit next?',
+    opts:['A stack','A queue','A priority queue'],
+    ans:1, why:'BFS processes cities in the order they were discovered — first discovered, first explored. That FIFO behavior is exactly what a queue gives you.' },
+  { q:'DFS uses which approach to decide what to visit next?',
+    opts:['A queue (FIFO)','A stack, or the equivalent call stack via recursion','Always picks the closest city'],
+    ans:1, why:'DFS commits to one neighbor and keeps going deeper, only backtracking (popping) when it hits a dead end — that\'s stack (LIFO) behavior, which recursion gives you for free.' },
+  { q:'Why can Dijkstra find a path with MORE roads than BFS, for the same start and end city?',
+    opts:['Dijkstra has a bug','Dijkstra minimizes total distance, not the number of roads — a longer route can still be cheaper','Dijkstra always picks the first path it finds'],
+    ans:1, why:'BFS only counts hops, so it prefers fewer roads regardless of their length. Dijkstra adds up actual road weights, so a route with more, shorter roads can beat a route with fewer, longer ones.' },
+  { q:'What happens to Dijkstra\'s guarantee if a road has a negative weight?',
+    opts:['Nothing changes, it still works correctly','It can settle a city too early with the wrong (too high) distance and never fix it','It runs faster'],
+    ans:1, why:'Dijkstra finalizes a city\'s distance the moment it\'s settled and never revisits it. A negative edge discovered later could have produced a cheaper route, but by then it\'s too late — this is why Dijkstra requires non-negative weights.' },
+  { q:'What is the time complexity of BFS and DFS on a graph with V cities and E roads?',
+    opts:['O(V²) always','O(V + E)','O(log V)'],
+    ans:1, why:'Both algorithms visit every city once and look at every road once (twice for undirected roads, which is still a constant factor), giving O(V + E) — linear in the size of the graph.' },
+];
+let qi = 0, qCorrect = 0;
+function showQuiz() {
+  const item = quiz[qi];
+  document.getElementById('quizQ').innerHTML = `<strong>Q${qi + 1}/${quiz.length}:</strong> ${item.q}`;
+  const box = document.getElementById('quizOpts');
+  box.innerHTML = '';
+  document.getElementById('quizFb').textContent = '';
+  item.opts.forEach((o, i) => {
+    const b = document.createElement('button');
+    b.className = 'secondary';
+    b.style.cssText = 'display:block; width:100%; text-align:left; margin-bottom:8px; font-weight:500;';
+    b.textContent = o;
+    b.onclick = () => {
+      box.querySelectorAll('button').forEach(x => x.disabled = true);
+      const ok = i === item.ans;
+      if (ok) qCorrect++;
+      b.style.borderColor = ok ? 'var(--green)' : 'var(--red)';
+      b.style.background = ok ? 'rgba(63,185,80,.15)' : 'rgba(248,81,73,.15)';
+      if (!ok) {
+        const right = box.children[item.ans];
+        right.style.borderColor = 'var(--green)';
+        right.style.background = 'rgba(63,185,80,.15)';
+      }
+      let tail = '';
+      if (qi < quiz.length - 1) tail = ' <a href="#" id="nq" style="color:var(--accent)">Next →</a>';
+      else {
+        tail = ` 🎉 Done — ${qCorrect}/${quiz.length} correct.` +
+          (qCorrect < quiz.length ? ' <a href="#" id="rq" style="color:var(--accent)">Try again</a>' : '');
+        if (qCorrect === quiz.length) { try { localStorage.setItem('mgph_badge_quiz', '1'); } catch (e) {} updateBadgeLabels(); }
+      }
+      document.getElementById('quizFb').innerHTML = (ok ? '✅ Correct! ' : '❌ Not quite. ') + item.why + tail;
+      const nq = document.getElementById('nq');
+      if (nq) nq.onclick = e => { e.preventDefault(); qi++; showQuiz(); };
+      const rq = document.getElementById('rq');
+      if (rq) rq.onclick = e => { e.preventDefault(); qi = 0; qCorrect = 0; showQuiz(); };
+    };
+    box.appendChild(b);
+  });
+}
+
+/* ================= INIT ================= */
+fillSelect('bfsStart', 'A');
+fillSelect('dfsStart', 'A');
+fillSelect('dijkStart', 'A');
+fillSelect('dijkTarget', 'H');
+bfsReset();
+dfsReset();
+dijkReset();
+updateBadgeLabels();
+showQuiz();
+</script>
+<script>
+/* ===== Offline support (works when served over http/https) ===== */
+if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
+  window.addEventListener('load', function () {
+    navigator.serviceWorker.register('sw.js').catch(function () { /* offline mode simply unavailable */ });
+  });
+}
+</script>
+<script src="firebase-config.js"></script>
+<script src="mindaicode-auth.js"></script>
+</body>
+</html>

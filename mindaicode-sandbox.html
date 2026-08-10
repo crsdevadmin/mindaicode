@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MindAICode — Code Sandbox</title>
+<style>
+  :root {
+    --bg:#0d1117; --panel:#161b22; --panel2:#1c2333; --accent:#58a6ff; --accent2:#f78166;
+    --purple:#d2a8ff; --green:#3fb950; --yellow:#d29922; --red:#f85149;
+    --text:#e6edf3; --muted:#8b949e; --border:#30363d;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family:'Segoe UI', system-ui, sans-serif; background:var(--bg); color:var(--text); min-height:100vh; }
+  header {
+    display:flex; align-items:center; justify-content:space-between;
+    padding:14px 28px; background:var(--panel); border-bottom:1px solid var(--border); flex-wrap:wrap; gap:8px;
+  }
+  .logo { font-size:22px; font-weight:800; }
+  .logo span { color:var(--accent); }
+  .tagline { display:flex; gap:14px; align-items:center; flex-wrap:wrap; font-size:13px; }
+  .tagline a { text-decoration:none; }
+  .container { max-width:1180px; margin:0 auto; padding:24px 20px 60px; }
+
+  .intro {
+    background:linear-gradient(135deg, rgba(63,185,80,.10), rgba(88,166,255,.07));
+    border:1px solid var(--border); border-radius:12px; padding:22px 24px; margin-bottom:18px;
+  }
+  .intro h2 { font-size:20px; margin-bottom:8px; }
+  .intro p { font-size:15px; line-height:1.7; color:var(--text); }
+  .intro p + p { margin-top:8px; color:var(--muted); font-size:14px; }
+
+  .card { background:var(--panel); border:1px solid var(--border); border-radius:12px; padding:20px; margin-bottom:18px; }
+  h3 { font-size:16px; margin-bottom:10px; }
+  .sub { color:var(--muted); font-size:13.5px; margin-bottom:14px; line-height:1.6; }
+
+  .split { display:grid; grid-template-columns:1fr 1fr; gap:18px; }
+  @media (max-width:900px) { .split { grid-template-columns:1fr; } }
+
+  .bar { display:flex; flex-wrap:wrap; gap:9px; align-items:center; margin-bottom:12px; }
+  button {
+    background:var(--accent); color:#0d1117; border:none; padding:10px 17px;
+    border-radius:8px; font-size:14px; font-weight:700; cursor:pointer; font-family:inherit;
+    transition:filter .15s, transform .1s;
+  }
+  button:hover { filter:brightness(1.14); }
+  button:active { transform:scale(.97); }
+  button.secondary { background:var(--panel2); color:var(--text); border:1px solid var(--border); }
+  button.small { padding:7px 13px; font-size:13px; }
+  select {
+    background:var(--panel2); border:1px solid var(--border); color:var(--text);
+    padding:9px 12px; border-radius:8px; font-size:14px; font-family:inherit;
+  }
+
+  .editorWrap { position:relative; }
+  .prelude, .postlude {
+    font-family:'Cascadia Code', Consolas, monospace; font-size:12.5px;
+    color:var(--muted); background:var(--panel2); padding:8px 14px;
+    border:1px solid var(--border); user-select:none;
+  }
+  .prelude { border-radius:9px 9px 0 0; border-bottom:none; }
+  .postlude { border-radius:0 0 9px 9px; border-top:none; }
+  textarea {
+    width:100%; min-height:260px; resize:vertical;
+    font-family:'Cascadia Code', Consolas, monospace; font-size:13.5px; line-height:1.6;
+    background:#0f141c; color:var(--text); border:1px solid var(--border);
+    padding:12px 14px; outline:none; tab-size:2;
+  }
+  textarea:focus { border-color:var(--accent); }
+
+  #status { font-size:13.5px; line-height:1.6; padding:12px 15px; border-radius:9px; margin-top:12px; display:none; }
+  #status.ok { display:block; background:rgba(63,185,80,.1); border:1px solid rgba(63,185,80,.35); }
+  #status.bad { display:block; background:rgba(248,81,73,.1); border:1px solid rgba(248,81,73,.35); }
+  #status.warn { display:block; background:rgba(210,153,34,.1); border:1px solid rgba(210,153,34,.35); }
+  #status b { display:block; margin-bottom:4px; font-size:14.5px; }
+  #status .ok2 { color:var(--green); } #status .bad2 { color:var(--red); } #status .warn2 { color:var(--yellow); }
+  #status code {
+    font-family:Consolas, monospace; background:rgba(0,0,0,.35);
+    padding:1px 6px; border-radius:4px; font-size:12.5px;
+  }
+
+  .viz { background:var(--panel2); border:1px solid var(--border); border-radius:10px; padding:14px; }
+  .bars { display:flex; align-items:flex-end; gap:2px; height:190px; }
+  .b { flex:1; border-radius:3px 3px 0 0; background:var(--accent); transition:height .1s linear; }
+  .b.hot { background:var(--accent2); }
+  .b.ok { background:var(--green); }
+  .metrics { display:flex; gap:10px; margin-top:12px; }
+  .metric { flex:1; background:var(--bg); border:1px solid var(--border); border-radius:8px; padding:9px; text-align:center; }
+  .metric .v { font-size:19px; font-weight:800; color:var(--accent); font-variant-numeric:tabular-nums; }
+  .metric .l { font-size:11.5px; color:var(--muted); }
+  .arrOut {
+    font-family:Consolas, monospace; font-size:12.5px; color:var(--muted);
+    margin-top:10px; word-break:break-all; line-height:1.6;
+  }
+  .arrOut b { color:var(--text); }
+
+  .challenge {
+    background:var(--panel2); border:1px solid var(--border); border-radius:10px;
+    padding:14px 16px; margin-bottom:10px;
+  }
+  .challenge h4 { font-size:14.5px; margin-bottom:5px; }
+  .challenge p { font-size:13.5px; color:var(--muted); line-height:1.6; margin-bottom:9px; }
+  .challenge .row { display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
+  .challenge.solved { border-color:var(--green); background:rgba(63,185,80,.08); }
+  .solvedTag { font-size:12px; color:var(--green); font-weight:700; }
+  .hintBox {
+    display:none; margin-top:9px; font-size:13px; color:var(--muted);
+    background:var(--bg); border-left:3px solid var(--yellow); padding:9px 12px; border-radius:6px; line-height:1.6;
+  }
+
+  @media (max-width:640px) {
+    header { padding:12px 16px; }
+    .logo { font-size:19px; }
+    .container { padding:16px 14px 40px; }
+    .card, .intro { padding:16px; }
+    .intro h2 { font-size:17px; } .intro p { font-size:14px; }
+    .bar { flex-direction:column; align-items:stretch; }
+    button, select { width:100%; }
+    button.small { width:auto; }
+    textarea { font-size:12.5px; min-height:210px; }
+    .bars { height:150px; }
+  }
+</style>
+<script>if(location.protocol.startsWith("http")){var m=document.createElement("link");m.rel="manifest";m.href="manifest.json";document.head.appendChild(m);}</script>
+<meta name="theme-color" content="#0d1117">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+</head>
+<body>
+
+<header>
+  <a href="mindaicode-home.html" style="text-decoration:none; color:inherit;">
+    <div class="logo">🧠 MindAI<span>Code</span></div>
+  </a>
+  <div class="tagline">
+    <a href="mindaicode-race-all.html" style="color:var(--purple); font-weight:600;">🏁 Race all six</a>
+    <a href="mindaicode-home.html" style="color:var(--muted);">🏠 All algorithms</a>
+  </div>
+</header>
+
+<div class="container">
+
+  <div class="intro">
+    <h2>🛠️ Break it. Fix it. Understand it.</h2>
+    <p>This is <strong>real, running code</strong> — not a picture of code. Change a single character, press Run, and watch what happens to the numbers. Nothing here can break your computer, so experiment freely.</p>
+    <p>The fastest way to learn what a line does is to delete it and see what goes wrong.</p>
+  </div>
+
+  <div class="split">
+    <!-- EDITOR -->
+    <div class="card" style="margin-bottom:0;">
+      <h3>✏️ Your code</h3>
+      <div class="sub">You get an array <code>a</code> of <code>n</code> numbers. Rearrange it so it ends up smallest → largest.</div>
+      <div class="bar">
+        <select id="presetSel" title="Load starter code">
+          <option value="bubble">🫧 Bubble Sort</option>
+          <option value="selection">🔎 Selection Sort</option>
+          <option value="insertion">🃏 Insertion Sort</option>
+          <option value="blank">📄 Empty — write your own</option>
+        </select>
+        <button id="runBtn">▶ Run</button>
+        <button id="resetBtn" class="secondary">↺ Reset code</button>
+      </div>
+      <div class="editorWrap">
+        <div class="prelude">function sort(a, n) {</div>
+        <textarea id="code" spellcheck="false"></textarea>
+        <div class="postlude">}</div>
+      </div>
+      <div id="status"></div>
+    </div>
+
+    <!-- OUTPUT -->
+    <div class="card" style="margin-bottom:0;">
+      <h3>📊 What your code did</h3>
+      <div class="sub">Every bar is one number. Taller means bigger. Press Run to watch your code rearrange them.</div>
+      <div class="viz">
+        <div class="bars" id="bars"></div>
+        <div class="metrics">
+          <div class="metric"><div class="v" id="mReads">0</div><div class="l">Array reads</div></div>
+          <div class="metric"><div class="v" id="mWrites">0</div><div class="l">Array writes</div></div>
+          <div class="metric"><div class="v" id="mResult">—</div><div class="l">Sorted?</div></div>
+        </div>
+        <div class="arrOut" id="arrOut"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CHALLENGES -->
+  <div class="card" style="margin-top:18px;">
+    <h3>🎯 Challenges</h3>
+    <div class="sub">Each one loads code with exactly one thing wrong. Find it, fix it, and press Run until it says sorted.</div>
+    <div id="challenges"></div>
+  </div>
+
+  <div class="card">
+    <h3>💡 Things worth trying</h3>
+    <div class="sub" style="margin-bottom:0;">
+      • Change <code>&gt;</code> to <code>&lt;</code> in Bubble Sort — what order do you get?<br>
+      • Delete the line <code>let t = a[j];</code> and see how numbers get duplicated.<br>
+      • Change <code>n - 1 - i</code> to <code>n - 1</code> — still sorts, but watch the read count climb.<br>
+      • Write a sort that only makes one pass. How close does it get?<br>
+      • Try <code>a[0] = 999;</code> on its own — the fastest way to see writes appear.
+    </div>
+  </div>
+
+</div>
+
+<script>
+/* ================= STARTER CODE ================= */
+const PRESETS = {
+  bubble:
+`// Bubble Sort — compare neighbours, swap if out of order.
+for (let i = 0; i < n - 1; i++) {
+  for (let j = 0; j < n - 1 - i; j++) {
+    if (a[j] > a[j + 1]) {
+      let t = a[j];
+      a[j] = a[j + 1];
+      a[j + 1] = t;
+    }
+  }
+}`,
+  selection:
+`// Selection Sort — find the smallest, put it in place.
+for (let i = 0; i < n - 1; i++) {
+  let min = i;
+  for (let j = i + 1; j < n; j++) {
+    if (a[j] < a[min]) {
+      min = j;
+    }
+  }
+  if (min !== i) {
+    let t = a[i];
+    a[i] = a[min];
+    a[min] = t;
+  }
+}`,
+  insertion:
+`// Insertion Sort — hold a value out, shift bigger ones right.
+for (let i = 1; i < n; i++) {
+  let key = a[i];
+  let j = i - 1;
+  while (j >= 0 && a[j] > key) {
+    a[j + 1] = a[j];
+    j = j - 1;
+  }
+  a[j + 1] = key;
+}`,
+  blank:
+`// Your turn. Sort the array 'a' of 'n' numbers, smallest first.
+// Tip: swap two values like this:
+//   let t = a[0]; a[0] = a[1]; a[1] = t;
+
+`,
+};
+
+/* ================= CHALLENGES ================= */
+const CHALLENGES = [
+  {
+    id: 'c1', title: '① The upside-down sort',
+    desc: 'This Bubble Sort runs without any error — but the numbers come out biggest first. One character is wrong.',
+    hint: 'Look at the comparison. <code>a[j] &lt; a[j+1]</code> swaps when the left is SMALLER, which pushes small values to the right. It should be <code>&gt;</code>.',
+    code:
+`// Fix me: this sorts the wrong way round!
+for (let i = 0; i < n - 1; i++) {
+  for (let j = 0; j < n - 1 - i; j++) {
+    if (a[j] < a[j + 1]) {
+      let t = a[j];
+      a[j] = a[j + 1];
+      a[j + 1] = t;
+    }
+  }
+}`,
+  },
+  {
+    id: 'c2', title: '② The value thief',
+    desc: 'Numbers go missing and others appear twice. The swap is broken — something is being overwritten before it gets saved.',
+    hint: 'Writing <code>a[j] = a[j+1]</code> destroys the old <code>a[j]</code> before it is copied anywhere. You need a temporary variable: <code>let t = a[j];</code> first, then assign <code>a[j+1] = t;</code> at the end.',
+    code:
+`// Fix me: values are getting duplicated and lost!
+for (let i = 0; i < n - 1; i++) {
+  for (let j = 0; j < n - 1 - i; j++) {
+    if (a[j] > a[j + 1]) {
+      a[j] = a[j + 1];
+      a[j + 1] = a[j];
+    }
+  }
+}`,
+  },
+  {
+    id: 'c3', title: '③ The lazy loop',
+    desc: 'This Insertion Sort leaves the very first pair unsorted. Its outer loop starts in the wrong place.',
+    hint: 'Insertion Sort treats <code>a[0]</code> as already sorted and inserts from index <code>1</code> onwards. Starting at <code>i = 2</code> skips the value at index 1 entirely.',
+    code:
+`// Fix me: one value never gets inserted!
+for (let i = 2; i < n; i++) {
+  let key = a[i];
+  let j = i - 1;
+  while (j >= 0 && a[j] > key) {
+    a[j + 1] = a[j];
+    j = j - 1;
+  }
+  a[j + 1] = key;
+}`,
+  },
+];
+
+/* ================= INSTRUMENTED RUNNER ================= */
+const OP_LIMIT = 2000000;
+const TIME_LIMIT_MS = 3000;
+
+function runUserCode(source, input) {
+  const data = [...input];
+  const ops = [];
+  let reads = 0, writes = 0, opCount = 0;
+  const started = Date.now();
+
+  function guard() {
+    opCount++;
+    if (opCount > OP_LIMIT) throw new Error('__TOO_MANY__');
+    if ((opCount & 1023) === 0 && Date.now() - started > TIME_LIMIT_MS) throw new Error('__TOO_SLOW__');
+  }
+
+  const proxy = new Proxy(data, {
+    get(t, prop) {
+      if (typeof prop === 'string' && /^\d+$/.test(prop)) {
+        guard(); reads++;
+        if (ops.length < 60000) ops.push({ t: 'r', i: +prop });
+      }
+      return t[prop];
+    },
+    set(t, prop, val) {
+      if (typeof prop === 'string' && /^\d+$/.test(prop)) {
+        guard(); writes++;
+        if (ops.length < 60000) ops.push({ t: 'w', i: +prop, v: val });
+      }
+      t[prop] = val;
+      return true;
+    },
+  });
+
+  let error = null;
+  try {
+    // eslint-disable-next-line no-new-func
+    const fn = new Function('a', 'n', '"use strict";\n' + source + '\n');
+    fn(proxy, data.length);
+  } catch (e) {
+    error = e && e.message === '__TOO_MANY__' ? 'TOO_MANY'
+          : e && e.message === '__TOO_SLOW__' ? 'TOO_SLOW'
+          : (e && e.message) ? e.message : String(e);
+  }
+  return { result: data, ops, reads, writes, error };
+}
+
+function isSorted(a) {
+  for (let i = 1; i < a.length; i++) if (a[i] < a[i - 1]) return false;
+  return true;
+}
+function sameContents(a, b) {
+  const x = [...a].sort((p, q) => p - q), y = [...b].sort((p, q) => p - q);
+  return JSON.stringify(x) === JSON.stringify(y);
+}
+
+/* ================= UI ================= */
+const N = 18;
+let input = [];
+let bars = [];
+let playTimer = null;
+
+function newInput() {
+  input = Array.from({ length: N }, () => Math.floor(Math.random() * 92) + 8);
+  drawBars(input);
+  document.getElementById('arrOut').innerHTML = '<b>Start:</b> ' + input.join(', ');
+  document.getElementById('mReads').textContent = '0';
+  document.getElementById('mWrites').textContent = '0';
+  document.getElementById('mResult').textContent = '—';
+  document.getElementById('status').style.display = 'none';
+}
+function drawBars(vals) {
+  const box = document.getElementById('bars');
+  box.innerHTML = '';
+  bars = vals.map(v => {
+    const d = document.createElement('div');
+    d.className = 'b';
+    d.style.height = v + '%';
+    box.appendChild(d);
+    return d;
+  });
+}
+function setStatus(kind, title, body) {
+  const s = document.getElementById('status');
+  s.className = kind;
+  const cls = kind === 'ok' ? 'ok2' : kind === 'bad' ? 'bad2' : 'warn2';
+  s.innerHTML = `<b class="${cls}">${title}</b>${body}`;
+}
+
+function run() {
+  clearInterval(playTimer);
+  const src = document.getElementById('code').value;
+  const { result, ops, reads, writes, error } = runUserCode(src, input);
+
+  document.getElementById('mReads').textContent = reads.toLocaleString();
+  document.getElementById('mWrites').textContent = writes.toLocaleString();
+
+  if (error === 'TOO_MANY' || error === 'TOO_SLOW') {
+    setStatus('warn', '⏱️ Your code ran too long — I stopped it.',
+      'That usually means a loop never ends. Check that whatever your loop counts is actually changing — for example a <code>while</code> loop needs something inside it to eventually make its condition false.');
+    document.getElementById('mResult').textContent = '⏱️';
+    return;
+  }
+  if (error) {
+    setStatus('bad', '❌ Your code hit an error', `<code>${String(error).replace(/</g, '&lt;')}</code><br>Check for a missing bracket, semicolon, or a misspelled variable name.`);
+    document.getElementById('mResult').textContent = '❌';
+    return;
+  }
+
+  // animate the writes, then judge the result
+  drawBars(input);
+  const writeOps = ops.filter(o => o.t === 'w');
+  if (writeOps.length === 0) { finish(result, reads, writes); return; }
+  let k = 0;
+  const speed = writeOps.length > 400 ? 1 : writeOps.length > 150 ? 8 : 26;
+  playTimer = setInterval(() => {
+    let n = 0;
+    while (n < 1 + Math.floor(writeOps.length / 120) && k < writeOps.length) {
+      const op = writeOps[k];
+      bars.forEach(b => b.classList.remove('hot'));
+      if (bars[op.i]) { bars[op.i].style.height = op.v + '%'; bars[op.i].classList.add('hot'); }
+      k++; n++;
+    }
+    if (k >= writeOps.length) {
+      clearInterval(playTimer);
+      bars.forEach(b => b.classList.remove('hot'));
+      finish(result, reads, writes);
+    }
+  }, speed);
+}
+
+function finish(result, reads, writes) {
+  drawBars(result);
+  const sorted = isSorted(result);
+  const intact = sameContents(result, input);
+  document.getElementById('arrOut').innerHTML =
+    '<b>Start:</b> ' + input.join(', ') + '<br><b>End:</b> ' + result.join(', ');
+
+  if (sorted && intact) {
+    bars.forEach(b => b.classList.add('ok'));
+    document.getElementById('mResult').textContent = '✅';
+    setStatus('ok', '✅ Sorted correctly!',
+      `Your code used <b>${reads.toLocaleString()}</b> reads and <b>${writes.toLocaleString()}</b> writes on ${N} numbers. ` +
+      `Try a different algorithm from the dropdown and compare those two numbers — that difference is what Big-O is really measuring.`);
+    markSolved();
+  } else if (sorted && !intact) {
+    document.getElementById('mResult').textContent = '⚠️';
+    setStatus('warn', '⚠️ It looks sorted — but values changed!',
+      'The numbers are in order, yet some of the original values were lost or duplicated. This almost always means a broken swap: one slot was overwritten before its old value was saved somewhere.');
+  } else if (!intact) {
+    document.getElementById('mResult').textContent = '❌';
+    setStatus('bad', '❌ Values were lost or duplicated',
+      'Compare the start and end lists below the chart. A swap needs three steps — save one value in a temporary variable, overwrite it, then write the saved value into the other slot.');
+  } else {
+    document.getElementById('mResult').textContent = '❌';
+    const firstBad = result.findIndex((v, i) => i > 0 && v < result[i - 1]);
+    setStatus('bad', '❌ Not sorted yet',
+      `All the original values are still there, but the order is wrong — position <code>${firstBad}</code> holds <code>${result[firstBad]}</code>, which is smaller than the <code>${result[firstBad - 1]}</code> before it. Keep going!`);
+  }
+}
+
+/* ---- challenges ---- */
+let currentChallenge = null;
+function renderChallenges() {
+  const box = document.getElementById('challenges');
+  box.innerHTML = '';
+  CHALLENGES.forEach(c => {
+    const solved = isChallengeSolved(c.id);
+    const d = document.createElement('div');
+    d.className = 'challenge' + (solved ? ' solved' : '');
+    d.innerHTML =
+      `<h4>${c.title} ${solved ? '<span class="solvedTag">✓ solved</span>' : ''}</h4>
+       <p>${c.desc}</p>
+       <div class="row">
+         <button class="small" data-load="${c.id}">Load this challenge</button>
+         <button class="small secondary" data-hint="${c.id}">Show hint</button>
+       </div>
+       <div class="hintBox" id="hint-${c.id}">${c.hint}</div>`;
+    box.appendChild(d);
+  });
+  box.querySelectorAll('[data-load]').forEach(b => {
+    b.onclick = () => {
+      const c = CHALLENGES.find(x => x.id === b.dataset.load);
+      document.getElementById('code').value = c.code;
+      currentChallenge = c.id;
+      newInput();
+      document.getElementById('code').scrollIntoView({ behavior: 'smooth', block: 'center' });
+    };
+  });
+  box.querySelectorAll('[data-hint]').forEach(b => {
+    b.onclick = () => {
+      const h = document.getElementById('hint-' + b.dataset.hint);
+      const show = h.style.display !== 'block';
+      h.style.display = show ? 'block' : 'none';
+      b.textContent = show ? 'Hide hint' : 'Show hint';
+    };
+  });
+}
+function isChallengeSolved(id) {
+  try { return localStorage.getItem('msbx_solved_' + id) === '1'; } catch (e) { return false; }
+}
+function markSolved() {
+  if (!currentChallenge) return;
+  try { localStorage.setItem('msbx_solved_' + currentChallenge, '1'); } catch (e) {}
+  currentChallenge = null;
+  renderChallenges();
+}
+
+/* ---- wiring ---- */
+document.getElementById('presetSel').onchange = function () {
+  document.getElementById('code').value = PRESETS[this.value];
+  currentChallenge = null;
+  newInput();
+};
+document.getElementById('runBtn').onclick = run;
+document.getElementById('resetBtn').onclick = () => {
+  const p = document.getElementById('presetSel').value;
+  document.getElementById('code').value = PRESETS[p];
+  currentChallenge = null;
+  newInput();
+};
+// Tab key should indent, not jump out of the editor
+document.getElementById('code').addEventListener('keydown', function (e) {
+  if (e.key === 'Tab') {
+    e.preventDefault();
+    const s = this.selectionStart, en = this.selectionEnd;
+    this.value = this.value.slice(0, s) + '  ' + this.value.slice(en);
+    this.selectionStart = this.selectionEnd = s + 2;
+  }
+});
+
+document.getElementById('code').value = PRESETS.bubble;
+newInput();
+renderChallenges();
+</script>
+<script>
+/* ===== Offline support (works when served over http/https) ===== */
+if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
+  window.addEventListener('load', function () {
+    navigator.serviceWorker.register('sw.js').catch(function () { /* offline mode simply unavailable */ });
+  });
+}
+</script>
+<script src="firebase-config.js"></script>
+<script src="mindaicode-auth.js"></script>
+</body>
+</html>

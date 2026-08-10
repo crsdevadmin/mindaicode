@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MindAICode — Course Path</title>
+<style>
+  :root {
+    --bg:#0d1117; --panel:#161b22; --panel2:#1c2333; --accent:#58a6ff; --accent2:#f78166;
+    --purple:#d2a8ff; --green:#3fb950; --yellow:#d29922; --red:#f85149;
+    --text:#e6edf3; --muted:#8b949e; --border:#30363d;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family:'Segoe UI', system-ui, sans-serif; background:var(--bg); color:var(--text); min-height:100vh; }
+  header {
+    display:flex; align-items:center; justify-content:space-between;
+    padding:14px 28px; background:var(--panel); border-bottom:1px solid var(--border); flex-wrap:wrap; gap:8px;
+  }
+  .logo { font-size:22px; font-weight:800; }
+  .logo span { color:var(--accent); }
+  .tagline { display:flex; gap:14px; align-items:center; flex-wrap:wrap; font-size:13px; }
+  .tagline a { text-decoration:none; color:var(--muted); }
+  .container { max-width:860px; margin:0 auto; padding:24px 20px 60px; }
+
+  .hero { text-align:center; margin-bottom:30px; }
+  .hero h1 { font-size:26px; margin-bottom:8px; }
+  .hero p { color:var(--muted); font-size:14.5px; max-width:600px; margin:0 auto; line-height:1.6; }
+
+  .overallWrap { background:var(--panel); border:1px solid var(--border); border-radius:12px; padding:16px 20px; margin-bottom:30px; }
+  .overallTop { display:flex; justify-content:space-between; align-items:baseline; margin-bottom:8px; font-size:13.5px; }
+  .overallTop b { font-size:15px; }
+  .barTrack { height:10px; border-radius:6px; background:var(--panel2); overflow:hidden; }
+  .barFill { height:100%; background:linear-gradient(90deg, var(--accent), var(--green)); border-radius:6px; transition:width .6s cubic-bezier(.4,0,.2,1); width:0%; }
+
+  .path { position:relative; padding-left:34px; }
+  .path::before {
+    content:''; position:absolute; left:13px; top:8px; bottom:8px; width:2px;
+    background:linear-gradient(var(--border), var(--border));
+  }
+  .modRow { position:relative; margin-bottom:20px; }
+  .modDot {
+    position:absolute; left:-34px; top:18px; width:28px; height:28px; border-radius:50%;
+    background:var(--panel2); border:2px solid var(--border); display:flex; align-items:center; justify-content:center;
+    font-size:13px; font-weight:800; z-index:1;
+  }
+  .modDot.done { background:rgba(63,185,80,.18); border-color:var(--green); color:var(--green); }
+  .modDot.active { background:rgba(88,166,255,.18); border-color:var(--accent); color:var(--accent); }
+  .modDot.locked { color:var(--muted); }
+
+  .modCard {
+    background:var(--panel); border:1px solid var(--border); border-radius:12px; padding:16px 18px;
+    transition:border-color .15s;
+  }
+  .modCard.unlocked { border-color:rgba(88,166,255,.25); }
+  .modCard.locked { opacity:.62; }
+  .modHead { display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap; margin-bottom:4px; }
+  .modHead h3 { font-size:16px; }
+  .modTag {
+    font-size:10.5px; font-weight:700; letter-spacing:.3px; text-transform:uppercase;
+    padding:3px 9px; border-radius:10px; white-space:nowrap;
+  }
+  .modTag.live { background:rgba(63,185,80,.14); color:var(--green); border:1px solid rgba(63,185,80,.35); }
+  .modTag.soon { background:var(--panel2); color:var(--muted); border:1px solid var(--border); }
+  .modDesc { font-size:13.5px; color:var(--muted); line-height:1.55; margin-bottom:10px; }
+  .modPrereq { font-size:12px; color:var(--muted); margin-bottom:10px; }
+  .modPrereq b { color:var(--text); }
+  .modBarTrack { height:7px; border-radius:5px; background:var(--panel2); overflow:hidden; margin-bottom:6px; }
+  .modBarFill { height:100%; background:var(--accent); border-radius:5px; transition:width .6s; width:0%; }
+  .modBarFill.full { background:var(--green); }
+  .modFoot { display:flex; align-items:center; justify-content:space-between; font-size:12px; color:var(--muted); }
+  .modLinks { display:flex; gap:8px; flex-wrap:wrap; margin-top:10px; }
+  .modLinks a {
+    font-size:12.5px; font-weight:700; color:var(--accent); text-decoration:none;
+    background:rgba(88,166,255,.1); border:1px solid rgba(88,166,255,.3); padding:5px 11px; border-radius:8px;
+  }
+  .modLinks a:hover { filter:brightness(1.2); }
+  .modLinks span.pagelbl { font-size:12px; color:var(--muted); }
+
+  footer { text-align:center; color:var(--muted); font-size:12.5px; padding:30px 20px 40px; }
+
+  @media (max-width:640px) {
+    header { padding:12px 16px; } .logo { font-size:19px; }
+    .container { padding:16px 14px 40px; }
+    .hero h1 { font-size:21px; } .hero p { font-size:13.5px; }
+    .path { padding-left:28px; }
+    .path::before { left:10px; }
+    .modDot { left:-28px; width:24px; height:24px; font-size:11.5px; top:16px; }
+    .modCard { padding:14px; }
+  }
+</style>
+<script>if(location.protocol.startsWith("http")){var m=document.createElement("link");m.rel="manifest";m.href="manifest.json";document.head.appendChild(m);}</script>
+<meta name="theme-color" content="#0d1117">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+</head>
+<body>
+
+<header>
+  <a href="mindaicode-home.html" style="text-decoration:none; color:inherit;">
+    <div class="logo">🧠 MindAI<span>Code</span></div>
+  </a>
+  <div class="tagline">
+    <a href="mindaicode-home.html">🏠 All algorithms</a>
+  </div>
+</header>
+
+<div class="container">
+
+  <div class="hero">
+    <h1>🗺️ Your course path</h1>
+    <p>The full DSA syllabus, in the order most college courses teach it. Finish a module's badges to light it up — modules that aren't built yet are marked "coming soon" so you always know what's next.</p>
+  </div>
+
+  <div class="overallWrap">
+    <div class="overallTop"><b>Overall course progress</b><span id="overallPct">0%</span></div>
+    <div class="barTrack"><div class="barFill" id="overallBar"></div></div>
+  </div>
+
+  <div class="modCard unlocked" id="basicsCard" style="margin-bottom:20px;">
+    <div class="modHead"><h3>🧩 Before Module 0 — Programming Basics</h3><span class="modTag live">Start here</span></div>
+    <div class="modDesc">Variables, arrays &amp; 0-based indexing, loops, functions, and recursion — no prior programming assumed. Not part of the numbered DSA syllabus, but every module below assumes you already know these.</div>
+    <div class="modBarTrack"><div class="modBarFill" id="basicsBarFill" style="width:0%"></div></div>
+    <div class="modFoot"><span id="basicsBadgeCount">0/6 badges</span><span id="basicsPct">0%</span></div>
+    <div class="modLinks"><a href="mindaicode-programming-basics.html">Programming Basics →</a></div>
+  </div>
+
+  <div class="path" id="path"></div>
+
+</div>
+
+<footer>
+  🧠 MindAICode — Learn. Visualize. Code. Master.<br>
+  Two-semester plan: Foundations → Sorting → Searching → Linear Structures, then Hashing → Trees → Graphs → Recursion &amp; DP → Interview Prep.
+</footer>
+
+<script>
+/* ================= MODULE DATA ================= */
+const SORT_ALGOS = [
+  { key:'mac',  href:'mindaicode-bubble-sort.html' },
+  { key:'msel', href:'mindaicode-selection-sort.html' },
+  { key:'mins', href:'mindaicode-insertion-sort.html' },
+  { key:'mmrg', href:'mindaicode-merge-sort.html' },
+  { key:'mqs',  href:'mindaicode-quick-sort.html' },
+  { key:'mhp',  href:'mindaicode-heap-sort.html' },
+];
+const SORT_BADGES = ['sort', 'predict', 'quiz', 'race', 'lab'];
+
+function readFlag(key) {
+  try { return localStorage.getItem(key) === '1'; } catch (e) { return false; }
+}
+
+// each module's progress() returns {earned, total}; built:false modules skip progress entirely
+const MODULES = [
+  {
+    id:'m0', num:0, name:'Foundations — Big-O', built:true,
+    desc:'What an algorithm is, Big-O notation, and why every later module\'s explanations depend on this vocabulary.',
+    prereq:'None',
+    links:[{ label:'Big-O Foundations', href:'mindaicode-big-o.html' }],
+    progress:() => ({ earned: readFlag('mbigo_badge_quiz') ? 1 : 0, total:1 }),
+  },
+  {
+    id:'m1', num:1, name:'Sorting', built:true,
+    desc:'Bubble, Selection, Insertion, Merge, Quick, and Heap Sort — all six, animated, with quizzes and a live race.',
+    prereq:'Module 0 — Foundations',
+    links:[
+      { label:'Bubble', href:'mindaicode-bubble-sort.html' },
+      { label:'Selection', href:'mindaicode-selection-sort.html' },
+      { label:'Insertion', href:'mindaicode-insertion-sort.html' },
+      { label:'Merge', href:'mindaicode-merge-sort.html' },
+      { label:'Quick', href:'mindaicode-quick-sort.html' },
+      { label:'Heap', href:'mindaicode-heap-sort.html' },
+      { label:'Race all six', href:'mindaicode-race-all.html' },
+    ],
+    progress:() => {
+      let earned = 0;
+      const total = SORT_ALGOS.length * SORT_BADGES.length;
+      SORT_ALGOS.forEach(a => SORT_BADGES.forEach(b => { if (readFlag(a.key + '_badge_' + b)) earned++; }));
+      return { earned, total };
+    },
+  },
+  {
+    id:'m2', num:2, name:'Searching', built:true,
+    desc:'Linear, Jump, and Binary Search head-to-head on a sorted list — the payoff for having sorted it in the first place.',
+    prereq:'Module 1 — Sorting (assumes a sorted array)',
+    links:[{ label:'Linear vs Jump vs Binary', href:'mindaicode-binary-search.html' }],
+    progress:() => {
+      let earned = 0;
+      if (readFlag('mbsr_badge_search')) earned++;
+      if (readFlag('mbsr_badge_quiz')) earned++;
+      return { earned, total:2 };
+    },
+  },
+  {
+    id:'m3', num:3, name:'Linear Data Structures', built:true,
+    desc:'Stack, Queue, and Linked List — cafeteria plates, a ticket line, and train carriages linking up.',
+    prereq:'Module 0 — Foundations (independent of sorting/searching)',
+    links:[{ label:'Stack, Queue & Linked List', href:'mindaicode-linear-structures.html' }],
+    progress:() => {
+      let earned = 0;
+      ['stack', 'queue', 'list', 'quiz'].forEach(id => { if (readFlag('mlds_badge_' + id)) earned++; });
+      return { earned, total:4 };
+    },
+  },
+  {
+    id:'m4', num:4, name:'Hashing', built:true,
+    desc:'Hash tables, collision handling, load factor — lockers with numbered slots and a rule for when two people get the same one.',
+    prereq:'Module 3 — Linear Data Structures',
+    links:[{ label:'Chaining vs Open Addressing', href:'mindaicode-hashing.html' }],
+    progress:() => {
+      let earned = 0;
+      ['chain', 'open', 'resize', 'quiz'].forEach(id => { if (readFlag('mhsh_badge_' + id)) earned++; });
+      return { earned, total:4 };
+    },
+  },
+  {
+    id:'m5', num:5, name:'Trees', built:true,
+    desc:'Binary Search Tree (insert/search/delete), traversals (inorder/preorder/postorder), and a min-heap — literally growing a tree one insert at a time.',
+    prereq:'Module 3 — Linear Data Structures',
+    links:[{ label:'BST & Min-Heap', href:'mindaicode-trees.html' }],
+    progress:() => {
+      let earned = 0;
+      ['bst', 'traverse', 'heap', 'quiz'].forEach(id => { if (readFlag('mtre_badge_' + id)) earned++; });
+      return { earned, total:4 };
+    },
+  },
+  {
+    id:'m6', num:6, name:'Graphs', built:true,
+    desc:'BFS, DFS, and Dijkstra\'s shortest path on the same 8-city road map — cities connected by roads.',
+    prereq:'Module 5 — Trees',
+    links:[{ label:'BFS, DFS & Dijkstra', href:'mindaicode-graphs.html' }],
+    progress:() => {
+      let earned = 0;
+      ['bfs', 'dfs', 'dijkstra', 'quiz'].forEach(id => { if (readFlag('mgph_badge_' + id)) earned++; });
+      return { earned, total:4 };
+    },
+  },
+  {
+    id:'m7', num:7, name:'Recursion & Dynamic Programming', built:true,
+    desc:'Recursive vs memoized Fibonacci, 0/1 Knapsack, Longest Common Subsequence — recursion trees collapsing once repeated work gets cached.',
+    prereq:'Modules 1–2 — Sorting & Searching',
+    links:[{ label:'Fibonacci, Knapsack & LCS', href:'mindaicode-recursion-dp.html' }],
+    progress:() => {
+      let earned = 0;
+      ['fib', 'knapsack', 'lcs', 'quiz'].forEach(id => { if (readFlag('mrdp_badge_' + id)) earned++; });
+      return { earned, total:4 };
+    },
+  },
+  {
+    id:'m8', num:8, name:'Interview Prep / Capstone', built:true,
+    desc:'A timed challenge mixing questions from every module, a personal leaderboard, and a mock-interview flashcard mode.',
+    prereq:'All modules above',
+    links:[{ label:'Timed Challenge & Mock Interview', href:'mindaicode-capstone.html' }],
+    progress:() => {
+      let earned = 0;
+      ['challenge', 'perfect', 'leaderboard', 'mock'].forEach(id => { if (readFlag('mcap_badge_' + id)) earned++; });
+      return { earned, total:4 };
+    },
+  },
+];
+
+/* Practice tools that support the above modules but aren't a "module" themselves */
+const EXTRAS = [
+  { label:'🛠️ Code Sandbox', href:'mindaicode-sandbox.html' },
+  { label:'⚖️ Stability Explained', href:'mindaicode-stability.html' },
+  { label:'🔁 Revision Mode', href:'mindaicode-revision.html' },
+];
+
+function renderBasicsCard() {
+  const ids = ['variables', 'array', 'loop', 'function', 'recursion', 'quiz'];
+  const earned = ids.filter(id => readFlag('mbas_badge_' + id)).length;
+  const pct = Math.round((earned / ids.length) * 100);
+  document.getElementById('basicsBadgeCount').textContent = `${earned}/${ids.length} badges`;
+  document.getElementById('basicsPct').textContent = pct + '%';
+  const fill = document.getElementById('basicsBarFill');
+  fill.style.width = pct + '%';
+  fill.classList.toggle('full', pct === 100);
+  document.getElementById('basicsCard').classList.toggle('locked', false);
+}
+
+function renderPath() {
+  const path = document.getElementById('path');
+  path.innerHTML = '';
+  let totalEarned = 0, totalPossible = 0;
+
+  MODULES.forEach(m => {
+    const row = document.createElement('div');
+    row.className = 'modRow';
+
+    let dotClass = 'locked', dotLabel = m.num;
+    const card = document.createElement('div');
+    let pct = 0, earned = 0, total = 0;
+
+    if (m.built) {
+      const p = m.progress();
+      earned = p.earned; total = p.total;
+      totalEarned += earned; totalPossible += total;
+      pct = total > 0 ? Math.round((earned / total) * 100) : 0;
+      dotClass = pct === 100 ? 'done' : 'active';
+      if (pct === 100) dotLabel = '✓';
+      card.className = 'modCard unlocked';
+      card.innerHTML = `
+        <div class="modHead"><h3>Module ${m.num} — ${m.name}</h3><span class="modTag live">Live</span></div>
+        <div class="modDesc">${m.desc}</div>
+        <div class="modPrereq">Prerequisite: <b>${m.prereq}</b></div>
+        <div class="modBarTrack"><div class="modBarFill${pct === 100 ? ' full' : ''}" style="width:${pct}%"></div></div>
+        <div class="modFoot"><span>${earned}/${total} badges</span><span>${pct}%</span></div>
+        <div class="modLinks">${m.links.map(l => `<a href="${l.href}">${l.label} →</a>`).join('')}</div>
+      `;
+    } else {
+      card.className = 'modCard locked';
+      card.innerHTML = `
+        <div class="modHead"><h3>Module ${m.num} — ${m.name}</h3><span class="modTag soon">Coming soon</span></div>
+        <div class="modDesc">${m.desc}</div>
+        <div class="modPrereq">Prerequisite: <b>${m.prereq}</b></div>
+        <div class="modFoot"><span>Not built yet — check back soon</span></div>
+      `;
+    }
+
+    const dot = document.createElement('div');
+    dot.className = 'modDot ' + dotClass;
+    dot.textContent = dotLabel;
+    row.appendChild(dot);
+    row.appendChild(card);
+    path.appendChild(row);
+  });
+
+  const overallPct = totalPossible > 0 ? Math.round((totalEarned / totalPossible) * 100) : 0;
+  document.getElementById('overallPct').textContent = `${overallPct}% of built modules (${totalEarned}/${totalPossible} badges)`;
+  requestAnimationFrame(() => { document.getElementById('overallBar').style.width = overallPct + '%'; });
+}
+
+renderBasicsCard();
+renderPath();
+</script>
+<script>
+/* ===== Offline support (works when served over http/https) ===== */
+if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
+  window.addEventListener('load', function () {
+    navigator.serviceWorker.register('sw.js').catch(function () { /* offline mode simply unavailable */ });
+  });
+}
+</script>
+<script src="firebase-config.js"></script>
+<script src="mindaicode-auth.js"></script>
+</body>
+</html>

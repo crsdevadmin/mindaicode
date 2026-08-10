@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MindAICode — Big-O, Actually Explained</title>
+<style>
+  :root {
+    --bg:#0d1117; --panel:#161b22; --panel2:#1c2333; --accent:#58a6ff; --accent2:#f78166;
+    --purple:#d2a8ff; --green:#3fb950; --yellow:#d29922; --red:#f85149; --cyan:#39d0d8;
+    --text:#e6edf3; --muted:#8b949e; --border:#30363d;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family:'Segoe UI', system-ui, sans-serif; background:var(--bg); color:var(--text); min-height:100vh; }
+  header {
+    display:flex; align-items:center; justify-content:space-between;
+    padding:14px 28px; background:var(--panel); border-bottom:1px solid var(--border); flex-wrap:wrap; gap:8px;
+  }
+  .logo { font-size:22px; font-weight:800; }
+  .logo span { color:var(--accent); }
+  .tagline { display:flex; gap:14px; align-items:center; flex-wrap:wrap; font-size:13px; }
+  .tagline a { text-decoration:none; }
+  .container { max-width:1060px; margin:0 auto; padding:24px 20px 60px; }
+
+  .intro {
+    background:linear-gradient(135deg, rgba(88,166,255,.11), rgba(210,168,255,.07));
+    border:1px solid var(--border); border-radius:12px; padding:22px 24px; margin-bottom:18px;
+  }
+  .intro h2 { font-size:20px; margin-bottom:8px; }
+  .intro p { font-size:15px; line-height:1.7; margin-bottom:9px; }
+  .analogy { background:var(--panel2); border-left:4px solid var(--green); padding:12px 16px; border-radius:8px; margin:12px 0 0; font-size:14.5px; line-height:1.65; }
+
+  .card { background:var(--panel); border:1px solid var(--border); border-radius:12px; padding:20px; margin-bottom:18px; }
+  h1 { font-size:24px; margin-bottom:6px; }
+  h3 { font-size:16px; margin-bottom:8px; }
+  .sub { color:var(--muted); font-size:13.5px; margin-bottom:14px; line-height:1.6; }
+
+  /* chart */
+  .chartWrap { position:relative; background:var(--panel2); border:1px solid var(--border); border-radius:10px; padding:14px 14px 6px; }
+  svg.chart { width:100%; height:300px; display:block; overflow:visible; }
+  .axis { stroke:var(--border); stroke-width:1.5; }
+  .gridline { stroke:var(--border); stroke-width:1; stroke-dasharray:3 4; opacity:.55; }
+  .axLabel { fill:var(--muted); font-size:11px; font-family:Consolas, monospace; }
+  .curve { fill:none; stroke-width:2.6; stroke-linecap:round; stroke-linejoin:round; transition:opacity .2s; }
+  .curve.dim { opacity:.16; }
+  .marker { fill:var(--bg); stroke-width:2.5; }
+  .marker.dim { opacity:.16; }
+  #nLine { stroke:var(--text); stroke-width:1; stroke-dasharray:4 4; opacity:.4; }
+
+  .legend { display:flex; flex-wrap:wrap; gap:8px; margin-top:12px; }
+  .lg {
+    display:flex; align-items:center; gap:7px; cursor:pointer; user-select:none;
+    background:var(--bg); border:1px solid var(--border); border-radius:20px;
+    padding:5px 12px; font-size:12.5px; font-weight:600; transition:all .15s;
+  }
+  .lg:hover { border-color:var(--muted); }
+  .lg.off { opacity:.4; }
+  .lg .dot { width:11px; height:11px; border-radius:50%; flex-shrink:0; }
+  .lg .nm { font-family:Consolas, monospace; }
+
+  .sliderRow { display:flex; align-items:center; gap:14px; margin:16px 0 4px; flex-wrap:wrap; }
+  .sliderRow label { font-size:13px; color:var(--muted); font-weight:700; white-space:nowrap; }
+  input[type=range] { accent-color:var(--accent); flex:1; min-width:180px; }
+  .nBadge {
+    background:rgba(88,166,255,.13); border:1px solid rgba(88,166,255,.4); color:var(--accent);
+    font-family:Consolas, monospace; font-weight:800; font-size:15px;
+    padding:5px 14px; border-radius:8px; min-width:82px; text-align:center;
+  }
+
+  table { width:100%; border-collapse:collapse; font-size:13.5px; }
+  th, td { text-align:left; padding:9px 10px; border-bottom:1px solid var(--border); }
+  th { color:var(--muted); font-size:12px; text-transform:uppercase; letter-spacing:.4px; }
+  td.num { font-variant-numeric:tabular-nums; font-family:Consolas, monospace; }
+  tr.hot td { background:rgba(88,166,255,.07); }
+  .nameCell { display:flex; align-items:center; gap:8px; font-weight:700; }
+  .nameCell .dot { width:10px; height:10px; border-radius:50%; }
+  .warnTxt { color:var(--red); font-weight:700; }
+  .okTxt { color:var(--green); font-weight:700; }
+  .midTxt { color:var(--yellow); font-weight:700; }
+
+  .callout {
+    background:rgba(210,153,34,.1); border:1px solid rgba(210,153,34,.35);
+    border-radius:10px; padding:14px 16px; font-size:14.5px; line-height:1.7; margin-top:14px;
+  }
+  .callout b { color:var(--yellow); }
+
+  .cmpGrid { display:grid; grid-template-columns:repeat(auto-fit, minmax(210px,1fr)); gap:12px; }
+  .cmpCard { background:var(--panel2); border:1px solid var(--border); border-radius:10px; padding:14px; }
+  .cmpCard h4 { font-size:14px; margin-bottom:6px; font-family:Consolas, monospace; }
+  .cmpCard p { font-size:13px; color:var(--muted); line-height:1.6; }
+  .cmpCard .ex { font-size:12.5px; color:var(--text); margin-top:7px; }
+  .cmpCard a { color:var(--accent); text-decoration:none; }
+
+  .quizOpt {
+    display:block; width:100%; text-align:left; margin-bottom:8px; cursor:pointer;
+    background:var(--panel2); color:var(--text); border:1px solid var(--border);
+    border-radius:9px; padding:11px 14px; font-size:14px; font-family:inherit;
+  }
+  .quizOpt:hover:not(:disabled) { border-color:var(--accent); }
+  .quizOpt.right { border-color:var(--green); background:rgba(63,185,80,.15); }
+  .quizOpt.wrong { border-color:var(--red); background:rgba(248,81,73,.15); }
+  #quizFb { font-size:13.5px; margin-top:10px; color:var(--muted); min-height:20px; line-height:1.65; }
+  #quizFb a { color:var(--accent); }
+
+  @media (max-width:640px) {
+    header { padding:12px 16px; }
+    .logo { font-size:19px; }
+    .container { padding:16px 14px 40px; }
+    .card, .intro { padding:16px; }
+    h1 { font-size:20px; } .intro h2 { font-size:17px; } .intro p { font-size:14px; }
+    svg.chart { height:230px; }
+    .sliderRow { gap:10px; }
+    .lg { font-size:11.5px; padding:4px 10px; }
+    th, td { padding:7px 6px; font-size:12.5px; }
+  }
+</style>
+<script>if(location.protocol.startsWith("http")){var m=document.createElement("link");m.rel="manifest";m.href="manifest.json";document.head.appendChild(m);}</script>
+<meta name="theme-color" content="#0d1117">
+<meta name="apple-mobile-web-app-capable" content="yes">
+</head>
+<body>
+
+<header>
+  <a href="mindaicode-home.html" style="text-decoration:none; color:inherit;">
+    <div class="logo">🧠 MindAI<span>Code</span></div>
+  </a>
+  <div class="tagline">
+    <a href="mindaicode-race-all.html" style="color:var(--purple); font-weight:600;">🏁 Race all six</a>
+    <a href="mindaicode-home.html" style="color:var(--muted);">🏠 All algorithms</a>
+  </div>
+</header>
+
+<div class="container">
+
+  <div class="intro">
+    <h2>📐 Big-O, without the maths panic</h2>
+    <p>Big-O is not about how many <em>seconds</em> something takes. It answers one question: <strong>when the input gets bigger, how much worse does this get?</strong></p>
+    <p>That's it. A fast algorithm on 10 items tells you nothing. The question is what happens at 10,000.</p>
+    <div class="analogy">
+      🎓 <strong>Real-life example:</strong> Finding one student in a class of 60 is easy however you do it. Now find one student in a college of 60,000. The method that made no difference before is suddenly the difference between <strong>a minute and a whole day</strong>. Big-O describes exactly that gap — and it ignores small stuff like how fast your laptop is, because that never changes the shape of the curve.
+    </div>
+  </div>
+
+  <div class="card">
+    <h1>Watch the curves separate 📈</h1>
+    <p class="sub">Drag the slider to grow the input size <code>n</code>. Every line shows how many steps that kind of algorithm needs. Click a label to hide or show its line.</p>
+
+    <div class="chartWrap">
+      <svg class="chart" id="chart" viewBox="0 0 700 300" preserveAspectRatio="none" aria-label="Growth curve comparison"></svg>
+    </div>
+
+    <div class="legend" id="legend"></div>
+
+    <div class="sliderRow">
+      <label for="nSlider">Input size n</label>
+      <input type="range" id="nSlider" min="1" max="100" value="20">
+      <span class="nBadge" id="nBadge">n = 20</span>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>🔢 What that means in real numbers</h3>
+    <p class="sub">Steps needed at <b id="nEcho">n = 20</b>, and how long that takes if your computer does <strong>10 million steps per second</strong>.</p>
+    <div style="overflow-x:auto;">
+      <table>
+        <thead><tr><th>Growth</th><th>Steps needed</th><th>Time taken</th><th>Where you've seen it</th></tr></thead>
+        <tbody id="tableBody"></tbody>
+      </table>
+    </div>
+    <div class="callout" id="callout"></div>
+  </div>
+
+  <div class="card">
+    <h3>📚 The six you actually need</h3>
+    <p class="sub">Ordered best to worst. In practice you'll meet the first four constantly, the fifth often, and the sixth as a warning.</p>
+    <div class="cmpGrid" id="cmpGrid"></div>
+  </div>
+
+  <div class="card">
+    <h3>🧠 Quick check</h3>
+    <div id="quizQ" style="font-size:15px; margin-bottom:12px;"></div>
+    <div id="quizOpts"></div>
+    <div id="quizFb"></div>
+  </div>
+
+</div>
+
+<script>
+/* ================= THE GROWTH FUNCTIONS ================= */
+const FUNCS = [
+  { key:'1',     label:'O(1)',        color:'#3fb950', f: n => 1,
+    desc:'Constant. The input size makes no difference at all.',
+    ex:'Reading <code>arr[5]</code>, or pushing onto a <a href="mindaicode-home.html">stack</a>.' },
+  { key:'logn',  label:'O(log n)',    color:'#39d0d8', f: n => Math.max(1, Math.ceil(Math.log2(n + 1))),
+    desc:'Logarithmic. Doubling the input adds just one extra step.',
+    ex:'<a href="mindaicode-binary-search.html">Binary Search</a> — halving the list each guess.' },
+  { key:'n',     label:'O(n)',        color:'#58a6ff', f: n => n,
+    desc:'Linear. Twice the data means twice the work.',
+    ex:'<a href="mindaicode-binary-search.html">Linear Search</a>, or one pass of Bubble Sort.' },
+  { key:'nlogn', label:'O(n log n)',  color:'#d2a8ff', f: n => Math.max(1, Math.round(n * Math.max(1, Math.log2(n + 1)))),
+    desc:'The practical limit for comparison sorting — you cannot do better.',
+    ex:'<a href="mindaicode-merge-sort.html">Merge</a>, <a href="mindaicode-quick-sort.html">Quick</a> and <a href="mindaicode-heap-sort.html">Heap Sort</a>.' },
+  { key:'n2',    label:'O(n²)',       color:'#f78166', f: n => n * n,
+    desc:'Quadratic. Ten times the data means a hundred times the work.',
+    ex:'<a href="mindaicode-bubble-sort.html">Bubble</a>, <a href="mindaicode-selection-sort.html">Selection</a> and <a href="mindaicode-insertion-sort.html">Insertion Sort</a>.' },
+  { key:'2n',    label:'O(2ⁿ)',       color:'#f85149', f: n => Math.pow(2, n),
+    desc:'Exponential. Adding ONE item doubles the work. Unusable beyond ~40 items.',
+    ex:'Naive recursive Fibonacci, or trying every possible subset.' },
+];
+
+const OPS_PER_SEC = 1e7;
+let hidden = {};        // key -> true when the curve is toggled off
+let curN = 20;
+
+/* ================= CHART ================= */
+const W = 700, H = 300, PAD_L = 44, PAD_R = 14, PAD_T = 14, PAD_B = 30;
+const NMAX = 100;
+
+// Log scale on Y, because O(2^n) would otherwise flatten everything else into the floor.
+const YMIN = 1;
+const YMAX = Math.pow(2, 40);
+function yPix(v) {
+  const clamped = Math.min(Math.max(v, YMIN), YMAX);
+  const t = Math.log(clamped) / Math.log(YMAX);
+  return PAD_T + (1 - t) * (H - PAD_T - PAD_B);
+}
+function xPix(n) {
+  return PAD_L + ((n - 1) / (NMAX - 1)) * (W - PAD_L - PAD_R);
+}
+
+function buildChart() {
+  const svg = document.getElementById('chart');
+  const parts = [];
+
+  // horizontal gridlines at powers of ten
+  [1, 10, 1e2, 1e3, 1e4, 1e6, 1e9, 1e12].forEach(v => {
+    if (v > YMAX) return;
+    const y = yPix(v);
+    parts.push(`<line class="gridline" x1="${PAD_L}" y1="${y}" x2="${W - PAD_R}" y2="${y}"></line>`);
+    const lbl = v === 1 ? '1' : v >= 1e9 ? (v / 1e9) + 'B' : v >= 1e6 ? (v / 1e6) + 'M' : v >= 1000 ? (v / 1000) + 'k' : String(v);
+    parts.push(`<text class="axLabel" x="${PAD_L - 7}" y="${y + 3.5}" text-anchor="end">${lbl}</text>`);
+  });
+
+  // axes
+  parts.push(`<line class="axis" x1="${PAD_L}" y1="${PAD_T}" x2="${PAD_L}" y2="${H - PAD_B}"></line>`);
+  parts.push(`<line class="axis" x1="${PAD_L}" y1="${H - PAD_B}" x2="${W - PAD_R}" y2="${H - PAD_B}"></line>`);
+  [1, 25, 50, 75, 100].forEach(n => {
+    parts.push(`<text class="axLabel" x="${xPix(n)}" y="${H - PAD_B + 15}" text-anchor="middle">${n}</text>`);
+  });
+  parts.push(`<text class="axLabel" x="${(W) / 2}" y="${H - 2}" text-anchor="middle">input size n →</text>`);
+
+  // vertical marker at the current n
+  parts.push(`<line id="nLine" x1="${xPix(curN)}" y1="${PAD_T}" x2="${xPix(curN)}" y2="${H - PAD_B}"></line>`);
+
+  // curves
+  FUNCS.forEach(fn => {
+    const pts = [];
+    for (let n = 1; n <= NMAX; n++) pts.push(`${xPix(n).toFixed(1)},${yPix(fn.f(n)).toFixed(1)}`);
+    const dim = hidden[fn.key] ? ' dim' : '';
+    parts.push(`<polyline class="curve${dim}" data-k="${fn.key}" stroke="${fn.color}" points="${pts.join(' ')}"></polyline>`);
+  });
+
+  // dots at the current n
+  FUNCS.forEach(fn => {
+    const dim = hidden[fn.key] ? ' dim' : '';
+    parts.push(`<circle class="marker${dim}" data-k="${fn.key}" cx="${xPix(curN).toFixed(1)}" cy="${yPix(fn.f(curN)).toFixed(1)}" r="4.5" stroke="${fn.color}"></circle>`);
+  });
+
+  svg.innerHTML = parts.join('');
+}
+
+function buildLegend() {
+  const box = document.getElementById('legend');
+  box.innerHTML = '';
+  FUNCS.forEach(fn => {
+    const b = document.createElement('button');
+    b.className = 'lg' + (hidden[fn.key] ? ' off' : '');
+    b.dataset.k = fn.key;
+    b.innerHTML = `<span class="dot" style="background:${fn.color}"></span><span class="nm">${fn.label}</span>`;
+    b.onclick = () => { hidden[fn.key] = !hidden[fn.key]; buildChart(); buildLegend(); };
+    box.appendChild(b);
+  });
+}
+
+/* ================= NUMBERS TABLE ================= */
+function fmtSteps(v) {
+  if (v < 1000) return String(Math.round(v));
+  if (v < 1e6) return (v / 1000).toFixed(1).replace(/\.0$/, '') + ' thousand';
+  if (v < 1e9) return (v / 1e6).toFixed(1).replace(/\.0$/, '') + ' million';
+  if (v < 1e12) return (v / 1e9).toFixed(1).replace(/\.0$/, '') + ' billion';
+  if (v < 1e15) return (v / 1e12).toFixed(1).replace(/\.0$/, '') + ' trillion';
+  return v.toExponential(1).replace('e+', ' × 10^');
+}
+function fmtTime(steps) {
+  const secs = steps / OPS_PER_SEC;
+  if (secs < 1e-6) return { t: 'instant', cls: 'okTxt' };
+  if (secs < 0.001) return { t: (secs * 1e6).toFixed(0) + ' microseconds', cls: 'okTxt' };
+  if (secs < 1) return { t: (secs * 1000).toFixed(1) + ' milliseconds', cls: 'okTxt' };
+  if (secs < 60) return { t: secs.toFixed(1) + ' seconds', cls: 'midTxt' };
+  if (secs < 3600) return { t: (secs / 60).toFixed(1) + ' minutes', cls: 'midTxt' };
+  if (secs < 86400) return { t: (secs / 3600).toFixed(1) + ' hours', cls: 'warnTxt' };
+  if (secs < 86400 * 365) return { t: (secs / 86400).toFixed(1) + ' days', cls: 'warnTxt' };
+  const years = secs / (86400 * 365);
+  // The universe is ~13.8 billion years old — past that, plain words stop meaning anything.
+  if (years > 1.38e10) {
+    const times = years / 1.38e10;
+    const nice = times >= 1e6
+      ? times.toExponential(0).replace('e+', ' × 10^')
+      : Math.round(times).toLocaleString();
+    return { t: nice + '× the age of the universe', cls: 'warnTxt' };
+  }
+  if (years > 1e9) return { t: (years / 1e9).toFixed(1) + ' billion years', cls: 'warnTxt' };
+  if (years > 1e6) return { t: (years / 1e6).toFixed(1) + ' million years', cls: 'warnTxt' };
+  return { t: years.toFixed(1) + ' years', cls: 'warnTxt' };
+}
+function renderTable() {
+  const body = document.getElementById('tableBody');
+  body.innerHTML = '';
+  FUNCS.forEach(fn => {
+    const steps = fn.f(curN);
+    const time = fmtTime(steps);
+    const tr = document.createElement('tr');
+    if (!hidden[fn.key]) tr.className = 'hot';
+    tr.innerHTML =
+      `<td><span class="nameCell"><span class="dot" style="background:${fn.color}"></span>${fn.label}</span></td>
+       <td class="num">${fmtSteps(steps)}</td>
+       <td class="num ${time.cls}">${time.t}</td>
+       <td style="font-size:12.5px; color:var(--muted);">${fn.ex}</td>`;
+    body.appendChild(tr);
+  });
+
+  // a takeaway that changes as n grows
+  const c = document.getElementById('callout');
+  const n2 = curN * curN, nl = Math.max(1, Math.round(curN * Math.max(1, Math.log2(curN + 1))));
+  const exp = Math.pow(2, curN);
+  if (curN <= 10) {
+    c.innerHTML = `<b>At n = ${curN}, everything looks fine.</b> Even the exponential curve finishes instantly. This is exactly why testing on tiny inputs tells you nothing — every algorithm looks fast here.`;
+  } else if (curN <= 40) {
+    c.innerHTML = `<b>The gap is opening up.</b> At n = ${curN}, O(n²) needs ${fmtSteps(n2)} steps against O(n log n)'s ${fmtSteps(nl)} — roughly <b>${(n2 / nl).toFixed(1)}× more work</b>. And O(2ⁿ) has already reached ${fmtSteps(exp)}, which takes ${fmtTime(exp).t}.`;
+  } else {
+    c.innerHTML = `<b>Now it really matters.</b> At n = ${curN}, O(n²) needs ${fmtSteps(n2)} steps versus ${fmtSteps(nl)} for O(n log n) — about <b>${(n2 / nl).toFixed(1)}× more work</b>. O(2ⁿ) would take ${fmtTime(exp).t}, which is why exponential algorithms are considered unusable rather than merely slow.`;
+  }
+}
+
+/* ================= CONCEPT CARDS ================= */
+function renderCards() {
+  const g = document.getElementById('cmpGrid');
+  g.innerHTML = '';
+  FUNCS.forEach(fn => {
+    const d = document.createElement('div');
+    d.className = 'cmpCard';
+    d.innerHTML = `<h4 style="color:${fn.color}">${fn.label}</h4>
+                   <p>${fn.desc}</p>
+                   <div class="ex">${fn.ex}</div>`;
+    g.appendChild(d);
+  });
+}
+
+/* ================= WIRING ================= */
+const slider = document.getElementById('nSlider');
+function update() {
+  curN = parseInt(slider.value, 10);
+  document.getElementById('nBadge').textContent = 'n = ' + curN;
+  document.getElementById('nEcho').textContent = 'n = ' + curN;
+  buildChart();
+  renderTable();
+}
+slider.oninput = update;
+
+/* ================= QUIZ ================= */
+const quiz = [
+  { q:'What does Big-O actually describe?',
+    opts:['How many seconds an algorithm takes','How the work grows as the input gets bigger','How much memory a computer has'],
+    ans:1, why:'It deliberately ignores hardware speed and constant factors. A faster laptop shifts every curve down a bit, but never changes its shape — and the shape is what decides what happens at scale.' },
+  { q:'An algorithm takes 100 steps on 10 items. It is O(n²). Roughly how many steps for 100 items?',
+    opts:['1,000 steps','10,000 steps','200 steps'],
+    ans:1, why:'O(n²) means squaring the input squares the work. 10× the data is 100× the work: 100 items gives 100² = 10,000 steps.' },
+  { q:'Why is O(log n) so much better than O(n)?',
+    opts:['It skips items at random','Doubling the input adds only ONE extra step','It uses less memory'],
+    ans:1, why:'Each step throws away half of what remains. Going from 1,000 to 2,000 items costs binary search exactly one more comparison — from about 10 to about 11.' },
+  { q:'You are sorting 10 items, once. Does choosing Bubble Sort over Merge Sort matter?',
+    opts:['Yes, always use the best Big-O','Not really — at n=10 the difference is invisible','No, Bubble Sort is faster'],
+    ans:1, why:'Big-O is about scaling. At n=10 both finish instantly and the simpler code may be the better engineering choice. It starts to matter at thousands of items — which is exactly when people forget to check.' },
+];
+let qi = 0, qCorrect = 0;
+function showQuiz() {
+  const item = quiz[qi];
+  document.getElementById('quizQ').innerHTML = `<strong>Q${qi + 1}/${quiz.length}:</strong> ${item.q}`;
+  const box = document.getElementById('quizOpts');
+  box.innerHTML = '';
+  document.getElementById('quizFb').textContent = '';
+  item.opts.forEach((o, i) => {
+    const b = document.createElement('button');
+    b.className = 'quizOpt';
+    b.textContent = o;
+    b.onclick = () => {
+      box.querySelectorAll('button').forEach(x => x.disabled = true);
+      const ok = i === item.ans;
+      if (ok) qCorrect++;
+      b.classList.add(ok ? 'right' : 'wrong');
+      if (!ok) box.children[item.ans].classList.add('right');
+      let tail = '';
+      if (qi < quiz.length - 1) tail = ' <a href="#" id="nq">Next →</a>';
+      else {
+        tail = ` 🎉 Done — ${qCorrect}/${quiz.length} correct.`;
+        if (qCorrect === quiz.length) { try { localStorage.setItem('mbigo_badge_quiz', '1'); } catch (e) {} }
+        else tail += ' <a href="#" id="rq">Try again</a>';
+      }
+      document.getElementById('quizFb').innerHTML = (ok ? '✅ Correct! ' : '❌ Not quite. ') + item.why + tail;
+      const nq = document.getElementById('nq');
+      if (nq) nq.onclick = e => { e.preventDefault(); qi++; showQuiz(); };
+      const rq = document.getElementById('rq');
+      if (rq) rq.onclick = e => { e.preventDefault(); qi = 0; qCorrect = 0; showQuiz(); };
+    };
+    box.appendChild(b);
+  });
+}
+
+buildLegend();
+renderCards();
+update();
+showQuiz();
+</script>
+<script>
+/* ===== Offline support (works when served over http/https) ===== */
+if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
+  window.addEventListener('load', function () {
+    navigator.serviceWorker.register('sw.js').catch(function () {});
+  });
+}
+</script>
+<script src="firebase-config.js"></script>
+<script src="mindaicode-auth.js"></script>
+</body>
+</html>

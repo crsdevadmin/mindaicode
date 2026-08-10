@@ -1,0 +1,1727 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MindAICode — Selection Sort Visualizer</title>
+<style>
+  :root {
+    --bg: #0d1117;
+    --panel: #161b22;
+    --panel2: #1c2333;
+    --accent: #58a6ff;
+    --accent2: #f78166;
+    --purple: #d2a8ff;
+    --green: #3fb950;
+    --yellow: #d29922;
+    --text: #e6edf3;
+    --muted: #8b949e;
+    --border: #30363d;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+  }
+  header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 14px 28px;
+    background: var(--panel);
+    border-bottom: 1px solid var(--border);
+  }
+  .logo { font-size: 22px; font-weight: 800; letter-spacing: .5px; }
+  .logo span { color: var(--accent); }
+  .tagline { color: var(--muted); font-size: 13px; }
+
+  .container {
+    max-width: 1360px; margin: 0 auto; padding: 24px;
+    display: grid; grid-template-columns: 1fr 440px; gap: 20px;
+  }
+  @media (max-width: 900px) { .container { grid-template-columns: 1fr; } }
+
+  .card {
+    background: var(--panel); border: 1px solid var(--border);
+    border-radius: 12px; padding: 20px;
+  }
+  h1 { font-size: 24px; margin-bottom: 6px; }
+  h3 { font-size: 15px; margin-bottom: 10px; }
+  .subtitle { color: var(--muted); font-size: 14px; margin-bottom: 16px; }
+  .full { grid-column: 1 / -1; }
+
+  /* Beginner intro */
+  .intro {
+    grid-column: 1 / -1;
+    background: linear-gradient(135deg, rgba(88,166,255,.10), rgba(63,185,80,.08));
+    border: 1px solid var(--border); border-radius: 12px;
+    padding: 22px 24px;
+  }
+  .intro h2 { font-size: 20px; margin-bottom: 8px; }
+  .intro p { font-size: 15px; line-height: 1.7; margin-bottom: 10px; }
+  .intro .analogy {
+    background: var(--panel2); border-left: 4px solid var(--green);
+    padding: 12px 16px; border-radius: 8px; margin: 12px 0;
+  }
+  .steps3 { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 12px; }
+  .step3 {
+    flex: 1; min-width: 180px; background: var(--panel2);
+    border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px;
+    font-size: 13.5px; line-height: 1.5; color: var(--muted);
+  }
+  .step3 b { color: var(--accent); display: block; margin-bottom: 4px; font-size: 14px; }
+
+  /* Badges */
+  .badges { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+  .badge {
+    display: flex; align-items: center; gap: 6px;
+    background: var(--panel2); border: 1px solid var(--border);
+    border-radius: 20px; padding: 6px 14px;
+    font-size: 13px; color: var(--muted);
+    filter: grayscale(1); opacity: .55;
+    transition: all .4s;
+  }
+  .badge.earned {
+    filter: none; opacity: 1;
+    color: var(--text); border-color: var(--yellow);
+    background: rgba(210,153,34,.12);
+    box-shadow: 0 0 12px rgba(210,153,34,.25);
+  }
+
+  /* Stage */
+  #stage {
+    position: relative; height: 340px;
+    background: var(--panel2);
+    border: 1px solid var(--border); border-radius: 10px;
+    overflow: hidden; margin-bottom: 16px;
+  }
+  .ball {
+    position: absolute; bottom: 30px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 700; color: #fff;
+    background: radial-gradient(circle at 32% 30%, #79b8ff, #1f6feb 70%);
+    box-shadow: 0 6px 14px rgba(0,0,0,.45), inset 0 -6px 10px rgba(0,0,0,.25);
+    transition: left 1s cubic-bezier(.34,1.56,.64,1), bottom .4s ease, background .3s, transform .3s, outline-color .3s;
+    user-select: none;
+    outline: 3px solid transparent; outline-offset: 3px;
+  }
+  .ball.is-target { outline-color: var(--accent); }
+  .ball.scanning {
+    background: radial-gradient(circle at 32% 30%, #ffd77a, #d29922 70%);
+    transform: translateY(-10px);
+  }
+  .ball.min {
+    background: radial-gradient(circle at 32% 30%, #d9b3ff, #8e5fd6 70%);
+    transform: translateY(-14px);
+  }
+  .ball.swapping {
+    background: radial-gradient(circle at 32% 30%, #ffab91, #f4511e 70%);
+    transform: translateY(-24px) scale(1.08);
+  }
+  .ball.sorted {
+    background: radial-gradient(circle at 32% 30%, #7ee787, #2ea043 70%);
+  }
+  /* Bar-chart mode */
+  .ball.bar-mode {
+    border-radius: 6px 6px 2px 2px;
+    align-items: flex-start; padding-top: 6px;
+    background: linear-gradient(180deg, #79b8ff, #1f6feb 85%);
+    box-shadow: 0 4px 10px rgba(0,0,0,.4);
+  }
+  .ball.bar-mode.scanning {
+    background: linear-gradient(180deg, #ffd77a, #d29922 85%);
+    transform: translateY(-8px);
+  }
+  .ball.bar-mode.min {
+    background: linear-gradient(180deg, #d9b3ff, #8e5fd6 85%);
+    transform: translateY(-12px);
+  }
+  .ball.bar-mode.swapping {
+    background: linear-gradient(180deg, #ffab91, #f4511e 85%);
+    transform: translateY(-16px) scale(1.04, 1);
+  }
+  .ball.bar-mode.sorted {
+    background: linear-gradient(180deg, #7ee787, #2ea043 85%);
+  }
+  /* Student mode — a small head + a body bar whose HEIGHT shows the value */
+  .ball.student-mode {
+    background: transparent; box-shadow: none;
+    flex-direction: column; justify-content: flex-end; align-items: center;
+    gap: 0; padding-bottom: 0;
+    border: none; border-radius: 0;
+  }
+  .student-head {
+    width: 28px; height: 28px; border-radius: 50%; flex-shrink: 0;
+    background: radial-gradient(circle at 35% 30%, #ffe0b8, #e8a765 75%);
+    box-shadow: 0 2px 4px rgba(0,0,0,.35);
+    position: relative; margin-bottom: 3px; z-index: 1;
+    transition: box-shadow .3s;
+  }
+  .student-head::before {
+    content: ''; position: absolute; top: 13px; left: 7px;
+    width: 3px; height: 3px; border-radius: 50%;
+    background: #3a2a1a; box-shadow: 11px 0 0 #3a2a1a;
+  }
+  .student-head::after {
+    content: ''; position: absolute; top: 17px; left: 9px;
+    width: 10px; height: 5px; border-radius: 0 0 10px 10px;
+    border-bottom: 2px solid #3a2a1a; border-left: none; border-right: none;
+  }
+  .student-hair {
+    position: absolute; top: -7px; left: 50%; transform: translateX(-50%);
+    width: 26px; height: 17px;
+    border-radius: 50% 50% 4px 4px / 65% 65% 4px 4px;
+    background: #4a3222;
+    z-index: 2;
+  }
+  .student-hair::before {
+    content: ''; position: absolute; bottom: -3px; left: -1px;
+    width: 6px; height: 8px; border-radius: 0 0 6px 6px; background: #4a3222;
+  }
+  .student-hair::after {
+    content: ''; position: absolute; bottom: -3px; right: -1px;
+    width: 6px; height: 8px; border-radius: 0 0 6px 6px; background: #4a3222;
+  }
+  .student-body {
+    width: 100%; flex: 1; min-height: 22px;
+    background: linear-gradient(180deg, #79b8ff, #1f6feb 88%);
+    clip-path: polygon(10% 0%, 90% 0%, 78% 100%, 22% 100%);
+    display: flex; align-items: flex-start; justify-content: center;
+    padding-top: 6px; transition: background .3s;
+    position: relative;
+  }
+  .student-legs {
+    width: 62%; height: 14px; flex-shrink: 0;
+    background: linear-gradient(180deg, #1f6feb, #16468f);
+    -webkit-mask-image: linear-gradient(to right, #000 0 32%, transparent 32% 68%, #000 68% 100%);
+            mask-image: linear-gradient(to right, #000 0 32%, transparent 32% 68%, #000 68% 100%);
+    border-radius: 0 0 4px 4px;
+    transition: background .3s;
+  }
+  .student-tag {
+    font-size: 11px; font-weight: 800; color: #fff;
+    text-shadow: 0 1px 2px rgba(0,0,0,.4);
+  }
+  .ball.student-mode.scanning { transform: translateY(-8px); }
+  .ball.student-mode.scanning .student-head { box-shadow: 0 0 0 3px var(--yellow); }
+  .ball.student-mode.scanning .student-body { background: linear-gradient(180deg, #ffd77a, #d29922 88%); }
+  .ball.student-mode.scanning .student-legs { background: linear-gradient(180deg, #d29922, #a3720f); }
+  .ball.student-mode.min { transform: translateY(-12px); }
+  .ball.student-mode.min .student-head { box-shadow: 0 0 0 3px var(--purple); }
+  .ball.student-mode.min .student-body { background: linear-gradient(180deg, #d9b3ff, #8e5fd6 88%); }
+  .ball.student-mode.min .student-legs { background: linear-gradient(180deg, #8e5fd6, #5c3a90); }
+  .ball.student-mode.swapping { transform: translateY(-16px) scale(1.05); }
+  .ball.student-mode.swapping .student-head { box-shadow: 0 0 0 3px var(--accent2); }
+  .ball.student-mode.swapping .student-body { background: linear-gradient(180deg, #ffab91, #f4511e 88%); }
+  .ball.student-mode.swapping .student-legs { background: linear-gradient(180deg, #f4511e, #b8330c); }
+  .ball.student-mode.sorted .student-head { box-shadow: 0 0 0 3px var(--green); }
+  .ball.student-mode.sorted .student-body { background: linear-gradient(180deg, #7ee787, #2ea043 88%); }
+  .ball.student-mode.sorted .student-legs { background: linear-gradient(180deg, #2ea043, #1c6b2b); }
+  .ball.student-mode.is-target .student-head { box-shadow: 0 0 0 3px var(--accent), 0 0 10px rgba(88,166,255,.6); }
+  #teacher {
+    position: absolute; top: 10px; font-size: 32px; line-height: 1;
+    transition: left 1s cubic-bezier(.34,1.56,.64,1), opacity .3s;
+    opacity: 0; pointer-events: none; z-index: 6;
+    filter: drop-shadow(0 3px 5px rgba(0,0,0,.5));
+  }
+  #teacher::after {
+    content: '👀 scanning for the smallest…'; position: absolute; top: -18px; left: 50%;
+    transform: translateX(-50%); font-size: 10px; white-space: nowrap;
+    color: var(--muted); font-weight: 600;
+  }
+  #floor {
+    position: absolute; bottom: 0; left: 0; right: 0; height: 26px;
+    background: linear-gradient(#21262d, #161b22);
+    border-top: 1px solid var(--border);
+  }
+  #passBadge {
+    position: absolute; top: 12px; left: 14px;
+    background: rgba(88,166,255,.12); color: var(--accent);
+    border: 1px solid rgba(88,166,255,.35);
+    padding: 4px 12px; border-radius: 20px; font-size: 13px; font-weight: 600;
+  }
+  #streakBadge {
+    position: absolute; top: 12px; right: 14px;
+    background: rgba(210,153,34,.12); color: var(--yellow);
+    border: 1px solid rgba(210,153,34,.35);
+    padding: 4px 12px; border-radius: 20px; font-size: 13px; font-weight: 600;
+    display: none;
+  }
+
+  /* Controls */
+  .controls {
+    display: flex; flex-wrap: wrap; gap: 10px; align-items: center;
+    margin-bottom: 14px;
+  }
+  button {
+    background: var(--accent); color: #0d1117; border: none;
+    padding: 9px 18px; border-radius: 8px; font-size: 14px; font-weight: 700;
+    cursor: pointer; transition: filter .15s, transform .1s;
+  }
+  button:hover { filter: brightness(1.15); }
+  button:active { transform: scale(.96); }
+  button.secondary { background: var(--panel2); color: var(--text); border: 1px solid var(--border); }
+  button.on { background: var(--yellow); color: #0d1117; border-color: var(--yellow); }
+  button:disabled { opacity: .4; cursor: not-allowed; }
+  .speed { display: flex; align-items: center; gap: 8px; color: var(--muted); font-size: 13px; margin-left: auto; }
+  input[type=range] { accent-color: var(--accent); width: 120px; }
+  input[type=text] {
+    background: var(--panel2); border: 1px solid var(--border); color: var(--text);
+    padding: 9px 12px; border-radius: 8px; font-size: 14px; width: 220px;
+  }
+  select {
+    background: var(--panel2); border: 1px solid var(--border); color: var(--text);
+    padding: 8px 10px; border-radius: 8px; font-size: 14px;
+  }
+  .lab-label { font-size: 13px; color: var(--muted); font-weight: 600; }
+
+  /* Grouped toolbar */
+  .toolbar { display: flex; flex-direction: column; gap: 10px; margin-bottom: 14px; }
+  .tgroup {
+    display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+    padding: 10px 14px; background: var(--panel2);
+    border: 1px solid var(--border); border-radius: 10px;
+  }
+  .tlabel {
+    font-size: 12px; font-weight: 700; color: var(--muted);
+    text-transform: uppercase; letter-spacing: .4px;
+    min-width: 96px; flex-shrink: 0;
+  }
+  .tbtns { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; flex: 1; }
+  .tbtns.nowrap { flex-wrap: nowrap; overflow-x: auto; padding-bottom: 2px; }
+  .tbtns.nowrap button, .tbtns.nowrap select { flex-shrink: 0; }
+
+  /* Narration */
+  #narration {
+    background: var(--panel2); border-left: 4px solid var(--accent);
+    padding: 12px 16px; border-radius: 8px;
+    font-size: 15px; min-height: 48px;
+  }
+  #narration button { margin: 6px 8px 0 0; padding: 7px 16px; }
+
+  /* Code panel */
+  .code {
+    font-family: 'Cascadia Code', 'Fira Code', Consolas, monospace;
+    font-size: 14px; line-height: 1.5;
+    background: var(--panel2); border-radius: 10px;
+    padding: 14px 0; overflow-x: auto; max-width: 100%;
+  }
+  .code .line {
+    padding: 3px 12px; white-space: pre; color: var(--text);
+    border-left: 3px solid transparent;
+  }
+  .code .line.active {
+    background: rgba(88,166,255,.14);
+    border-left-color: var(--accent);
+  }
+
+  /* Live variables under code */
+  .vars { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+  .var {
+    font-family: Consolas, monospace; font-size: 12.5px;
+    background: var(--panel2); border: 1px solid var(--border);
+    border-radius: 6px; padding: 4px 10px; color: var(--muted);
+  }
+  .var b { color: var(--accent); }
+  .var.hi { border-color: var(--yellow); color: var(--text); background: rgba(210,153,34,.1); }
+
+  /* Live array view */
+  #arrayView {
+    display: flex; flex-wrap: wrap; gap: 6px; align-items: center;
+    background: var(--panel2); border: 1px solid var(--border);
+    border-radius: 8px; padding: 10px 14px; margin-bottom: 14px;
+    font-family: Consolas, monospace; font-size: 14px;
+  }
+  #arrayView .lbl { color: var(--muted); margin-right: 4px; }
+  .cell {
+    min-width: 38px; text-align: center; padding: 6px 8px;
+    background: var(--bg); border: 1.5px solid var(--border);
+    border-radius: 6px; font-weight: 700;
+    transition: all .3s;
+    outline: 2px dashed transparent; outline-offset: 2px;
+  }
+  .cell .idx { display: block; font-size: 10px; font-weight: 400; color: var(--muted); }
+  .cell.is-target { outline-color: var(--accent); }
+  .cell.scanning { border-color: var(--yellow); background: rgba(210,153,34,.15); transform: translateY(-3px); }
+  .cell.min { border-color: var(--purple); background: rgba(210,179,255,.15); transform: translateY(-3px); }
+  .cell.swapping { border-color: var(--accent2); background: rgba(247,129,102,.18); transform: translateY(-3px) scale(1.05); }
+  .cell.sorted { border-color: var(--green); background: rgba(63,185,80,.12); color: var(--green); }
+
+  /* Guided tour */
+  #tourOverlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,.7);
+    z-index: 100; display: none;
+  }
+  .tour-target {
+    position: relative !important; z-index: 101 !important;
+    box-shadow: 0 0 0 4px var(--accent), 0 0 24px rgba(88,166,255,.5) !important;
+    border-radius: 8px;
+  }
+  #tourTip {
+    position: fixed; z-index: 102; max-width: 320px;
+    background: var(--panel); border: 1px solid var(--accent);
+    border-radius: 12px; padding: 16px 18px; display: none;
+    box-shadow: 0 12px 32px rgba(0,0,0,.6);
+  }
+  #tourTip h4 { font-size: 15px; margin-bottom: 6px; color: var(--accent); }
+  #tourTip p { font-size: 13.5px; line-height: 1.55; color: var(--text); margin-bottom: 12px; }
+  #tourTip .row { display: flex; gap: 8px; align-items: center; }
+  #tourTip .cnt { margin-left: auto; font-size: 12px; color: var(--muted); }
+
+  /* AI Explainer */
+  #aiOverlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,.65);
+    z-index: 110; display: none;
+  }
+  #aiPanel {
+    position: fixed; top: 6%; left: 50%; transform: translateX(-50%);
+    width: min(560px, 90vw); max-height: 84vh; overflow-y: auto;
+    background: var(--panel); border: 1px solid var(--accent);
+    border-radius: 14px; padding: 20px 22px; display: none;
+    box-shadow: 0 20px 50px rgba(0,0,0,.6); z-index: 111;
+  }
+  .ai-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px; }
+  .ai-header h4 { font-size: 17px; color: var(--accent); }
+  .ai-header button {
+    background: var(--panel2); color: var(--muted); border: 1px solid var(--border);
+    padding: 4px 10px; font-size: 13px; border-radius: 6px;
+  }
+  #aiNote {
+    font-size: 11.5px; color: var(--muted); margin-bottom: 12px;
+    padding-bottom: 10px; border-bottom: 1px dashed var(--border);
+  }
+  #aiBody { font-size: 14.5px; line-height: 1.7; color: var(--text); }
+  #aiBody h5 { color: var(--accent); font-size: 14px; margin: 14px 0 4px; }
+  #aiBody code {
+    font-family: Consolas, monospace; font-size: 13px;
+    background: var(--panel2); padding: 1px 6px; border-radius: 4px;
+  }
+  #aiBody .mistake-note {
+    background: rgba(210,153,34,.1); border-left: 3px solid var(--yellow);
+    padding: 8px 12px; border-radius: 6px; margin-top: 10px; font-size: 13.5px;
+  }
+  #aiChips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; }
+  .ai-chip {
+    background: var(--panel2); border: 1px solid var(--border); color: var(--text);
+    font-size: 12.5px; font-weight: 600; padding: 6px 12px; border-radius: 16px;
+  }
+  .ai-chip:hover { border-color: var(--accent); color: var(--accent); }
+
+  .tabs { display: flex; gap: 6px; margin-bottom: 10px; }
+  .tab {
+    background: var(--panel2); color: var(--muted);
+    border: 1px solid var(--border);
+    padding: 6px 16px; border-radius: 8px 8px 0 0;
+    font-size: 13px; font-weight: 700; cursor: pointer;
+  }
+  .tab.on { background: var(--accent); color: #0d1117; border-color: var(--accent); }
+  .codeWrap { display: none; }
+  .codeWrap.on { display: block; }
+  .kw { color: #ff7b72; } .fn { color: #d2a8ff; } .num { color: #79c0ff; } .cm { color: #6e7681; }
+
+  .stats { display: flex; gap: 14px; margin-top: 14px; }
+  .stat {
+    flex: 1; background: var(--panel2); border: 1px solid var(--border);
+    border-radius: 8px; padding: 10px; text-align: center;
+  }
+  .stat .v { font-size: 22px; font-weight: 800; color: var(--accent); }
+  .stat .l { font-size: 12px; color: var(--muted); }
+
+  .learn { font-size: 14px; color: var(--muted); line-height: 1.6; }
+  .learn strong { color: var(--text); }
+  .complexity { display: flex; gap: 10px; margin-top: 10px; flex-wrap: wrap; }
+  .chip {
+    background: rgba(247,129,102,.12); color: var(--accent2);
+    border: 1px solid rgba(247,129,102,.35);
+    padding: 3px 10px; border-radius: 14px; font-size: 12.5px; font-weight: 600;
+  }
+  .chip.g { background: rgba(63,185,80,.12); color: var(--green); border-color: rgba(63,185,80,.35); }
+  .chip.p { background: rgba(210,179,255,.12); color: var(--purple); border-color: rgba(210,179,255,.35); }
+
+  /* Quiz */
+  .quiz-opt {
+    display: block; width: 100%; text-align: left; margin-bottom: 8px;
+    background: var(--panel2); color: var(--text);
+    border: 1px solid var(--border); font-weight: 500;
+  }
+  .quiz-opt.right { border-color: var(--green); background: rgba(63,185,80,.15); }
+  .quiz-opt.wrong { border-color: #f85149; background: rgba(248,81,73,.15); }
+  #quizFeedback { font-size: 13.5px; margin-top: 8px; color: var(--muted); min-height: 20px; }
+
+  /* Mistakes */
+  .mistake { margin-bottom: 12px; font-size: 13.5px; line-height: 1.55; color: var(--muted); }
+  .mistake b { color: var(--accent2); }
+  .mistake code {
+    font-family: Consolas, monospace; font-size: 12.5px;
+    background: var(--panel2); padding: 1px 6px; border-radius: 4px; color: var(--text);
+  }
+
+  /* Race */
+  .raceGrid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 12px; }
+  @media (max-width: 700px) { .raceGrid { grid-template-columns: 1fr; } }
+  .racer {
+    background: var(--panel2); border: 1px solid var(--border);
+    border-radius: 10px; padding: 14px; transition: border-color .3s, box-shadow .3s;
+  }
+  .racer.finished { border-color: var(--green); box-shadow: 0 0 14px rgba(63,185,80,.25); }
+  .racerHead { display: flex; justify-content: space-between; margin-bottom: 6px; font-size: 14px; }
+  .racerSub { font-size: 12px; color: var(--muted); margin-bottom: 8px; }
+  .racerHead .ops { color: var(--muted); font-size: 13px; }
+  .bars { display: flex; align-items: flex-end; gap: 2px; height: 130px; }
+  .bar { flex: 1; border-radius: 2px 2px 0 0; background: var(--accent); transition: height .1s linear; }
+  .racer.s .bar { background: var(--purple); }
+  .bar.hot { background: var(--accent2) !important; }
+  #raceResult {
+    margin-top: 14px; padding: 12px 16px; border-radius: 8px;
+    background: rgba(63,185,80,.1); border: 1px solid rgba(63,185,80,.3);
+    font-size: 14.5px; display: none;
+  }
+
+  /* ===== MOBILE / SMALL SCREENS ===== */
+  @media (max-width: 640px) {
+    header { padding: 12px 16px; }
+    .logo { font-size: 19px; }
+    .tagline { font-size: 12px; }
+    .container { padding: 14px 12px 40px; gap: 14px; }
+    .card { padding: 15px; border-radius: 10px; }
+    h1 { font-size: 20px; }
+    h3 { font-size: 14px; }
+    .subtitle { font-size: 13px; margin-bottom: 12px; }
+    .intro { padding: 18px 16px; }
+    .intro h2 { font-size: 17px; }
+    .intro p { font-size: 14px; line-height: 1.6; }
+    .intro .analogy { padding: 10px 12px; font-size: 13.5px; }
+    .steps3 { gap: 8px; }
+    .step3 { min-width: 100%; font-size: 13px; }
+    .badges { gap: 6px; }
+    .badge { font-size: 11.5px; padding: 5px 10px; }
+    #stage { height: 280px; }
+    .toolbar { gap: 8px; }
+    .tgroup { flex-direction: column; align-items: stretch; gap: 8px; padding: 10px; }
+    .tlabel { min-width: 0; }
+    .tbtns { width: 100%; }
+    .tbtns.nowrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    button { padding: 8px 14px; font-size: 13.5px; }
+    input[type=text] { width: 100%; }
+    select { width: 100%; }
+    .tbtns.nowrap select { width: auto; }
+    .speed { margin-left: 0; }
+    #narration { font-size: 14px; padding: 10px 12px; }
+    #arrayView { font-size: 12.5px; padding: 8px 10px; gap: 4px; }
+    .cell { min-width: 30px; padding: 5px 6px; }
+    .cell .idx { font-size: 9px; }
+    .stats { gap: 8px; }
+    .stat { padding: 8px 6px; }
+    .stat .v { font-size: 18px; }
+    .stat .l { font-size: 11px; }
+    .code { font-size: 11.5px; }
+    .code .line { padding: 2px 10px; }
+    .vars { gap: 6px; }
+    .var { font-size: 11.5px; padding: 3px 8px; }
+    .learn { font-size: 13.5px; }
+    .mistake { font-size: 13px; }
+    .raceGrid { grid-template-columns: 1fr; }
+    .bars { height: 100px; }
+    #aiPanel { top: 3%; width: 94vw; padding: 16px 15px; max-height: 90vh; }
+    #aiBody { font-size: 14px; }
+    .ai-chip { font-size: 12px; }
+    #tourTip { max-width: calc(100vw - 24px); padding: 14px 15px; }
+    #tourTip p { font-size: 13px; }
+  }
+
+  /* ===== CLASSROOM / PROJECTOR MODE ===== */
+  body.classroom .intro,
+  body.classroom .card.full,
+  body.classroom .sidebar { display: none !important; }
+  body.classroom .container { grid-template-columns: 1fr !important; max-width: 1500px; }
+  body.classroom #stage { height: 58vh !important; min-height: 340px; }
+  body.classroom h1 { font-size: 34px; }
+  body.classroom #narration { font-size: 22px; line-height: 1.5; padding: 18px 22px; }
+  body.classroom #arrayView { font-size: 19px; }
+  body.classroom #arrayView .cell { min-width: 52px; padding: 9px 11px; font-size: 19px; }
+  body.classroom #arrayView .cell .idx { font-size: 12px; }
+  body.classroom .stat .v { font-size: 32px; }
+  body.classroom .stat .l { font-size: 15px; }
+  body.classroom .tgroup { padding: 12px 16px; }
+  body.classroom button, body.classroom select { font-size: 16px; padding: 11px 20px; }
+  body.classroom .subtitle { font-size: 17px; }
+  body.classroom #passBadge, body.classroom #streakBadge { font-size: 17px; padding: 6px 16px; }
+  body.classroom .ball { font-weight: 800 !important; }
+  #classBtn.on { background: var(--yellow); color: #0d1117; border-color: var(--yellow); }
+</style>
+<script>if(location.protocol.startsWith("http")){var m=document.createElement("link");m.rel="manifest";m.href="manifest.json";document.head.appendChild(m);}</script>
+<meta name="theme-color" content="#0d1117">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+</head>
+<body>
+
+<header>
+  <a href="mindaicode-home.html" style="display:flex; align-items:center; text-decoration:none; color:inherit;">
+    <div class="logo">🧠 MindAI<span>Code</span></div>
+  </a>
+  <div class="tagline" style="display:flex; gap:14px; align-items:center; flex-wrap:wrap;"><a href="mindaicode-race-all.html" style="color:var(--purple); text-decoration:none; font-weight:600;">🏁 Race all six</a><a href="mindaicode-home.html" style="color:var(--muted); text-decoration:none;">🏠 All algorithms</a></div>
+</header>
+
+<div class="container">
+
+  <!-- INTRO -->
+  <div class="intro">
+    <h2>👋 New here? Start with this (30 seconds)</h2>
+    <p><strong>Selection Sort</strong> works completely differently from Bubble Sort. Instead of swapping neighbours as it goes, it does one thing at a time: <strong>scan the entire remaining list for the smallest value, then place it — once.</strong></p>
+    <div class="analogy">
+      🎓 <strong>Real-life example:</strong> A teacher looks at a whole group of unsorted students and, without moving anyone yet, scans everyone to find the shortest student — remembering who that is as she goes. Once she's checked everyone, she brings THAT ONE student to the front of the line. Then she repeats with the remaining group. Only one student moves per round — very different from Bubble Sort's constant neighbour-swapping.
+    </div>
+    <div class="steps3">
+      <div class="step3"><b>1️⃣ Watch</b> Press ▶ Play. Notice the purple-highlighted "current smallest so far" moving as the scan continues.</div>
+      <div class="step3"><b>2️⃣ Predict</b> Turn on 🎯 Predict mode and guess if each candidate becomes the new smallest.</div>
+      <div class="step3"><b>3️⃣ Compare</b> Try the ⚡ Race below — same O(n²) as Bubble Sort, but watch how many fewer times it actually moves anyone.</div>
+    </div>
+  </div>
+
+  <!-- BADGES -->
+  <div class="card full">
+    <div class="badges">
+      <strong style="margin-right: 6px;">🏆 Your badges:</strong>
+      <span class="badge" data-badge="sort">🏅 First Sort</span>
+      <span class="badge" data-badge="predict">🎯 Predictor ×5</span>
+      <span class="badge" data-badge="quiz">🧠 Quiz Master</span>
+      <span class="badge" data-badge="race">⚡ Race Watcher</span>
+      <span class="badge" data-badge="lab">🧪 Scientist</span>
+    </div>
+  </div>
+
+  <!-- MAIN VISUALIZER -->
+  <div class="card">
+    <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap;">
+      <h1 style="margin-bottom:0;">Selection Sort 🔎</h1>
+      <div style="display:flex; gap:8px; flex-wrap:wrap;">
+        <button id="explainBtn" class="secondary">🤖 Explain step</button>
+        <button id="classBtn" class="secondary">🎥 Classroom</button>
+        <button id="tourBtn" class="secondary">❓ Take the tour</button>
+      </div>
+    </div>
+    <p class="subtitle" id="stageSubtitle">Watch the teacher scan for the smallest, then place just one student per round.</p>
+
+    <div id="stage">
+      <div id="passBadge">Pass 0</div>
+      <div id="streakBadge">🎯 Streak: 0</div>
+      <div id="teacher">🧑‍🏫</div>
+      <div id="floor"></div>
+    </div>
+
+    <div id="arrayView"></div>
+
+    <div class="toolbar">
+      <div class="tgroup">
+        <div class="tbtns nowrap">
+          <button id="playBtn">▶ Play</button>
+          <button id="stepBtn" class="secondary">⏭ Step</button>
+          <button id="predictBtn" class="secondary">🎯 Predict: Off</button>
+          <button id="shuffleBtn" class="secondary">🔀 Shuffle</button>
+          <button id="resetBtn" class="secondary">↺ Reset</button>
+          <select id="shapeSel" title="Visualization style">
+            <option value="circle">⚪ Balls</option>
+            <option value="bar">📊 Bars</option>
+            <option value="student">🧑‍🎓 Students</option>
+          </select>
+          <div class="speed" style="margin-left:0; flex-shrink:0;">
+            <span>🐢</span><input type="range" id="speed" min="1" max="10" value="5" style="width:80px;"><span>🐇</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="tgroup">
+        <span class="tlabel">🔊 Audio</span>
+        <div class="tbtns">
+          <button id="soundBtn" class="secondary">🔊 Sound: On</button>
+          <button id="voiceBtn" class="secondary">🗣 Voice: Off</button>
+          <select id="voiceSpeed" title="Voice speed">
+            <option value="0.65">🐢 Voice: Slow</option>
+            <option value="0.9" selected>🚶 Voice: Normal</option>
+            <option value="1.2">🐇 Voice: Fast</option>
+          </select>
+          <select id="langSel" title="Narration language">
+            <option value="en">🌐 English</option>
+            <option value="ta">🌐 தமிழ்</option>
+            <option value="hi">🌐 हिंदी</option>
+            <option value="te">🌐 తెలుగు</option>
+            <option value="kn">🌐 ಕನ್ನಡ</option>
+            <option value="bn">🌐 বাংলা</option>
+            <option value="mr">🌐 मराठी</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="tgroup">
+        <span class="tlabel">⌨️ Your data</span>
+        <div class="tbtns">
+          <input type="text" id="customInput" placeholder="e.g. 34, 7, 91, 12">
+          <button id="loadBtn" class="secondary">Load</button>
+        </div>
+      </div>
+
+      <div class="tgroup">
+        <span class="tlabel">🧪 Experiments</span>
+        <div class="tbtns">
+          <button id="expCorrect" class="secondary">✅ Correct code</button>
+          <button id="expNoupdate" class="secondary">❌ Never update the minimum</button>
+          <button id="expOnepass" class="secondary">❌ Only one pass</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="narration">Press <strong>Play</strong> to start, or <strong>Step</strong> to go one comparison at a time.</div>
+
+    <div class="stats">
+      <div class="stat"><div class="v" id="cmpCount">0</div><div class="l">Comparisons</div></div>
+      <div class="stat"><div class="v" id="swapCount">0</div><div class="l">Swaps</div></div>
+      <div class="stat"><div class="v" id="passCount">0</div><div class="l">Passes</div></div>
+    </div>
+  </div>
+
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+    <div class="card">
+      <h3>💻 The Code</h3>
+      <div class="tabs">
+        <button class="tab on" data-lang="py" type="button">Python</button>
+        <button class="tab" data-lang="java" type="button">Java</button>
+      </div>
+      <div class="codeWrap on" id="code-py">
+        <div class="code">
+          <div class="line" data-l="0"><span class="kw">def</span> <span class="fn">selection_sort</span>(arr):</div>
+          <div class="line" data-l="1">    n = <span class="fn">len</span>(arr)</div>
+          <div class="line" data-l="2">    <span class="kw">for</span> i <span class="kw">in</span> <span class="fn">range</span>(n):</div>
+          <div class="line" data-l="3">        min_idx = i</div>
+          <div class="line" data-l="4">        <span class="kw">for</span> j <span class="kw">in</span> <span class="fn">range</span>(i + <span class="num">1</span>, n):</div>
+          <div class="line" data-l="5">            <span class="kw">if</span> arr[j] &lt; arr[min_idx]:</div>
+          <div class="line" data-l="6">                min_idx = j</div>
+          <div class="line" data-l="7">        arr[i], arr[min_idx] = arr[min_idx], arr[i]</div>
+          <div class="line" data-l="8">    <span class="kw">return</span> arr</div>
+        </div>
+      </div>
+      <div class="codeWrap" id="code-java">
+        <div class="code">
+          <div class="line" data-l="0"><span class="kw">void</span> <span class="fn">selectionSort</span>(<span class="kw">int</span>[] arr) {</div>
+          <div class="line" data-l="1">    <span class="kw">int</span> n = arr.length;</div>
+          <div class="line" data-l="2">    <span class="kw">for</span> (<span class="kw">int</span> i = <span class="num">0</span>; i &lt; n; i++) {</div>
+          <div class="line" data-l="3">        <span class="kw">int</span> minIdx = i;</div>
+          <div class="line" data-l="4">        <span class="kw">for</span> (<span class="kw">int</span> j = i + <span class="num">1</span>; j &lt; n; j++) {</div>
+          <div class="line" data-l="5">            <span class="kw">if</span> (arr[j] &lt; arr[minIdx]) {</div>
+          <div class="line" data-l="6">                minIdx = j;</div>
+          <div class="line" data-l="7">                <span class="cm">// swap once, after scanning</span></div>
+          <div class="line" data-l="7">                <span class="kw">int</span> t = arr[i];</div>
+          <div class="line" data-l="7">                arr[i] = arr[minIdx];</div>
+          <div class="line" data-l="7">                arr[minIdx] = t;</div>
+          <div class="line" data-l="8">    }</div>
+        </div>
+      </div>
+      <div class="vars">
+        <span class="var" id="varN">n = <b>–</b></span>
+        <span class="var" id="varI">i = <b>–</b></span>
+        <span class="var" id="varJ">j = <b>–</b></span>
+        <span class="var" id="varMin">min_idx = <b>–</b></span>
+        <span class="var" id="varAMin">arr[min_idx] = <b>–</b></span>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top: 16px;">
+      <h3>📚 How it works</h3>
+      <div class="learn">
+        For each position <strong>i</strong>, scan the ENTIRE remaining unsorted part to find the index of the smallest value (<strong>min_idx</strong>). Only after the scan finishes do we swap it into position <strong>i</strong> — <strong>one swap per pass, maximum</strong>. The sorted region grows from the <strong>left</strong> this time (opposite of Bubble Sort, which grows from the right).
+        <div class="complexity">
+          <span class="chip">Worst: O(n²)</span>
+          <span class="chip">Average: O(n²)</span>
+          <span class="chip">Best: O(n²)</span>
+          <span class="chip p">Swaps: O(n) max</span>
+          <span class="chip g">Space: O(1)</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top: 16px;">
+      <h3>🧠 Quick check</h3>
+      <div id="quizQ" style="font-size: 14px; margin-bottom: 10px;"></div>
+      <div id="quizOpts"></div>
+      <div id="quizFeedback"></div>
+    </div>
+
+    <div class="card" style="margin-top: 16px;">
+      <h3>⚠️ Common mistakes</h3>
+      <div class="mistake"><b>Swapping during the scan.</b> A common bug is swapping <code>arr[j]</code> and <code>arr[min_idx]</code> the moment a smaller value is found. That's wrong — Selection Sort only <em>tracks the index</em> (<code>min_idx = j</code>) while scanning, and swaps ONCE after the whole scan finishes.</div>
+      <div class="mistake"><b>Wrong comparison direction.</b> Using <code>arr[j] &gt; arr[min_idx]</code> instead of <code>&lt;</code> finds the MAXIMUM instead of the minimum — the array still changes, just not correctly.</div>
+      <div class="mistake"><b>Expecting a best-case shortcut.</b> Unlike Bubble Sort, there's no early exit here — Selection Sort always scans the full remaining array on every pass, even if the input is already sorted. Best case is still O(n²).</div>
+      <div class="mistake"><b>Assuming it's stable.</b> Standard Selection Sort is <strong>not stable</strong> — swapping the minimum into position i can jump it past other equal-valued elements, changing their original relative order.</div>
+    </div>
+  </div>
+
+  <!-- RACE -->
+  <div class="card full">
+    <h3>⚡ The Race: Selection Sort vs Bubble Sort</h3>
+    <p class="subtitle" style="margin-bottom: 4px;">Both are O(n²) — this race won't finish very differently. Watch the <strong>write count</strong> instead: that's where they really differ.</p>
+    <div class="controls" style="margin: 10px 0 0;">
+      <button id="raceBtn">🏁 Start Race</button>
+    </div>
+    <div class="raceGrid">
+      <div class="racer s" id="racerS">
+        <div class="racerHead"><strong>🔎 Selection Sort — O(n²)</strong><span class="ops">Comparisons: <b id="opsS">0</b></span></div>
+        <div class="racerSub">Writes so far: <b id="writesS">0</b></div>
+        <div class="bars" id="barsS"></div>
+      </div>
+      <div class="racer b" id="racerB">
+        <div class="racerHead"><strong>🫧 Bubble Sort — O(n²)</strong><span class="ops">Comparisons: <b id="opsB">0</b></span></div>
+        <div class="racerSub">Writes so far: <b id="writesB">0</b></div>
+        <div class="bars" id="barsB"></div>
+      </div>
+    </div>
+    <div id="raceResult"></div>
+  </div>
+
+</div>
+
+<div id="aiOverlay"></div>
+<div id="aiPanel">
+  <div class="ai-header">
+    <h4>🤖 AI Explainer</h4>
+    <button id="aiClose">✕ Close</button>
+  </div>
+  <div id="aiNote">Playback is paused. This breaks down exactly what just happened — read it, then hit Close and Step to continue, or click a question below for more depth.</div>
+  <div id="aiBody"></div>
+  <div id="aiChips"></div>
+</div>
+
+<div id="tourOverlay"></div>
+<div id="tourTip">
+  <h4 id="tourTitle"></h4>
+  <p id="tourText"></p>
+  <div class="row">
+    <button id="tourNext">Next →</button>
+    <button id="tourSkip" class="secondary">Skip</button>
+    <span class="cnt" id="tourCnt"></span>
+  </div>
+</div>
+
+<script>
+/* ================= LANGUAGES ================= */
+const L = {
+  en: {
+    start: 'Press <strong>Play</strong> to start, or <strong>Step</strong> to go one comparison at a time.',
+    pass: n => `🔁 <strong>Pass ${n}</strong> begins — scanning the rest of the list for the smallest value.`,
+    scanNew: (a,b) => `🔍 Checking <strong>${a}</strong> against the current smallest, <strong>${b}</strong> — ${a} &lt; ${b}, so ${a} is now the new smallest so far!`,
+    scanOk: (a,b) => `🔍 Checking <strong>${a}</strong> against the current smallest, <strong>${b}</strong> — ${a} is not smaller, no change.`,
+    swap: (a,b) => `🔄 <strong>Swap!</strong> The smallest found (${b}) moves into place, trading spots with ${a}.`,
+    noswap: v => `✅ ${v} was already the smallest remaining — no swap needed.`,
+    lock: p => `✅ Position ${p} is <strong>locked in</strong> — its final sorted value.`,
+    done: (c,s,p) => `🎉 <strong>Sorted!</strong> ${c} comparisons, only ${s} swap(s), across ${p} pass(es).`,
+    doneNoupdate: '😅 <strong>Nothing got sorted!</strong> We kept noticing smaller values during the scan, but never recorded them — min_idx never moved from i, so every "swap" was really swapping a value with itself.',
+    doneOnepass: '🤔 <strong>Only the smallest value</strong> reached its final place. One pass only finds ONE minimum — you need up to n passes to place them all.',
+    predictQ: (a,b) => `🎯 Is <strong>${a}</strong> smaller than the current best, <strong>${b}</strong>?`,
+    yes: 'Yes, new smallest!', no: 'No change',
+    right: '✅ Correct prediction! ', wrong: '❌ Wrong — watch: ',
+    minNums: '⚠️ Enter at least 2 numbers separated by commas.',
+  },
+  ta: {
+    start: 'தொடங்க <strong>Play</strong> அழுத்தவும், ஒவ்வொரு ஒப்பீடாக பார்க்க <strong>Step</strong> அழுத்தவும்.',
+    pass: n => `🔁 <strong>சுற்று ${n}</strong> தொடங்குகிறது — மீதமுள்ளவற்றில் மிகச்சிறியதை தேடுகிறோம்.`,
+    scanNew: (a,b) => `🔍 <strong>${a}</strong>-ஐ தற்போதைய சிறியது <strong>${b}</strong>-உடன் ஒப்பிடுகிறோம் — ${a} சிறியது, இதுவே புதிய சிறியது!`,
+    scanOk: (a,b) => `🔍 <strong>${a}</strong>-ஐ <strong>${b}</strong>-உடன் ஒப்பிடுகிறோம் — சிறியது இல்லை, மாற்றம் இல்லை.`,
+    swap: (a,b) => `🔄 <strong>மாற்றம்!</strong> கண்டுபிடிக்கப்பட்ட சிறியது (${b}) இடத்திற்கு வருகிறது.`,
+    noswap: v => `✅ ${v} ஏற்கனவே சிறியதாக இருந்தது — மாற்றம் தேவையில்லை.`,
+    lock: p => `✅ இடம் ${p} <strong>நிலைபெற்றது</strong>.`,
+    done: (c,s,p) => `🎉 <strong>வரிசையானது!</strong> ${c} ஒப்பீடுகள், ${s} மாற்றங்கள் மட்டும், ${p} சுற்றுகள்.`,
+    doneNoupdate: '😅 <strong>எதுவும் வரிசையாகவில்லை!</strong> சிறியதைக் கண்டோம், ஆனால் பதிவு செய்யவில்லை.',
+    doneOnepass: '🤔 <strong>மிகச்சிறியது மட்டுமே</strong> இடத்தை அடைந்தது. ஒரு சுற்று போதாது.',
+    predictQ: (a,b) => `🎯 <strong>${a}</strong> தற்போதைய சிறியது <strong>${b}</strong>-ஐ விட சிறியதா?`,
+    yes: 'ஆம், புதிய சிறியது!', no: 'மாற்றம் இல்லை',
+    right: '✅ சரியான கணிப்பு! ', wrong: '❌ தவறு — பாருங்கள்: ',
+    minNums: '⚠️ குறைந்தது 2 எண்களை கமாவால் பிரித்து உள்ளிடவும்.',
+  },
+  hi: {
+    start: 'शुरू करने के लिए <strong>Play</strong> दबाएँ, या <strong>Step</strong> दबाएँ।',
+    pass: n => `🔁 <strong>चक्कर ${n}</strong> शुरू — बाकी बचे में सबसे छोटा खोज रहे हैं।`,
+    scanNew: (a,b) => `🔍 <strong>${a}</strong> की तुलना अभी के सबसे छोटे <strong>${b}</strong> से — ${a} छोटा है, यही नया सबसे छोटा है!`,
+    scanOk: (a,b) => `🔍 <strong>${a}</strong> की तुलना <strong>${b}</strong> से — छोटा नहीं, कोई बदलाव नहीं।`,
+    swap: (a,b) => `🔄 <strong>अदला-बदली!</strong> मिला हुआ सबसे छोटा (${b}) जगह पर आ गया।`,
+    noswap: v => `✅ ${v} पहले से ही सबसे छोटा था — अदला-बदली की ज़रूरत नहीं।`,
+    lock: p => `✅ स्थान ${p} <strong>पक्का</strong> हो गया।`,
+    done: (c,s,p) => `🎉 <strong>क्रमबद्ध!</strong> ${c} तुलनाएँ, सिर्फ़ ${s} अदला-बदली, ${p} चक्कर।`,
+    doneNoupdate: '😅 <strong>कुछ भी क्रमबद्ध नहीं हुआ!</strong> हमने छोटा मान देखा पर दर्ज नहीं किया।',
+    doneOnepass: '🤔 <strong>सिर्फ़ सबसे छोटा मान</strong> अपनी जगह पहुँचा। एक चक्कर काफ़ी नहीं।',
+    predictQ: (a,b) => `🎯 क्या <strong>${a}</strong>, अभी के सबसे छोटे <strong>${b}</strong> से छोटा है?`,
+    yes: 'हाँ, नया सबसे छोटा!', no: 'कोई बदलाव नहीं',
+    right: '✅ सही अनुमान! ', wrong: '❌ ग़लत — देखिए: ',
+    minNums: '⚠️ कम से कम 2 संख्याएँ कॉमा से अलग करके लिखें।',
+  },
+  te: {
+    start: 'ప్రారంభించడానికి <strong>Play</strong> నొక్కండి, లేదా <strong>Step</strong> నొక్కండి.',
+    pass: n => `🔁 <strong>రౌండ్ ${n}</strong> ప్రారంభం — మిగిలిన వాటిలో అతిచిన్నది వెతుకుతున్నాం.`,
+    scanNew: (a,b) => `🔍 <strong>${a}</strong> ను ఇప్పటి అతిచిన్న <strong>${b}</strong> తో పోలిక — ${a} చిన్నది, ఇదే కొత్త అతిచిన్నది!`,
+    scanOk: (a,b) => `🔍 <strong>${a}</strong> ను <strong>${b}</strong> తో పోలిక — చిన్నది కాదు, మార్పు లేదు.`,
+    swap: (a,b) => `🔄 <strong>మార్పిడి!</strong> దొరికిన అతిచిన్నది (${b}) సరైన స్థానానికి వచ్చింది.`,
+    noswap: v => `✅ ${v} ఇప్పటికే అతిచిన్నది — మార్పిడి అవసరం లేదు.`,
+    lock: p => `✅ ${p} స్థానం <strong>స్థిరపడింది</strong>.`,
+    done: (c,s,p) => `🎉 <strong>క్రమబద్ధం అయ్యింది!</strong> ${c} పోలికలు, కేవలం ${s} మార్పిడులు, ${p} రౌండ్లు.`,
+    doneNoupdate: '😅 <strong>ఏదీ క్రమబద్ధం కాలేదు!</strong> చిన్న విలువ కనిపించింది కానీ నమోదు చేయలేదు.',
+    doneOnepass: '🤔 <strong>అతిచిన్న విలువ మాత్రమే</strong> తన స్థానానికి చేరింది. ఒక్క రౌండ్ సరిపోదు.',
+    predictQ: (a,b) => `🎯 <strong>${a}</strong>, ఇప్పటి అతిచిన్న <strong>${b}</strong> కంటే చిన్నదా?`,
+    yes: 'అవును, కొత్త అతిచిన్నది!', no: 'మార్పు లేదు',
+    right: '✅ సరైన అంచనా! ', wrong: '❌ తప్పు — చూడండి: ',
+    minNums: '⚠️ కనీసం 2 సంఖ్యలను కామాతో వేరు చేసి ఇవ్వండి.',
+  },
+  kn: {
+    start: 'ಪ್ರಾರಂಭಿಸಲು <strong>Play</strong> ಒತ್ತಿರಿ, ಅಥವಾ <strong>Step</strong> ಒತ್ತಿರಿ.',
+    pass: n => `🔁 <strong>ಸುತ್ತು ${n}</strong> ಪ್ರಾರಂಭ — ಉಳಿದವುಗಳಲ್ಲಿ ಅತಿ ಚಿಕ್ಕದನ್ನು ಹುಡುಕುತ್ತಿದ್ದೇವೆ.`,
+    scanNew: (a,b) => `🔍 <strong>${a}</strong> ಅನ್ನು ಈಗಿನ ಅತಿ ಚಿಕ್ಕ <strong>${b}</strong> ಜೊತೆ ಹೋಲಿಕೆ — ${a} ಚಿಕ್ಕದು, ಇದೇ ಹೊಸ ಅತಿ ಚಿಕ್ಕದು!`,
+    scanOk: (a,b) => `🔍 <strong>${a}</strong> ಅನ್ನು <strong>${b}</strong> ಜೊತೆ ಹೋಲಿಕೆ — ಚಿಕ್ಕದಲ್ಲ, ಬದಲಾವಣೆ ಇಲ್ಲ.`,
+    swap: (a,b) => `🔄 <strong>ಅದಲುಬದಲು!</strong> ಸಿಕ್ಕ ಅತಿ ಚಿಕ್ಕದು (${b}) ಸರಿಯಾದ ಸ್ಥಾನಕ್ಕೆ ಬಂತು.`,
+    noswap: v => `✅ ${v} ಈಗಾಗಲೇ ಅತಿ ಚಿಕ್ಕದಾಗಿತ್ತು — ಅದಲುಬದಲು ಬೇಕಿಲ್ಲ.`,
+    lock: p => `✅ ${p} ಸ್ಥಾನ <strong>ಖಚಿತವಾಯಿತು</strong>.`,
+    done: (c,s,p) => `🎉 <strong>ವಿಂಗಡಿಸಲಾಗಿದೆ!</strong> ${c} ಹೋಲಿಕೆಗಳು, ಕೇವಲ ${s} ಅದಲುಬದಲುಗಳು, ${p} ಸುತ್ತುಗಳು.`,
+    doneNoupdate: '😅 <strong>ಏನೂ ವಿಂಗಡಣೆಯಾಗಲಿಲ್ಲ!</strong> ಚಿಕ್ಕ ಮೌಲ್ಯ ಕಂಡಿತು ಆದರೆ ದಾಖಲಿಸಲಿಲ್ಲ.',
+    doneOnepass: '🤔 <strong>ಅತಿ ಚಿಕ್ಕ ಮೌಲ್ಯ ಮಾತ್ರ</strong> ತನ್ನ ಸ್ಥಾನ ತಲುಪಿತು. ಒಂದು ಸುತ್ತು ಸಾಕಾಗದು.',
+    predictQ: (a,b) => `🎯 <strong>${a}</strong>, ಈಗಿನ ಅತಿ ಚಿಕ್ಕ <strong>${b}</strong> ಗಿಂತ ಚಿಕ್ಕದೇ?`,
+    yes: 'ಹೌದು, ಹೊಸ ಅತಿ ಚಿಕ್ಕದು!', no: 'ಬದಲಾವಣೆ ಇಲ್ಲ',
+    right: '✅ ಸರಿಯಾದ ಊಹೆ! ', wrong: '❌ ತಪ್ಪು — ನೋಡಿ: ',
+    minNums: '⚠️ ಕನಿಷ್ಠ 2 ಸಂಖ್ಯೆಗಳನ್ನು ಅಲ್ಪವಿರಾಮದಿಂದ ಬೇರ್ಪಡಿಸಿ ಬರೆಯಿರಿ.',
+  },
+  bn: {
+    start: 'শুরু করতে <strong>Play</strong> চাপুন, বা <strong>Step</strong> চাপুন।',
+    pass: n => `🔁 <strong>রাউন্ড ${n}</strong> শুরু — বাকিগুলোর মধ্যে সবচেয়ে ছোটটি খুঁজছি।`,
+    scanNew: (a,b) => `🔍 <strong>${a}</strong> কে এখনকার সবচেয়ে ছোট <strong>${b}</strong> এর সাথে তুলনা — ${a} ছোট, এটাই নতুন সবচেয়ে ছোট!`,
+    scanOk: (a,b) => `🔍 <strong>${a}</strong> কে <strong>${b}</strong> এর সাথে তুলনা — ছোট নয়, কোনো পরিবর্তন নেই।`,
+    swap: (a,b) => `🔄 <strong>অদলবদল!</strong> পাওয়া সবচেয়ে ছোটটি (${b}) সঠিক জায়গায় এল।`,
+    noswap: v => `✅ ${v} আগে থেকেই সবচেয়ে ছোট ছিল — অদলবদলের দরকার নেই।`,
+    lock: p => `✅ ${p} স্থানটি <strong>পাকা</strong> হয়ে গেল।`,
+    done: (c,s,p) => `🎉 <strong>সাজানো হয়ে গেছে!</strong> ${c} তুলনা, মাত্র ${s} অদলবদল, ${p} রাউন্ড।`,
+    doneNoupdate: '😅 <strong>কিছুই সাজানো হয়নি!</strong> ছোট মান দেখেছি কিন্তু নথিভুক্ত করিনি।',
+    doneOnepass: '🤔 <strong>শুধু সবচেয়ে ছোট মানটি</strong> নিজের জায়গায় পৌঁছেছে। এক রাউন্ড যথেষ্ট নয়।',
+    predictQ: (a,b) => `🎯 <strong>${a}</strong> কি এখনকার সবচেয়ে ছোট <strong>${b}</strong> থেকেও ছোট?`,
+    yes: 'হ্যাঁ, নতুন সবচেয়ে ছোট!', no: 'কোনো পরিবর্তন নেই',
+    right: '✅ সঠিক অনুমান! ', wrong: '❌ ভুল — দেখুন: ',
+    minNums: '⚠️ অন্তত ২টি সংখ্যা কমা দিয়ে আলাদা করে লিখুন।',
+  },
+  mr: {
+    start: 'सुरू करण्यासाठी <strong>Play</strong> दाबा, किंवा <strong>Step</strong> दाबा.',
+    pass: n => `🔁 <strong>फेरी ${n}</strong> सुरू — उरलेल्यांतील सर्वात लहान शोधत आहोत.`,
+    scanNew: (a,b) => `🔍 <strong>${a}</strong> ची आत्ताच्या सर्वात लहान <strong>${b}</strong> शी तुलना — ${a} लहान आहे, हाच नवा सर्वात लहान!`,
+    scanOk: (a,b) => `🔍 <strong>${a}</strong> ची <strong>${b}</strong> शी तुलना — लहान नाही, बदल नाही.`,
+    swap: (a,b) => `🔄 <strong>अदलाबदल!</strong> सापडलेला सर्वात लहान (${b}) योग्य जागी आला.`,
+    noswap: v => `✅ ${v} आधीच सर्वात लहान होता — अदलाबदलीची गरज नाही.`,
+    lock: p => `✅ ${p} स्थान <strong>पक्के</strong> झाले.`,
+    done: (c,s,p) => `🎉 <strong>क्रमवारी पूर्ण!</strong> ${c} तुलना, फक्त ${s} अदलाबदल, ${p} फेऱ्या.`,
+    doneNoupdate: '😅 <strong>काहीच क्रमात आले नाही!</strong> लहान मूल्य दिसले पण नोंदवले नाही.',
+    doneOnepass: '🤔 <strong>फक्त सर्वात लहान मूल्य</strong> त्याच्या जागी पोहोचले. एक फेरी पुरेशी नाही.',
+    predictQ: (a,b) => `🎯 <strong>${a}</strong> हा आत्ताच्या सर्वात लहान <strong>${b}</strong> पेक्षा लहान आहे का?`,
+    yes: 'होय, नवा सर्वात लहान!', no: 'बदल नाही',
+    right: '✅ बरोबर अंदाज! ', wrong: '❌ चूक — पाहा: ',
+    minNums: '⚠️ किमान 2 संख्या स्वल्पविरामाने वेगळ्या करून लिहा.',
+  },
+};
+let lang = 'en';
+const voiceLang = { en: 'en-US', ta: 'ta-IN', hi: 'hi-IN', te: 'te-IN', kn: 'kn-IN', bn: 'bn-IN', mr: 'mr-IN' };
+function T() { return L[lang]; }
+document.getElementById('langSel').onchange = function () { lang = this.value; };
+
+/* ================= BADGES ================= */
+function award(id) {
+  const el = document.querySelector(`.badge[data-badge="${id}"]`);
+  if (!el || el.classList.contains('earned')) return;
+  el.classList.add('earned');
+  try { localStorage.setItem('msel_badge_' + id, '1'); } catch (e) {}
+  tone(880, .2, 'triangle', .12); setTimeout(() => tone(1320, .3, 'triangle', .12), 180);
+}
+try {
+  ['sort','predict','quiz','race','lab'].forEach(id => {
+    if (localStorage.getItem('msel_badge_' + id))
+      document.querySelector(`.badge[data-badge="${id}"]`).classList.add('earned');
+  });
+} catch (e) {}
+
+/* ================= AUDIO ================= */
+let soundOn = true, voiceOn = false, actx = null;
+function ctx() {
+  if (!actx) actx = new (window.AudioContext || window.webkitAudioContext)();
+  if (actx.state === 'suspended') actx.resume();
+  return actx;
+}
+function tone(freq, dur, type, vol) {
+  if (!soundOn) return;
+  try {
+    const c = ctx(), o = c.createOscillator(), g = c.createGain();
+    o.type = type || 'sine'; o.frequency.value = freq;
+    g.gain.setValueAtTime(vol || 0.15, c.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.001, c.currentTime + dur);
+    o.connect(g); g.connect(c.destination);
+    o.start(); o.stop(c.currentTime + dur);
+  } catch (e) {}
+}
+function sfxCompare(a, b) { tone(300 + a * 4, .18, 'sine'); setTimeout(() => tone(300 + b * 4, .18, 'sine'), 200); }
+function sfxSwap() { tone(220, .12, 'square', .1); setTimeout(() => tone(440, .15, 'square', .1), 110); }
+function sfxLock() { tone(660, .25, 'triangle', .12); }
+function sfxNewMin() { tone(950, .12, 'triangle', .1); }
+function sfxDone() { [523, 659, 784, 1047].forEach((f, i) => setTimeout(() => tone(f, .3, 'triangle', .14), i * 160)); }
+let lastSpeechPromise = null;
+function speak(text) {
+  lastSpeechPromise = null;
+  if (!voiceOn || !window.speechSynthesis) return null;
+  speechSynthesis.cancel();
+  const clean = text.replace(/[🔁🔍🔄✅⚡🎉⚠️🎯😅🤔]/g, '');
+  const u = new SpeechSynthesisUtterance(clean);
+  const rate = parseFloat(document.getElementById('voiceSpeed').value);
+  u.rate = rate; u.lang = voiceLang[lang];
+  const p = new Promise(resolve => {
+    let done = false;
+    const finish = () => { if (!done) { done = true; resolve(); } };
+    u.onend = finish;
+    u.onerror = finish;
+    const estMs = Math.max(1000, (clean.length * 65) / rate) + 700;
+    setTimeout(finish, estMs);
+  });
+  lastSpeechPromise = p;
+  speechSynthesis.speak(u);
+  return p;
+}
+document.getElementById('soundBtn').onclick = function () {
+  soundOn = !soundOn;
+  this.textContent = soundOn ? '🔊 Sound: On' : '🔇 Sound: Off';
+};
+document.getElementById('voiceBtn').onclick = function () {
+  voiceOn = !voiceOn;
+  this.textContent = voiceOn ? '🗣 Voice: On' : '🗣 Voice: Off';
+  if (!voiceOn) speechSynthesis.cancel();
+};
+
+/* ================= MAIN VISUALIZER ================= */
+const stage = document.getElementById('stage');
+const narration = document.getElementById('narration');
+const passBadge = document.getElementById('passBadge');
+const streakBadge = document.getElementById('streakBadge');
+const playBtn = document.getElementById('playBtn');
+
+let values = [34, 7, 91, 12, 55, 28, 76, 3];
+let balls = [], steps = [], stepIdx = 0;
+let playing = false, timer = null;
+let stats = { cmp: 0, swap: 0, pass: 0 };
+let variant = 'correct';
+let predictOn = false, waitingPredict = false, streak = 0;
+let cur = [];
+// Marker state: curI = target slot (where the eventual min lands), curJ = the
+// index currently being scanned, curMin = index of the best-found-so-far,
+// lockedUpTo = how many positions FROM THE LEFT are already finalized.
+let curI = null, curJ = null, curMin = null, swapping = false, lockedUpTo = 0;
+let shapeMode = 'circle';
+
+const stageSubtitle = document.getElementById('stageSubtitle');
+const subtitles = {
+  circle: 'Watch the teacher scan for the smallest, then place just one student per round.',
+  bar: 'Bars grow taller for bigger values — the purple bar is the smallest found so far this pass.',
+  student: 'The teacher scans everyone, remembers the shortest (purple), then brings just that one to the front.',
+};
+document.getElementById('shapeSel').onchange = function () {
+  shapeMode = this.value;
+  stageSubtitle.textContent = subtitles[shapeMode];
+  buildBalls();
+  applyBallStates();
+  updateTeacher();
+};
+
+function classForIndex(i) {
+  if (swapping && (i === curI || i === curMin)) return 'swapping';
+  if (i < lockedUpTo) return 'sorted';
+  if (curJ === i) return 'scanning';
+  if (curMin === i) return 'min';
+  return '';
+}
+function isTargetIndex(i) { return curI === i && i >= lockedUpTo; }
+
+function applyBallStates() {
+  balls.forEach((b, i) => {
+    b.classList.remove('scanning', 'min', 'swapping', 'sorted', 'is-target');
+    const cls = classForIndex(i);
+    if (cls) b.classList.add(cls);
+    if (isTargetIndex(i)) b.classList.add('is-target');
+  });
+}
+
+const teacherEl = document.getElementById('teacher');
+function updateTeacher() {
+  if (shapeMode !== 'student') { teacherEl.style.opacity = '0'; return; }
+  const idxs = [];
+  if (curJ !== null) idxs.push(curJ);
+  if (curMin !== null) idxs.push(curMin);
+  if (idxs.length === 0 && curI !== null) idxs.push(curI);
+  if (idxs.length === 0 || idxs.some(ix => !balls[ix])) { teacherEl.style.opacity = '0'; return; }
+  const xs = idxs.map(ix => {
+    const b = balls[ix];
+    return parseFloat(b.style.left) + parseFloat(b.style.width) / 2;
+  });
+  const mid = xs.reduce((a, b) => a + b, 0) / xs.length;
+  teacherEl.style.left = (mid - 17) + 'px';
+  teacherEl.style.opacity = '1';
+}
+
+function renderArray() {
+  const box = document.getElementById('arrayView');
+  box.innerHTML = '<span class="lbl">arr =</span>';
+  cur.forEach((v, i) => {
+    const c = document.createElement('span');
+    c.className = 'cell';
+    const cls = classForIndex(i);
+    if (cls) c.classList.add(cls);
+    if (isTargetIndex(i)) c.classList.add('is-target');
+    c.innerHTML = `${v}<span class="idx">[${i}]</span>`;
+    box.appendChild(c);
+  });
+}
+function renderVars() {
+  document.getElementById('varN').innerHTML = 'n = <b>' + cur.length + '</b>';
+  document.getElementById('varI').innerHTML = 'i = <b>' + (curI === null ? '–' : curI) + '</b>';
+  document.getElementById('varJ').innerHTML = 'j = <b>' + (curJ === null ? '–' : curJ) + '</b>';
+  document.getElementById('varMin').innerHTML = 'min_idx = <b>' + (curMin === null ? '–' : curMin) + '</b>';
+  document.getElementById('varAMin').innerHTML = 'arr[min_idx] = <b>' + (curMin === null ? '–' : cur[curMin]) + '</b>';
+  document.getElementById('varMin').classList.toggle('hi', curMin !== null);
+  document.getElementById('varAMin').classList.toggle('hi', curMin !== null);
+}
+
+function ballSize() {
+  const w = stage.clientWidth;
+  return Math.min(64, Math.max(38, Math.floor((w - 40) / values.length) - 12));
+}
+function xFor(i, size) {
+  const w = stage.clientWidth;
+  const gap = (w - values.length * size) / (values.length + 1);
+  return gap + i * (size + gap);
+}
+function buildBalls() {
+  balls.forEach(b => b.remove());
+  balls = [];
+  const size = ballSize();
+  const maxV = Math.max(...values);
+  const stageH = stage.clientHeight;
+  const maxBarH = stageH - 70;
+  values.forEach((v, i) => {
+    const b = document.createElement('div');
+    if (shapeMode === 'bar') {
+      b.textContent = v;
+      b.className = 'ball bar-mode';
+      const h = Math.max(28, Math.round(maxBarH * (v / maxV)));
+      const w = Math.max(30, size * 0.72);
+      b.style.width = w + 'px'; b.style.height = h + 'px';
+      b.style.fontSize = Math.max(11, Math.round(size * 0.26)) + 'px';
+      b.style.left = xFor(i, size) + (size - w) / 2 + 'px';
+    } else if (shapeMode === 'student') {
+      b.className = 'ball student-mode';
+      const HEAD = 28, LEGS = 14;
+      const torsoH = Math.max(20, Math.round(maxBarH * 0.66 * (v / maxV)));
+      const h = HEAD + 3 + torsoH + LEGS;
+      const w = Math.max(34, size * 0.68);
+      b.style.width = w + 'px'; b.style.height = h + 'px';
+      b.style.left = xFor(i, size) + (size - w) / 2 + 'px';
+      b.innerHTML = `<div class="student-head"></div><div class="student-body"><span class="student-tag">${v}</span></div><div class="student-legs"></div>`;
+    } else {
+      b.textContent = v;
+      b.className = 'ball';
+      const s = Math.round(size * (0.72 + 0.28 * (v / maxV)));
+      b.style.width = s + 'px'; b.style.height = s + 'px';
+      b.style.fontSize = Math.max(12, Math.round(s * 0.32)) + 'px';
+      b.style.left = xFor(i, size) + (size - s) / 2 + 'px';
+    }
+    stage.appendChild(b);
+    balls.push(b);
+  });
+}
+
+function computeSteps() {
+  steps = [];
+  const a = [...values];
+  const n = a.length;
+  const passes = variant === 'onepass' ? 1 : n;
+  for (let i = 0; i < passes; i++) {
+    steps.push({ t: 'pass', num: i + 1, i });
+    let minIdx = i;
+    for (let j = i + 1; j < n; j++) {
+      steps.push({ t: 'scan', i, j, minIdx, aVal: a[j], minVal: a[minIdx] });
+      if (a[j] < a[minIdx] && variant !== 'noupdate') {
+        minIdx = j;
+        steps.push({ t: 'newMin', i, j, val: a[j] });
+      }
+    }
+    if (minIdx !== i) {
+      steps.push({ t: 'swap', i, minIdx, a: a[i], b: a[minIdx] });
+      [a[i], a[minIdx]] = [a[minIdx], a[i]];
+    } else {
+      steps.push({ t: 'noswapneeded', i, val: a[i] });
+    }
+    steps.push({ t: 'lock', idx: i });
+  }
+  steps.push({ t: 'done', variant });
+}
+
+function highlight(lines) {
+  document.querySelectorAll('.codeWrap .line').forEach(el =>
+    el.classList.toggle('active', lines.includes(+el.dataset.l)));
+}
+document.querySelectorAll('.tab').forEach(tab => {
+  tab.onclick = () => {
+    document.querySelectorAll('.tab').forEach(t => t.classList.toggle('on', t === tab));
+    document.querySelectorAll('.codeWrap').forEach(w =>
+      w.classList.toggle('on', w.id === 'code-' + tab.dataset.lang));
+  };
+});
+function updateStats() {
+  document.getElementById('cmpCount').textContent = stats.cmp;
+  document.getElementById('swapCount').textContent = stats.swap;
+  document.getElementById('passCount').textContent = stats.pass;
+}
+function delay() { return 4000 - document.getElementById('speed').value * 300; }
+
+function execStep(prefix) {
+  if (stepIdx >= steps.length) return false;
+  const s = steps[stepIdx++];
+  swapping = false;
+  if (s.t === 'pass') {
+    stats.pass = s.num;
+    curI = s.i; curJ = null; curMin = s.i;
+    passBadge.textContent = 'Pass ' + s.num;
+    narration.innerHTML = T().pass(s.num);
+    highlight([2, 3]);
+  } else if (s.t === 'scan') {
+    stats.cmp++;
+    curJ = s.j;
+    narration.innerHTML = (prefix || '') + (s.aVal < s.minVal ? T().scanNew(s.aVal, s.minVal) : T().scanOk(s.aVal, s.minVal));
+    highlight([4, 5]);
+    sfxCompare(s.aVal, s.minVal);
+  } else if (s.t === 'newMin') {
+    curMin = s.j;
+    highlight([6]);
+    sfxNewMin();
+  } else if (s.t === 'swap') {
+    stats.swap++;
+    swapping = true; curI = s.i; curMin = s.minIdx; curJ = null;
+    [cur[s.i], cur[s.minIdx]] = [cur[s.minIdx], cur[s.i]];
+    const bI = balls[s.i], bM = balls[s.minIdx];
+    const slotSize = ballSize();
+    const wI = parseFloat(bI.style.width), wM = parseFloat(bM.style.width);
+    bI.style.left = xFor(s.minIdx, slotSize) + (slotSize - wI) / 2 + 'px';
+    bM.style.left = xFor(s.i, slotSize) + (slotSize - wM) / 2 + 'px';
+    [balls[s.i], balls[s.minIdx]] = [bM, bI];
+    narration.innerHTML = T().swap(s.a, s.b);
+    highlight([7]);
+    sfxSwap();
+  } else if (s.t === 'noswapneeded') {
+    curJ = null; curMin = s.i;
+    narration.innerHTML = T().noswap(s.val);
+    highlight([7]);
+  } else if (s.t === 'lock') {
+    lockedUpTo = s.idx + 1; curI = null; curJ = null; curMin = null;
+    narration.innerHTML = T().lock(s.idx + 1);
+    highlight([2]);
+    sfxLock();
+  } else if (s.t === 'done') {
+    curI = null; curJ = null; curMin = null;
+    if (s.variant === 'correct') {
+      lockedUpTo = cur.length;
+      narration.innerHTML = T().done(stats.cmp, stats.swap, stats.pass);
+      sfxDone();
+      award('sort');
+    } else if (s.variant === 'noupdate') {
+      narration.innerHTML = T().doneNoupdate;
+    } else if (s.variant === 'onepass') {
+      narration.innerHTML = T().doneOnepass;
+    }
+    highlight([8]);
+    stopPlay();
+  }
+  applyBallStates();
+  renderArray();
+  renderVars();
+  updateTeacher();
+  speak(narration.textContent);
+  updateStats();
+  return stepIdx < steps.length;
+}
+
+function doStep() {
+  if (stepIdx >= steps.length) return false;
+  const s = steps[stepIdx];
+  if (predictOn && s.t === 'scan' && !waitingPredict) {
+    waitingPredict = true;
+    curJ = s.j;
+    applyBallStates();
+    updateTeacher();
+    narration.innerHTML = T().predictQ(s.aVal, s.minVal) +
+      `<br><button id="pYes">${T().yes}</button><button id="pNo" class="secondary">${T().no}</button>`;
+    speak(narration.textContent);
+    document.getElementById('pYes').onclick = () => answerPredict(true, s);
+    document.getElementById('pNo').onclick = () => answerPredict(false, s);
+    return true;
+  }
+  return execStep();
+}
+function answerPredict(saidNewMin, s) {
+  waitingPredict = false;
+  const correct = (s.aVal < s.minVal) === saidNewMin;
+  if (correct) { streak++; tone(780, .15, 'triangle', .12); }
+  else { streak = 0; tone(180, .25, 'sawtooth', .08); }
+  streakBadge.textContent = '🎯 Streak: ' + streak;
+  if (streak >= 5) award('predict');
+  const more = execStep(correct ? T().right : T().wrong);
+  if (playing) scheduleNext(more);
+}
+
+function scheduleNext(more) {
+  if (!more) { stopPlay(); return; }
+  const baseDelay = delay();
+  const speechP = lastSpeechPromise;
+  const start = Date.now();
+  if (voiceOn && speechP) {
+    speechP.then(() => {
+      if (!playing) return;
+      const remaining = Math.max(0, baseDelay - (Date.now() - start));
+      timer = setTimeout(playLoop, remaining);
+    });
+  } else {
+    timer = setTimeout(playLoop, baseDelay);
+  }
+}
+
+function playLoop() {
+  if (!playing) return;
+  const more = doStep();
+  if (waitingPredict) return;
+  scheduleNext(more);
+}
+function stopPlay() {
+  playing = false;
+  clearTimeout(timer);
+  playBtn.textContent = '▶ Play';
+}
+playBtn.onclick = () => {
+  if (playing) { stopPlay(); return; }
+  if (stepIdx >= steps.length) reset(false);
+  playing = true;
+  playBtn.textContent = '⏸ Pause';
+  playLoop();
+};
+document.getElementById('stepBtn').onclick = () => { if (!waitingPredict) { stopPlay(); doStep(); } };
+document.getElementById('predictBtn').onclick = function () {
+  predictOn = !predictOn;
+  this.textContent = '🎯 Predict: ' + (predictOn ? 'On' : 'Off');
+  this.classList.toggle('on', predictOn);
+  streakBadge.style.display = predictOn ? 'block' : 'none';
+};
+
+function reset(newOrder) {
+  stopPlay();
+  waitingPredict = false;
+  if (newOrder) values = values.map(() => Math.floor(Math.random() * 97) + 3);
+  stepIdx = 0;
+  stats = { cmp: 0, swap: 0, pass: 0 };
+  cur = [...values]; curI = null; curJ = null; curMin = null; swapping = false;
+  lockedUpTo = 0;
+  updateStats();
+  passBadge.textContent = 'Pass 0';
+  narration.innerHTML = T().start;
+  highlight([]);
+  buildBalls();
+  computeSteps();
+  applyBallStates();
+  renderArray();
+  renderVars();
+  updateTeacher();
+}
+document.getElementById('shuffleBtn').onclick = () => { variant = 'correct'; reset(true); };
+document.getElementById('resetBtn').onclick = () => { variant = 'correct'; reset(false); };
+document.getElementById('loadBtn').onclick = () => {
+  const nums = document.getElementById('customInput').value
+    .split(/[\s,]+/).map(Number).filter(v => !isNaN(v)).slice(0, 12);
+  if (nums.length >= 2) { values = nums; variant = 'correct'; reset(false); }
+  else narration.innerHTML = T().minNums;
+};
+
+/* Experiments */
+function runExperiment(v) {
+  variant = v;
+  reset(false);
+  if (v !== 'correct') award('lab');
+  playing = true;
+  playBtn.textContent = '⏸ Pause';
+  playLoop();
+}
+document.getElementById('expCorrect').onclick = () => runExperiment('correct');
+document.getElementById('expNoupdate').onclick = () => runExperiment('noupdate');
+document.getElementById('expOnepass').onclick = () => runExperiment('onepass');
+
+window.addEventListener('resize', () => {
+  const size = ballSize();
+  balls.forEach((b, i) => {
+    const s = parseInt(b.style.width);
+    b.style.left = xFor(i, size) + (size - s) / 2 + 'px';
+  });
+});
+
+reset(false);
+
+/* ================= QUIZ ================= */
+const quiz = [
+  { q: 'How many times does Selection Sort swap per pass?',
+    opts: ['As many times as needed during the scan', 'At most once, after the scan finishes', 'Never — it only compares'],
+    ans: 1, why: 'It only tracks min_idx while scanning, then makes exactly one swap (or none) once the whole scan is done.' },
+  { q: 'Which direction does the sorted region grow?',
+    opts: ['From the left', 'From the right', 'From the middle'],
+    ans: 0, why: 'Each pass finalizes position i, so positions 0, 1, 2… lock in order — opposite of Bubble Sort, which grows from the right.' },
+  { q: 'Does Selection Sort have a best-case speedup like Bubble Sort\'s early exit?',
+    opts: ['Yes, if the array is already sorted', 'No — it always scans everything, every pass'],
+    ans: 1, why: 'There\'s no "swapped" flag to check — it always does the full scan even on an already-sorted array, so best case is still O(n²).' },
+];
+let qi = 0, quizCorrect = 0;
+function showQuiz() {
+  const item = quiz[qi];
+  document.getElementById('quizQ').innerHTML = `<strong>Q${qi + 1}/${quiz.length}:</strong> ${item.q}`;
+  const box = document.getElementById('quizOpts');
+  box.innerHTML = '';
+  document.getElementById('quizFeedback').textContent = '';
+  item.opts.forEach((o, i) => {
+    const b = document.createElement('button');
+    b.className = 'quiz-opt'; b.textContent = o;
+    b.onclick = () => {
+      box.querySelectorAll('button').forEach(x => x.disabled = true);
+      const ok = i === item.ans;
+      if (ok) quizCorrect++;
+      b.classList.add(ok ? 'right' : 'wrong');
+      if (!ok) box.children[item.ans].classList.add('right');
+      let tail;
+      if (qi < quiz.length - 1) tail = ' <a href="#" id="nextQ" style="color:var(--accent)">Next →</a>';
+      else {
+        tail = ` 🎉 Quiz done — ${quizCorrect}/${quiz.length} correct!`;
+        if (quizCorrect === quiz.length) award('quiz');
+        else tail += ' <a href="#" id="retryQ" style="color:var(--accent)">Try again</a>';
+      }
+      document.getElementById('quizFeedback').innerHTML =
+        (ok ? '✅ Correct! ' : '❌ Not quite. ') + item.why + tail;
+      const n = document.getElementById('nextQ');
+      if (n) n.onclick = e => { e.preventDefault(); qi++; showQuiz(); };
+      const r = document.getElementById('retryQ');
+      if (r) r.onclick = e => { e.preventDefault(); qi = 0; quizCorrect = 0; showQuiz(); };
+    };
+    box.appendChild(b);
+  });
+}
+showQuiz();
+
+/* ================= RACE ================= */
+const RN = 30;
+let raceTimer = null;
+function buildRaceBars(id, vals) {
+  const box = document.getElementById(id);
+  box.innerHTML = '';
+  vals.forEach(v => {
+    const b = document.createElement('div');
+    b.className = 'bar';
+    b.style.height = v + '%';
+    box.appendChild(b);
+  });
+  return [...box.children];
+}
+function bubbleOps(vals) {
+  const a = [...vals], ops = [];
+  for (let i = 0; i < a.length; i++) {
+    for (let j = 0; j < a.length - i - 1; j++) {
+      ops.push({ t: 'c', i: j });
+      if (a[j] > a[j + 1]) {
+        [a[j], a[j + 1]] = [a[j + 1], a[j]];
+        ops.push({ t: 'w', i: j, v: a[j] }, { t: 'w', i: j + 1, v: a[j + 1] });
+      }
+    }
+  }
+  return ops;
+}
+function selectionOps(vals) {
+  const a = [...vals], ops = [];
+  const n = a.length;
+  for (let i = 0; i < n; i++) {
+    let minIdx = i;
+    for (let j = i + 1; j < n; j++) {
+      ops.push({ t: 'c', i: j });
+      if (a[j] < a[minIdx]) minIdx = j;
+    }
+    if (minIdx !== i) {
+      [a[i], a[minIdx]] = [a[minIdx], a[i]];
+      ops.push({ t: 'w', i, v: a[i] }, { t: 'w', i: minIdx, v: a[minIdx] });
+    }
+  }
+  return ops;
+}
+document.getElementById('raceBtn').onclick = () => {
+  clearInterval(raceTimer);
+  document.getElementById('raceResult').style.display = 'none';
+  document.getElementById('racerS').classList.remove('finished');
+  document.getElementById('racerB').classList.remove('finished');
+  const vals = Array.from({ length: RN }, () => Math.floor(Math.random() * 90) + 8);
+  const barsS = buildRaceBars('barsS', vals);
+  const barsB = buildRaceBars('barsB', vals);
+  const opsS = selectionOps(vals), opsB = bubbleOps(vals);
+  let si = 0, bi = 0;
+  let writesS = 0, writesB = 0;
+  const apply = (ops, idx, bars) => {
+    const op = ops[idx];
+    bars.forEach(b => b.classList.remove('hot'));
+    if (op.t === 'w') bars[op.i].style.height = op.v + '%';
+    if (bars[op.i]) bars[op.i].classList.add('hot');
+    return op.t === 'w';
+  };
+  raceTimer = setInterval(() => {
+    if (si < opsS.length) {
+      if (apply(opsS, si, barsS)) writesS++;
+      si++;
+      document.getElementById('opsS').textContent = si;
+      document.getElementById('writesS').textContent = writesS;
+      if (si >= opsS.length) {
+        document.getElementById('racerS').classList.add('finished');
+        barsS.forEach(b => b.classList.remove('hot'));
+      }
+    }
+    if (bi < opsB.length) {
+      if (apply(opsB, bi, barsB)) writesB++;
+      bi++;
+      document.getElementById('opsB').textContent = bi;
+      document.getElementById('writesB').textContent = writesB;
+      if (bi >= opsB.length) {
+        document.getElementById('racerB').classList.add('finished');
+        barsB.forEach(b => b.classList.remove('hot'));
+        sfxLock();
+      }
+    }
+    if (si >= opsS.length && bi >= opsB.length) {
+      clearInterval(raceTimer);
+      const r = document.getElementById('raceResult');
+      r.style.display = 'block';
+      r.innerHTML = `🤝 <strong>Roughly tied on comparisons</strong> — both are O(n²): ${si} vs ${bi} total steps on ${RN} numbers. But look at <strong>writes</strong>: Selection Sort made only <strong>${writesS}</strong> array writes, while Bubble Sort made <strong>${writesB}</strong> — about <strong>${(writesB / Math.max(writesS,1)).toFixed(1)}× more</strong>. Selection Sort always makes at most n−1 writes, which matters when writing is expensive (e.g. flash memory) even though it's no faster in comparisons.`;
+      sfxDone();
+      award('race');
+    }
+  }, 14);
+};
+
+/* ================= GUIDED TOUR ================= */
+const tourSteps = [
+  { sel: '#playBtn', title: '▶ Play / Pause', text: 'Starts the animation automatically. Press again to pause any time.' },
+  { sel: '#stepBtn', title: '⏭ Step', text: 'Moves one comparison at a time — the best way to see the scan-then-swap pattern clearly.' },
+  { sel: '#predictBtn', title: '🎯 Predict mode', text: 'Guess whether each candidate becomes the new "smallest so far" before it\'s revealed. Build a streak of 5 for a badge!' },
+  { sel: '#speed', title: '🐢 Animation speed', text: 'Drag left for slow, right for fast.' },
+  { sel: '#soundBtn', title: '🔊 Sound effects', text: 'A distinct chime plays whenever the tracked minimum changes — listen for how often (or rarely) it happens.' },
+  { sel: '#voiceBtn', title: '🗣 Voice narration', text: 'Reads every explanation aloud, with a speed dropdown next to it.' },
+  { sel: '#langSel', title: '🌐 Language', text: 'Switch narration to Tamil or Hindi.' },
+  { sel: '#customInput', title: '⌨️ Your own numbers', text: 'Sort your own list by typing numbers and pressing Load.' },
+  { sel: '#expNoupdate', title: '🧪 Experiments', text: 'Run a broken version where the tracked minimum never updates — watch the array stay completely unsorted despite lots of "smaller value found" moments.' },
+  { sel: '#explainBtn', title: '🤖 AI Explainer', text: 'Pause any time for a deep, step-aware explanation using this run\'s actual values, plus expandable answers to common questions.' },
+  { sel: '#arrayView', title: '🔢 Live array', text: 'Purple = current tracked minimum. Yellow = candidate being scanned. Dashed blue outline = the target slot for this pass. Watch the sorted (green) region grow from the LEFT.' },
+  { sel: '#code-py', title: '💻 Live code', text: 'The exact running line lights up, with live values of n, i, j, min_idx below. Switch tabs for Python or Java.' },
+  { sel: '#quizOpts', title: '🧠 Quiz', text: 'Test yourself on the details that make Selection Sort different from Bubble Sort.' },
+  { sel: '#raceBtn', title: '⚡ The Race', text: 'Selection Sort vs Bubble Sort on identical data — watch comparisons tie but writes differ dramatically.' },
+];
+let tourIdx = -1, tourEl = null;
+const tourOverlay = document.getElementById('tourOverlay');
+const tourTip = document.getElementById('tourTip');
+function tourShow(i) {
+  if (tourEl) tourEl.classList.remove('tour-target');
+  if (i >= tourSteps.length) { tourEnd(); return; }
+  tourIdx = i;
+  const st = tourSteps[i];
+  tourEl = document.querySelector(st.sel);
+  if (!tourEl) { tourShow(i + 1); return; }
+  tourOverlay.style.display = 'block';
+  tourEl.classList.add('tour-target');
+  tourEl.scrollIntoView({ block: 'center', behavior: 'instant' });
+  document.getElementById('tourTitle').textContent = st.title;
+  document.getElementById('tourText').textContent = st.text;
+  document.getElementById('tourCnt').textContent = (i + 1) + '/' + tourSteps.length;
+  document.getElementById('tourNext').textContent = i === tourSteps.length - 1 ? 'Finish ✓' : 'Next →';
+  const r = tourEl.getBoundingClientRect();
+  tourTip.style.display = 'block';
+  const tw = 320, th = tourTip.offsetHeight || 140;
+  let top = r.bottom + 12;
+  if (top + th > window.innerHeight - 10) top = Math.max(10, r.top - th - 12);
+  let left = Math.min(Math.max(10, r.left), window.innerWidth - tw - 10);
+  tourTip.style.top = top + 'px';
+  tourTip.style.left = left + 'px';
+}
+function tourEnd() {
+  if (tourEl) tourEl.classList.remove('tour-target');
+  tourEl = null; tourIdx = -1;
+  tourOverlay.style.display = 'none';
+  tourTip.style.display = 'none';
+  try { localStorage.setItem('msel_toured', '1'); } catch (e) {}
+}
+document.getElementById('tourBtn').onclick = () => tourShow(0);
+document.getElementById('tourNext').onclick = () => tourShow(tourIdx + 1);
+document.getElementById('tourSkip').onclick = tourEnd;
+tourOverlay.onclick = tourEnd;
+try { if (!localStorage.getItem('msel_toured')) setTimeout(() => tourShow(0), 800); } catch (e) {}
+
+/* ================= AI EXPLAINER ================= */
+const aiOverlay = document.getElementById('aiOverlay');
+const aiPanel = document.getElementById('aiPanel');
+const aiBody = document.getElementById('aiBody');
+const aiChips = document.getElementById('aiChips');
+
+function currentCodeLang() {
+  return document.querySelector('.tab.on')?.dataset.lang === 'java' ? 'java' : 'py';
+}
+
+function explainForStep() {
+  const s = steps[stepIdx - 1];
+  const codeLang = currentCodeLang();
+  if (!s) {
+    return `<p>Nothing has run yet. Press <strong>Step</strong> or <strong>Play</strong> once, then click this button again.</p>`;
+  }
+  const n = cur.length;
+  let html = '';
+  if (s.t === 'pass') {
+    html = `
+      <p>We just started pass <strong>${s.num}</strong> (<code>i = ${s.i}</code>). We're about to scan positions <code>${s.i + 1}</code> through <code>${n - 1}</code> to find the smallest remaining value.</p>
+      <h5>Why start min_idx at i?</h5>
+      <p>We assume — for now — that <code>arr[i]</code> itself might be the smallest, so <code>min_idx = i</code> is our starting guess. The scan will correct this if something smaller turns up.</p>`;
+  } else if (s.t === 'scan') {
+    const better = s.aVal < s.minVal;
+    html = `
+      <p>We're checking <code>arr[${s.j}] = ${s.aVal}</code> against the current best guess <code>arr[min_idx] = ${s.minVal}</code>.</p>
+      <h5>The condition</h5>
+      <p>The code checks <code>arr[j] &lt; arr[min_idx]</code> — right now that's <code>${s.aVal} &lt; ${s.minVal}</code>, which is <strong>${better ? 'TRUE' : 'FALSE'}</strong>.</p>
+      <p>${better
+        ? `Since ${s.aVal} is smaller, <code>min_idx</code> will update to point at position ${s.j} — but notice: NOTHING moves yet. We just remember the index.`
+        : `Since ${s.aVal} isn't smaller than ${s.minVal}, min_idx stays where it is, and we move on to check the next value.`}</p>
+      <h5>Why not swap right now?</h5>
+      <p>Swapping during the scan would mean lots of unnecessary writes every time a smaller value shows up. Selection Sort's whole advantage is doing the comparisons cheaply (tracking an index) and paying the cost of a write only ONCE, at the very end of the scan.</p>`;
+  } else if (s.t === 'newMin') {
+    html = `
+      <p><code>min_idx</code> just updated to position <strong>${s.j}</strong> (value ${s.val}) — this is now the smallest value found in this pass so far.</p>
+      <p>This doesn't move anything on screen except the purple highlight — it's pure bookkeeping until the scan finishes.</p>`;
+  } else if (s.t === 'swap') {
+    html = `
+      <p>The scan is done. The smallest value found was <strong>${s.b}</strong> at position <strong>${s.minIdx}</strong>. Now — and only now — we swap it with <code>arr[${s.i}] = ${s.a}</code>.</p>
+      <h5>How the swap works</h5>
+      ${codeLang === 'java' ? `
+      <p>Java needs a temp variable: <code>int t = arr[i]; arr[i] = arr[minIdx]; arr[minIdx] = t;</code> — otherwise the first assignment would overwrite <code>arr[i]</code> before we've saved its original value.</p>` : `
+      <p>Python's <code>arr[i], arr[min_idx] = arr[min_idx], arr[i]</code> builds a small tuple of the two values first, then assigns both at once — no temp variable needed.</p>`}
+      <div class="mistake-note">⚠️ Notice this is the ONLY swap in the entire pass — no matter how many comparisons happened during the scan.</div>`;
+  } else if (s.t === 'noswapneeded') {
+    html = `
+      <p><code>min_idx</code> never changed from <code>i</code> — meaning <code>arr[${s.i}] = ${s.val}</code> was <strong>already</strong> the smallest remaining value.</p>
+      <p>A well-written implementation checks <code>if (minIdx != i)</code> before swapping, to skip a pointless self-swap. It's not a bug to always swap unconditionally — the value ends up correct either way — but it wastes a write.</p>`;
+  } else if (s.t === 'lock') {
+    html = `
+      <p>Position <strong>${s.idx}</strong> is now <strong style="color:var(--green)">locked in</strong> — permanently correct.</p>
+      <h5>Why the sorted region grows from the LEFT here</h5>
+      <p>Each pass fully determines the true minimum of everything remaining and places it at the FRONT of the unsorted zone. That's the opposite of Bubble Sort, where the biggest value floats to the END each pass. Same overall goal, opposite direction of construction.</p>`;
+  } else if (s.t === 'done') {
+    if (s.variant === 'correct') {
+      html = `
+        <p>🎉 Sorted: <strong>${stats.cmp}</strong> comparisons but only <strong>${stats.swap}</strong> swap(s), across <strong>${stats.pass}</strong> pass(es).</p>
+        <h5>The key takeaway</h5>
+        <p>Selection Sort's comparison count is similar to Bubble Sort's (both O(n²)), but its swap count is capped at n−1 no matter what — Bubble Sort can swap far more often. That's the real difference between these two O(n²) algorithms.</p>`;
+    } else if (s.variant === 'noupdate') {
+      html = `
+        <p>This was the <strong>"Never update the minimum"</strong> experiment — the comparison still ran, but <code>min_idx = j</code> was skipped even when a smaller value was found.</p>
+        <h5>Why nothing changed</h5>
+        <p>Since <code>min_idx</code> always stayed equal to <code>i</code>, every pass's "swap" was really swapping <code>arr[i]</code> with itself — a no-op. Detecting a smaller value is useless if you never record where it is.</p>`;
+    } else if (s.variant === 'onepass') {
+      html = `
+        <p>This was the <strong>"Only one pass"</strong> experiment — the outer loop ran once instead of up to <code>n</code> times.</p>
+        <p>One pass finds and places exactly ONE minimum (the smallest of the whole array). Every other position needs its OWN pass to find the minimum of what remains — hence up to <code>n</code> total passes.</p>`;
+    }
+  }
+  return html || `<p>Step through the animation and I'll explain exactly what happened.</p>`;
+}
+
+const AI_FAQ = {
+  direction: {
+    label: 'Why does the sorted region grow from the left here (but the right in Bubble Sort)?',
+    body: `<h5>Direction of construction</h5>
+      <p>Selection Sort fixes position <code>i</code> definitively on pass <code>i</code>, working left to right — so positions 0, 1, 2… become correct in that order. Bubble Sort instead pushes the largest remaining value to the very end each pass, so it's the rightmost positions that become correct first. Both reach a fully sorted array; they just build it from opposite ends.</p>`,
+  },
+  bestcase: {
+    label: "Why no best-case shortcut like Bubble Sort's early exit?",
+    body: `<h5>No "already sorted" detection</h5>
+      <p>Bubble Sort can track a <code>swapped</code> flag and stop early if a pass made no swaps. Selection Sort has no equivalent signal — it always fully scans the remaining unsorted portion looking for a minimum, even if the array is already perfectly sorted. That's why its best case is still O(n²), unlike Bubble Sort's O(n) best case.</p>`,
+  },
+  trackindex: {
+    label: 'Why track an index instead of swapping during the scan?',
+    body: `<h5>Cheap comparisons, expensive writes</h5>
+      <p>Comparing two values costs very little. Writing a value into memory can be much more expensive in real systems (e.g. flash storage has a limited number of write cycles). Selection Sort is designed around this: do all the cheap comparisons first, and pay the expensive write cost only once per pass.</p>`,
+  },
+  writes: {
+    label: 'How many writes does Selection Sort make, at most?',
+    body: `<h5>At most n − 1 swaps</h5>
+      <p>With <code>n</code> elements, there are only <code>n</code> passes, and each pass makes at most one swap (the very last pass never needs one, since only one element remains). That upper bound of n−1 swaps holds no matter how scrambled the input is — a guarantee Bubble Sort and Insertion Sort don't share.</p>`,
+  },
+  stable: {
+    label: 'Is Selection Sort stable?',
+    body: `<h5>No — standard Selection Sort is NOT stable</h5>
+      <p>Swapping the found minimum into position <code>i</code> can jump it past other equal-valued elements sitting between its original spot and position <code>i</code>, changing their relative order. (A stable variant exists — using insertion instead of swapping — but it's rarely how the algorithm is taught or implemented.)</p>`,
+  },
+};
+
+function renderAiChips() {
+  aiChips.innerHTML = '';
+  Object.entries(AI_FAQ).forEach(([key, item]) => {
+    const chip = document.createElement('button');
+    chip.className = 'ai-chip';
+    chip.textContent = '❓ ' + item.label;
+    chip.onclick = () => {
+      aiBody.innerHTML += `<hr style="border-color:var(--border); margin:16px 0;">` + item.body;
+      aiPanel.scrollTop = aiPanel.scrollHeight;
+    };
+    aiChips.appendChild(chip);
+  });
+}
+
+function openAiExplainer() {
+  stopPlay();
+  aiBody.innerHTML = explainForStep();
+  renderAiChips();
+  aiOverlay.style.display = 'block';
+  aiPanel.style.display = 'block';
+}
+function closeAiExplainer() {
+  aiOverlay.style.display = 'none';
+  aiPanel.style.display = 'none';
+}
+document.getElementById('explainBtn').onclick = openAiExplainer;
+document.getElementById('aiClose').onclick = closeAiExplainer;
+aiOverlay.onclick = closeAiExplainer;
+
+/* ===== Classroom mode: hide everything except the animation ===== */
+(function () {
+  var btn = document.getElementById('classBtn');
+  if (!btn) return;
+  function apply(on) {
+    document.body.classList.toggle('classroom', on);
+    btn.classList.toggle('on', on);
+    btn.textContent = on ? '\u2715 Exit classroom' : '\U0001F3A5 Classroom';
+    try { localStorage.setItem('mac_classroom', on ? '1' : '0'); } catch (e) {}
+    window.dispatchEvent(new Event('resize'));
+  }
+  btn.onclick = function () { apply(!document.body.classList.contains('classroom')); };
+  var want = false;
+  try {
+    want = localStorage.getItem('mac_classroom') === '1' ||
+           /[?&]classroom=1/.test(location.search);
+  } catch (e) { want = /[?&]classroom=1/.test(location.search); }
+  if (want) apply(true);
+})();
+</script>
+<script>
+/* ===== Offline support (works when served over http/https) ===== */
+if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
+  window.addEventListener('load', function () {
+    navigator.serviceWorker.register('sw.js').catch(function () { /* offline mode simply unavailable */ });
+  });
+}
+</script>
+<script src="firebase-config.js"></script>
+<script src="mindaicode-auth.js"></script>
+</body>
+</html>

@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MindAICode — Hash Tables</title>
+<style>
+  :root {
+    --bg:#0d1117; --panel:#161b22; --panel2:#1c2333; --accent:#58a6ff; --accent2:#f78166;
+    --purple:#d2a8ff; --green:#3fb950; --yellow:#d29922; --red:#f85149;
+    --text:#e6edf3; --muted:#8b949e; --border:#30363d;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family:'Segoe UI', system-ui, sans-serif; background:var(--bg); color:var(--text); min-height:100vh; }
+  header {
+    display:flex; align-items:center; justify-content:space-between;
+    padding:14px 28px; background:var(--panel); border-bottom:1px solid var(--border); flex-wrap:wrap; gap:8px;
+  }
+  .logo { font-size:22px; font-weight:800; }
+  .logo span { color:var(--accent); }
+  .tagline { display:flex; gap:14px; align-items:center; flex-wrap:wrap; font-size:13px; }
+  .tagline a { text-decoration:none; color:var(--muted); }
+  .container { max-width:1080px; margin:0 auto; padding:24px 20px 60px; }
+
+  .card { background:var(--panel); border:1px solid var(--border); border-radius:12px; padding:20px; margin-bottom:18px; }
+  h1 { font-size:24px; margin-bottom:6px; }
+  h2.secH { font-size:19px; margin-bottom:4px; }
+  h3 { font-size:16px; margin-bottom:10px; }
+  .subtitle { color:var(--muted); font-size:14px; margin-bottom:16px; }
+
+  .intro {
+    background:linear-gradient(135deg, rgba(88,166,255,.10), rgba(63,185,80,.08));
+    border:1px solid var(--border); border-radius:12px; padding:22px 24px; margin-bottom:18px;
+  }
+  .intro h1 { font-size:24px; margin-bottom:8px; }
+  .intro p { font-size:15px; line-height:1.7; margin-bottom:10px; }
+
+  .controls { display:flex; flex-wrap:wrap; gap:10px; align-items:center; margin-bottom:14px; }
+  button {
+    background:var(--accent); color:#0d1117; border:none; padding:9px 16px;
+    border-radius:8px; font-size:13.5px; font-weight:700; cursor:pointer; font-family:inherit;
+    transition:filter .15s, transform .1s;
+  }
+  button:hover { filter:brightness(1.14); }
+  button:active { transform:scale(.97); }
+  button.secondary { background:var(--panel2); color:var(--text); border:1px solid var(--border); }
+  button.danger { background:rgba(248,81,73,.16); color:var(--red); border:1px solid rgba(248,81,73,.4); }
+  button:disabled { opacity:.4; cursor:not-allowed; }
+  input[type=text] { background:var(--panel2); border:1px solid var(--border); color:var(--text);
+    padding:8px 12px; border-radius:8px; font-size:13.5px; font-family:inherit; width:140px; }
+  label.lbl { font-size:12.5px; color:var(--muted); font-weight:700; }
+
+  .badgeLbl {
+    display:inline-block; font-size:11px; font-weight:700; padding:3px 10px; border-radius:10px;
+    background:rgba(210,168,255,.12); color:var(--purple); border:1px solid rgba(210,168,255,.35); margin-left:8px;
+  }
+  .badgeLbl.on { background:rgba(63,185,80,.14); color:var(--green); border-color:rgba(63,185,80,.4); }
+
+  .hashWrap { display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:12px; }
+  @media (max-width:820px) { .hashWrap { grid-template-columns:1fr; } }
+  .lockerBox { background:var(--bg); border:1px dashed var(--border); border-radius:10px; padding:12px; }
+  .lockerHead { display:flex; justify-content:space-between; align-items:baseline; margin-bottom:8px; font-size:13.5px; }
+  .lockerHead b { font-size:14.5px; }
+  .loadTag { font-size:11.5px; font-weight:700; padding:2px 9px; border-radius:10px; font-variant-numeric:tabular-nums; }
+  .loadTag.ok { background:rgba(63,185,80,.14); color:var(--green); border:1px solid rgba(63,185,80,.35); }
+  .loadTag.warn { background:rgba(210,153,34,.14); color:var(--yellow); border:1px solid rgba(210,153,34,.35); }
+  .loadTag.full { background:rgba(248,81,73,.15); color:var(--red); border:1px solid rgba(248,81,73,.4); }
+
+  .slotRow { display:flex; align-items:stretch; gap:6px; margin-bottom:6px; }
+  .slotIdx { width:22px; flex-shrink:0; font-size:11.5px; color:var(--muted); display:flex; align-items:center; justify-content:center; font-family:Consolas, monospace; }
+  .slotBox {
+    flex:1; min-height:34px; border:1.5px solid var(--border); border-radius:7px; background:var(--panel2);
+    display:flex; align-items:center; gap:4px; padding:4px 8px; flex-wrap:wrap; transition:all .2s;
+  }
+  .slotBox.hi { border-color:var(--yellow); box-shadow:0 0 8px rgba(210,153,34,.3); }
+  .slotBox.tomb { border-color:var(--red); background:rgba(248,81,73,.07); }
+  .keyChip { background:var(--bg); border:1px solid var(--border); border-radius:5px; padding:2px 7px; font-family:Consolas, monospace; font-size:12px; }
+  .keyChip.found { border-color:var(--green); color:var(--green); }
+  .tombLbl { font-size:11px; color:var(--red); font-style:italic; }
+  .emptyLbl { font-size:11px; color:var(--muted); font-style:italic; }
+
+  .note { font-size:13.5px; color:var(--muted); min-height:22px; margin-bottom:8px; line-height:1.55; }
+  .note b { color:var(--text); }
+
+  .tabs { display:flex; gap:6px; margin-bottom:10px; }
+  .tab { background:var(--panel2); color:var(--muted); border:1px solid var(--border); padding:6px 16px;
+    border-radius:8px 8px 0 0; font-size:13px; font-weight:700; cursor:pointer; font-family:inherit; }
+  .tab.on { background:var(--accent); color:#0d1117; border-color:var(--accent); }
+  .codeWrap { display:none; } .codeWrap.on { display:block; }
+  .code { font-family:'Cascadia Code', Consolas, monospace; font-size:12.5px; line-height:1.55;
+    background:var(--panel2); border-radius:10px; padding:14px 0; overflow-x:auto; }
+  .code .line { padding:3px 14px; white-space:pre; }
+  .kw { color:#ff7b72; } .fn { color:#d2a8ff; } .num2 { color:#79c0ff; } .cm { color:#6e7681; }
+
+  table.cmp { width:100%; border-collapse:collapse; font-size:13.5px; }
+  table.cmp th, table.cmp td { text-align:left; padding:9px 10px; border-bottom:1px solid var(--border); }
+  table.cmp th { color:var(--muted); font-size:12px; text-transform:uppercase; letter-spacing:.4px; }
+  .hl { color:var(--green); font-weight:700; }
+  .bad { color:var(--accent2); font-weight:700; }
+
+  @media (max-width:640px) {
+    header { padding:12px 16px; } .logo { font-size:19px; }
+    .container { padding:16px 14px 40px; }
+    .card, .intro { padding:16px; }
+    h1, .intro h1 { font-size:20px; }
+    .controls { flex-direction:column; align-items:stretch; }
+    button, input[type=text] { width:100%; }
+  }
+</style>
+<script>if(location.protocol.startsWith("http")){var m=document.createElement("link");m.rel="manifest";m.href="manifest.json";document.head.appendChild(m);}</script>
+<meta name="theme-color" content="#0d1117">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+</head>
+<body>
+
+<header>
+  <a href="mindaicode-home.html" style="text-decoration:none; color:inherit;">
+    <div class="logo">🧠 MindAI<span>Code</span></div>
+  </a>
+  <div class="tagline">
+    <a href="mindaicode-course-path.html" style="color:var(--purple); font-weight:600;">🗺️ Course path</a>
+    <a href="mindaicode-home.html">🏠 All algorithms</a>
+  </div>
+</header>
+
+<div class="container">
+
+  <div class="intro">
+    <h1>🔐 Hash Tables: Chaining vs Open Addressing</h1>
+    <p>A hash table is a row of numbered lockers. A <strong>hash function</strong> turns any key into a locker number in O(1) — no searching required. The interesting part is what happens when two different keys hash to the <strong>same locker</strong>. That's a collision, and there are two classic ways to handle it.</p>
+    <p style="margin-bottom:0; color:var(--muted); font-size:14px;">Module 4 · Every key you type below is inserted into <strong>both</strong> structures at once, so you can watch them handle the exact same collision differently.</p>
+  </div>
+
+  <div class="card">
+    <h2 class="secH">🔑 Try it</h2>
+    <p class="subtitle">Table size starts at 7 lockers. Hash function: add up the character codes of the key, then take the remainder when divided by the table size.</p>
+    <div class="controls">
+      <label class="lbl" for="keyInput">Key</label>
+      <input type="text" id="keyInput" maxlength="12" placeholder="e.g. cat">
+      <button id="insertBtn">➕ Insert</button>
+      <button id="searchBtn" class="secondary">🔍 Search</button>
+      <button id="deleteBtn" class="secondary">🗑 Delete</button>
+      <button id="resizeBtn" class="secondary">📐 Resize (rehash)</button>
+      <button id="clearBtn" class="danger">Clear all</button>
+    </div>
+
+    <div class="hashWrap">
+      <div class="lockerBox">
+        <div class="lockerHead"><b>⛓️ Separate Chaining <span id="chainBadge" class="badgeLbl">not earned</span></b><span class="loadTag ok" id="chainLoad">0/7</span></div>
+        <div id="chainSlots"></div>
+      </div>
+      <div class="lockerBox">
+        <div class="lockerHead"><b>➡️ Open Addressing <span id="openBadge" class="badgeLbl">not earned</span></b><span class="loadTag ok" id="openLoad">0/7</span></div>
+        <div id="openSlots"></div>
+      </div>
+    </div>
+    <div class="note" id="chainNote">Chaining note appears here.</div>
+    <div class="note" id="openNote">Open addressing note appears here.</div>
+
+    <div class="tabs" style="margin-top:16px;">
+      <button class="tab on" data-target="hash-py" type="button">Python</button>
+      <button class="tab" data-target="hash-java" type="button">Java</button>
+    </div>
+    <div class="codeWrap on" id="hash-py">
+      <div class="code">
+        <div class="line"><span class="kw">def</span> <span class="fn">hash_code</span>(key, table_size):</div>
+        <div class="line">    <span class="kw">return</span> sum(ord(ch) <span class="kw">for</span> ch <span class="kw">in</span> key) % table_size</div>
+        <div class="line"></div>
+        <div class="line"><span class="cm"># Chaining: each slot holds a list</span></div>
+        <div class="line">table[hash_code(key, n)].append(key)</div>
+        <div class="line"></div>
+        <div class="line"><span class="cm"># Open addressing (linear probing): find the next free slot</span></div>
+        <div class="line">i = hash_code(key, n)</div>
+        <div class="line"><span class="kw">while</span> table[i] <span class="kw">is not None</span> <span class="kw">and</span> table[i] != TOMBSTONE:</div>
+        <div class="line">    i = (i + <span class="num2">1</span>) % n         <span class="cm"># probe forward, wrapping around</span></div>
+        <div class="line">table[i] = key</div>
+      </div>
+    </div>
+    <div class="codeWrap" id="hash-java">
+      <div class="code">
+        <div class="line"><span class="kw">int</span> <span class="fn">hashCode</span>(String key, <span class="kw">int</span> n) {</div>
+        <div class="line">    <span class="kw">int</span> sum = <span class="num2">0</span>;</div>
+        <div class="line">    <span class="kw">for</span> (<span class="kw">char</span> c : key.toCharArray()) sum += c;</div>
+        <div class="line">    <span class="kw">return</span> sum % n;</div>
+        <div class="line">}</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>📈 Chaining vs Open Addressing</h3>
+    <div style="overflow-x:auto;">
+      <table class="cmp">
+        <thead><tr><th>Property</th><th>Separate Chaining</th><th>Open Addressing</th></tr></thead>
+        <tbody>
+          <tr><td>What lives in a slot</td><td>A list of every key that hashed there</td><td>At most one key</td></tr>
+          <tr><td>Can the table ever be "full"?</td><td class="num hl">No — lists just grow</td><td class="num bad">Yes — capped at table size</td></tr>
+          <tr><td>On a collision</td><td>Append to that slot's list</td><td>Probe forward to the next open slot</td></tr>
+          <tr><td>Deleting a key</td><td>Remove it from the list</td><td>Must leave a <b>tombstone</b>, not an empty slot</td></tr>
+          <tr><td>Average lookup time</td><td class="num hl">O(1) if load factor stays low</td><td class="num hl">O(1) if load factor stays low</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p style="font-size:13.5px; color:var(--muted); margin-top:12px; line-height:1.65;">
+      That tombstone rule is the part everyone forgets: if deleting simply cleared a slot to empty, a later search could stop early at that empty slot and wrongly report "not found" for a key that actually probed <em>past</em> it and landed further along.
+    </p>
+  </div>
+
+  <div class="card">
+    <h3>🧠 Quick check</h3>
+    <div id="quizQ" style="font-size:15px; margin-bottom:12px;"></div>
+    <div id="quizOpts"></div>
+    <div id="quizFb" style="font-size:13.5px; margin-top:10px; color:var(--muted); min-height:20px; line-height:1.6;"></div>
+  </div>
+
+</div>
+
+<script>
+/* ================= HASH FUNCTION ================= */
+function hashCode(key, tableSize) {
+  let sum = 0;
+  for (let i = 0; i < key.length; i++) sum += key.charCodeAt(i);
+  return sum % tableSize;
+}
+const TOMBSTONE = '__TOMBSTONE__';
+
+/* ================= STATE ================= */
+let tableSize = 7;
+let chainTable = [];   // array of arrays
+let openTable = [];    // array of null | {key} | TOMBSTONE
+let chainInsertCount = 0, chainSearchCount = 0, chainDeleteCount = 0;
+let openInsertCount = 0, openSearchCount = 0, openDeleteCount = 0;
+let didResize = false;
+
+function resetTables(size) {
+  tableSize = size;
+  chainTable = Array.from({ length: tableSize }, () => []);
+  openTable = Array.from({ length: tableSize }, () => null);
+}
+resetTables(7);
+
+/* ================= CORE OPS ================= */
+function chainInsert(key) {
+  const h = hashCode(key, tableSize);
+  if (chainTable[h].includes(key)) return { ok:false, reason:'duplicate', slot:h };
+  const collided = chainTable[h].length > 0;
+  chainTable[h].push(key);
+  return { ok:true, slot:h, collided };
+}
+function chainSearch(key) {
+  const h = hashCode(key, tableSize);
+  const idx = chainTable[h].indexOf(key);
+  return { found: idx !== -1, slot:h };
+}
+function chainDelete(key) {
+  const h = hashCode(key, tableSize);
+  const idx = chainTable[h].indexOf(key);
+  if (idx === -1) return { ok:false, slot:h };
+  chainTable[h].splice(idx, 1);
+  return { ok:true, slot:h };
+}
+
+function openInsert(key) {
+  const h = hashCode(key, tableSize);
+  let probe = h, steps = 0, firstTomb = -1;
+  while (steps < tableSize) {
+    const cell = openTable[probe];
+    if (cell === null) {
+      const target = firstTomb !== -1 ? firstTomb : probe;
+      openTable[target] = { key };
+      return { ok:true, slot:target, home:h, probes:steps, collided: steps > 0 || firstTomb !== -1 };
+    }
+    if (cell === TOMBSTONE) { if (firstTomb === -1) firstTomb = probe; }
+    else if (cell.key === key) { return { ok:false, reason:'duplicate', slot:probe }; }
+    probe = (probe + 1) % tableSize;
+    steps++;
+  }
+  if (firstTomb !== -1) { openTable[firstTomb] = { key }; return { ok:true, slot:firstTomb, home:h, probes:steps, collided:true }; }
+  return { ok:false, reason:'full', slot:h };
+}
+function openSearch(key) {
+  const h = hashCode(key, tableSize);
+  let probe = h, steps = 0;
+  while (steps < tableSize) {
+    const cell = openTable[probe];
+    if (cell === null) return { found:false, slot:probe, probes:steps };
+    if (cell !== TOMBSTONE && cell.key === key) return { found:true, slot:probe, probes:steps };
+    probe = (probe + 1) % tableSize;
+    steps++;
+  }
+  return { found:false, slot:-1, probes:steps };
+}
+function openDelete(key) {
+  const res = openSearch(key);
+  if (!res.found) return { ok:false };
+  openTable[res.slot] = TOMBSTONE;
+  return { ok:true, slot:res.slot };
+}
+
+/* ================= RENDER ================= */
+function loadClass(n, size) {
+  const ratio = n / size;
+  if (ratio >= 1) return 'full';
+  if (ratio >= 0.7) return 'warn';
+  return 'ok';
+}
+function renderChain(hiSlot) {
+  const box = document.getElementById('chainSlots');
+  box.innerHTML = '';
+  let n = 0;
+  chainTable.forEach((bucket, i) => {
+    n += bucket.length;
+    const row = document.createElement('div');
+    row.className = 'slotRow';
+    const slotEl = document.createElement('div');
+    slotEl.className = 'slotBox' + (i === hiSlot ? ' hi' : '');
+    slotEl.innerHTML = bucket.length
+      ? bucket.map(k => `<span class="keyChip">${k}</span>`).join('')
+      : '<span class="emptyLbl">empty</span>';
+    row.innerHTML = `<div class="slotIdx">${i}</div>`;
+    row.appendChild(slotEl);
+    box.appendChild(row);
+  });
+  const tag = document.getElementById('chainLoad');
+  tag.textContent = `${n}/${tableSize}`;
+  tag.className = 'loadTag ' + loadClass(n, tableSize);
+}
+function renderOpen(hiSlot) {
+  const box = document.getElementById('openSlots');
+  box.innerHTML = '';
+  let n = 0;
+  openTable.forEach((cell, i) => {
+    const row = document.createElement('div');
+    row.className = 'slotRow';
+    const slotEl = document.createElement('div');
+    let cls = 'slotBox' + (i === hiSlot ? ' hi' : '');
+    let inner = '<span class="emptyLbl">empty</span>';
+    if (cell === TOMBSTONE) { cls += ' tomb'; inner = '<span class="tombLbl">tombstone</span>'; }
+    else if (cell !== null) { inner = `<span class="keyChip">${cell.key}</span>`; n++; }
+    slotEl.className = cls;
+    slotEl.innerHTML = inner;
+    row.innerHTML = `<div class="slotIdx">${i}</div>`;
+    row.appendChild(slotEl);
+    box.appendChild(row);
+  });
+  const tag = document.getElementById('openLoad');
+  tag.textContent = `${n}/${tableSize}`;
+  tag.className = 'loadTag ' + loadClass(n, tableSize);
+}
+function renderAll(hiChain, hiOpen) { renderChain(hiChain); renderOpen(hiOpen); }
+
+/* ================= BADGES ================= */
+function readFlag(key) { try { return localStorage.getItem(key) === '1'; } catch (e) { return false; } }
+function setFlag(key) { try { localStorage.setItem(key, '1'); } catch (e) {} }
+function updateBadgeLabels() {
+  const map = { chainBadge: 'mhsh_badge_chain', openBadge: 'mhsh_badge_open' };
+  Object.entries(map).forEach(([elId, key]) => {
+    const el = document.getElementById(elId);
+    const on = readFlag(key);
+    el.textContent = on ? 'earned ✓' : 'not earned';
+    el.classList.toggle('on', on);
+  });
+}
+function maybeChainBadge() {
+  if (chainInsertCount >= 1 && chainSearchCount >= 1 && chainDeleteCount >= 1) { setFlag('mhsh_badge_chain'); updateBadgeLabels(); }
+}
+function maybeOpenBadge() {
+  if (openInsertCount >= 1 && openSearchCount >= 1 && openDeleteCount >= 1) { setFlag('mhsh_badge_open'); updateBadgeLabels(); }
+}
+
+/* ================= CONTROLS ================= */
+document.getElementById('insertBtn').onclick = () => {
+  const inp = document.getElementById('keyInput');
+  const key = inp.value.trim();
+  if (!key) return;
+  const c = chainInsert(key);
+  const o = openInsert(key);
+  if (c.ok) chainInsertCount++;
+  if (o.ok) openInsertCount++;
+  renderAll(c.slot, o.ok ? o.slot : -1);
+  document.getElementById('chainNote').innerHTML = c.ok
+    ? (c.collided ? `<b>${key}</b> hashed to slot <b>${c.slot}</b>, which already had a key — appended to that slot's chain.` : `<b>${key}</b> inserted at slot <b>${c.slot}</b>.`)
+    : `<b>${key}</b> is already in the chaining table — not inserted again.`;
+  document.getElementById('openNote').innerHTML = o.ok
+    ? (o.probes > 0 ? `<b>${key}</b> hashed to slot <b>${o.home}</b> (occupied), probed forward <b>${o.probes}</b> step(s) to the free slot <b>${o.slot}</b>.` : `<b>${key}</b> inserted at slot <b>${o.slot}</b>.`)
+    : (o.reason === 'full' ? `Open addressing table is <b>full</b> — ${key} could not be inserted. Chaining still has room because its lists just grow. Try Resize.` : `<b>${key}</b> is already in the open-addressing table.`);
+  maybeChainBadge(); maybeOpenBadge();
+  inp.value = '';
+};
+document.getElementById('searchBtn').onclick = () => {
+  const key = document.getElementById('keyInput').value.trim();
+  if (!key) return;
+  const c = chainSearch(key);
+  const o = openSearch(key);
+  chainSearchCount++; openSearchCount++;
+  renderAll(c.slot, o.slot);
+  document.getElementById('chainNote').innerHTML = c.found
+    ? `Found <b>${key}</b> in the chain at slot <b>${c.slot}</b>.`
+    : `<b>${key}</b> not found — its slot's chain was checked and it isn't there.`;
+  document.getElementById('openNote').innerHTML = o.found
+    ? `Found <b>${key}</b> at slot <b>${o.slot}</b> after <b>${o.probes}</b> probe(s).`
+    : `<b>${key}</b> not found — probed <b>${o.probes}</b> step(s) until hitting a truly empty slot.`;
+  maybeChainBadge(); maybeOpenBadge();
+};
+document.getElementById('deleteBtn').onclick = () => {
+  const key = document.getElementById('keyInput').value.trim();
+  if (!key) return;
+  const c = chainDelete(key);
+  const o = openDelete(key);
+  if (c.ok) chainDeleteCount++;
+  if (o.ok) openDeleteCount++;
+  renderAll(c.ok ? c.slot : -1, o.ok ? o.slot : -1);
+  document.getElementById('chainNote').innerHTML = c.ok
+    ? `Removed <b>${key}</b> from the chain at slot <b>${c.slot}</b>.`
+    : `<b>${key}</b> wasn't in the chaining table.`;
+  document.getElementById('openNote').innerHTML = o.ok
+    ? `Removed <b>${key}</b> from slot <b>${o.slot}</b> — left a <b>tombstone</b> there so later searches still probe past it correctly.`
+    : `<b>${key}</b> wasn't in the open-addressing table.`;
+  maybeChainBadge(); maybeOpenBadge();
+};
+document.getElementById('resizeBtn').onclick = () => {
+  const liveChain = chainTable.flat();
+  const liveOpen = openTable.filter(c => c && c !== TOMBSTONE).map(c => c.key);
+  const newSize = tableSize * 2 + 1; // 7 -> 15, keeps things simple and always grows
+  resetTables(newSize);
+  liveChain.forEach(k => chainInsert(k));
+  liveOpen.forEach(k => openInsert(k));
+  didResize = true;
+  try { localStorage.setItem('mhsh_badge_resize', '1'); } catch (e) {}
+  renderAll(-1, -1);
+  document.getElementById('chainNote').innerHTML = `Resized to <b>${newSize}</b> slots and rehashed every key — chain lengths shrink back down.`;
+  document.getElementById('openNote').innerHTML = `Resized to <b>${newSize}</b> slots and rehashed every key — plenty of room again, and tombstones are gone.`;
+};
+document.getElementById('clearBtn').onclick = () => {
+  resetTables(7);
+  chainInsertCount = chainSearchCount = chainDeleteCount = 0;
+  openInsertCount = openSearchCount = openDeleteCount = 0;
+  renderAll(-1, -1);
+  document.getElementById('chainNote').innerHTML = 'Cleared.';
+  document.getElementById('openNote').innerHTML = 'Cleared.';
+};
+
+/* ================= CODE TABS ================= */
+document.querySelectorAll('.tabs').forEach(group => {
+  const wraps = [];
+  let el = group.nextElementSibling;
+  while (el && el.classList.contains('codeWrap')) { wraps.push(el); el = el.nextElementSibling; }
+  group.querySelectorAll('.tab').forEach(tab => {
+    tab.onclick = () => {
+      group.querySelectorAll('.tab').forEach(t => t.classList.toggle('on', t === tab));
+      wraps.forEach(w => w.classList.toggle('on', w.id === tab.dataset.target));
+    };
+  });
+});
+
+/* ================= QUIZ ================= */
+const quiz = [
+  { q:'Two different keys hash to the same slot. What is this called?',
+    opts:['A collision','A tombstone','A resize'],
+    ans:0, why:'Whenever two distinct keys land on the same slot, that\'s a collision — and every hash table implementation needs a strategy for handling it.' },
+  { q:'In a table using open addressing, why can it become completely "full" in a way that chaining never does?',
+    opts:['Open addressing keys take up more memory','A slot in open addressing can only ever hold one key, so once every slot has something in it, there\'s nowhere left to probe','Open addressing has a hard-coded limit of 7 keys'],
+    ans:1, why:'Chaining just appends to a list, so a slot can absorb any number of collisions. Open addressing stores directly in the slots themselves, so once all slots are occupied there is genuinely no room left — until you resize.' },
+  { q:'Why must deleting a key in open addressing leave behind a tombstone instead of just clearing the slot?',
+    opts:['Tombstones are required by law in computer science','Clearing the slot to empty could make a later search stop too early and miss a key that probed past it','Tombstones make the table run faster'],
+    ans:1, why:'Search relies on probing forward until it hits a truly empty slot. If a deleted slot were cleared to empty, a search for a different key that originally collided and got placed further along would stop at that gap and incorrectly report "not found."' },
+  { q:'What does "load factor" measure?',
+    opts:['How many CPU cores the hash table uses','The number of stored keys divided by the table size','The length of the longest key stored'],
+    ans:1, why:'Load factor = (number of keys) / (table size). It\'s the standard way to track how "full" a hash table is getting, and it\'s the number you watch to decide when to resize.' },
+  { q:'What is the average-case time complexity of insert, search, and delete in a well-sized hash table?',
+    opts:['O(n)', 'O(log n)', 'O(1)'],
+    ans:2, why:'As long as the load factor is kept reasonably low (so collisions stay rare and chains/probe sequences stay short), all three core operations run in constant time on average — this is the whole appeal of hash tables.' },
+];
+let qi = 0, qCorrect = 0;
+function showQuiz() {
+  const item = quiz[qi];
+  document.getElementById('quizQ').innerHTML = `<strong>Q${qi + 1}/${quiz.length}:</strong> ${item.q}`;
+  const box = document.getElementById('quizOpts');
+  box.innerHTML = '';
+  document.getElementById('quizFb').textContent = '';
+  item.opts.forEach((o, i) => {
+    const b = document.createElement('button');
+    b.className = 'secondary';
+    b.style.cssText = 'display:block; width:100%; text-align:left; margin-bottom:8px; font-weight:500;';
+    b.textContent = o;
+    b.onclick = () => {
+      box.querySelectorAll('button').forEach(x => x.disabled = true);
+      const ok = i === item.ans;
+      if (ok) qCorrect++;
+      b.style.borderColor = ok ? 'var(--green)' : 'var(--red)';
+      b.style.background = ok ? 'rgba(63,185,80,.15)' : 'rgba(248,81,73,.15)';
+      if (!ok) {
+        const right = box.children[item.ans];
+        right.style.borderColor = 'var(--green)';
+        right.style.background = 'rgba(63,185,80,.15)';
+      }
+      let tail = '';
+      if (qi < quiz.length - 1) tail = ' <a href="#" id="nq" style="color:var(--accent)">Next →</a>';
+      else {
+        tail = ` 🎉 Done — ${qCorrect}/${quiz.length} correct.` +
+          (qCorrect < quiz.length ? ' <a href="#" id="rq" style="color:var(--accent)">Try again</a>' : '');
+        if (qCorrect === quiz.length) { setFlag('mhsh_badge_quiz'); updateBadgeLabels(); }
+      }
+      document.getElementById('quizFb').innerHTML = (ok ? '✅ Correct! ' : '❌ Not quite. ') + item.why + tail;
+      const nq = document.getElementById('nq');
+      if (nq) nq.onclick = e => { e.preventDefault(); qi++; showQuiz(); };
+      const rq = document.getElementById('rq');
+      if (rq) rq.onclick = e => { e.preventDefault(); qi = 0; qCorrect = 0; showQuiz(); };
+    };
+    box.appendChild(b);
+  });
+}
+
+renderAll(-1, -1);
+updateBadgeLabels();
+showQuiz();
+</script>
+<script>
+/* ===== Offline support (works when served over http/https) ===== */
+if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
+  window.addEventListener('load', function () {
+    navigator.serviceWorker.register('sw.js').catch(function () { /* offline mode simply unavailable */ });
+  });
+}
+</script>
+<script src="firebase-config.js"></script>
+<script src="mindaicode-auth.js"></script>
+</body>
+</html>

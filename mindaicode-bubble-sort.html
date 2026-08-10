@@ -1,0 +1,1719 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MindAICode — Bubble Sort Visualizer</title>
+<style>
+  :root {
+    --bg: #0d1117;
+    --panel: #161b22;
+    --panel2: #1c2333;
+    --accent: #58a6ff;
+    --accent2: #f78166;
+    --purple: #d2a8ff;
+    --green: #3fb950;
+    --yellow: #d29922;
+    --text: #e6edf3;
+    --muted: #8b949e;
+    --border: #30363d;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+  }
+  header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 14px 28px;
+    background: var(--panel);
+    border-bottom: 1px solid var(--border);
+  }
+  .logo { font-size: 22px; font-weight: 800; letter-spacing: .5px; }
+  .logo span { color: var(--accent); }
+  .tagline { color: var(--muted); font-size: 13px; }
+
+  .container {
+    max-width: 1360px; margin: 0 auto; padding: 24px;
+    display: grid; grid-template-columns: 1fr 440px; gap: 20px;
+  }
+  @media (max-width: 900px) { .container { grid-template-columns: 1fr; } }
+
+  .card {
+    background: var(--panel); border: 1px solid var(--border);
+    border-radius: 12px; padding: 20px;
+  }
+  h1 { font-size: 24px; margin-bottom: 6px; }
+  h3 { font-size: 15px; margin-bottom: 10px; }
+  .subtitle { color: var(--muted); font-size: 14px; margin-bottom: 16px; }
+  .full { grid-column: 1 / -1; }
+
+  /* Beginner intro */
+  .intro {
+    grid-column: 1 / -1;
+    background: linear-gradient(135deg, rgba(88,166,255,.10), rgba(63,185,80,.08));
+    border: 1px solid var(--border); border-radius: 12px;
+    padding: 22px 24px;
+  }
+  .intro h2 { font-size: 20px; margin-bottom: 8px; }
+  .intro p { font-size: 15px; line-height: 1.7; margin-bottom: 10px; }
+  .intro .analogy {
+    background: var(--panel2); border-left: 4px solid var(--green);
+    padding: 12px 16px; border-radius: 8px; margin: 12px 0;
+  }
+  .steps3 { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 12px; }
+  .step3 {
+    flex: 1; min-width: 180px; background: var(--panel2);
+    border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px;
+    font-size: 13.5px; line-height: 1.5; color: var(--muted);
+  }
+  .step3 b { color: var(--accent); display: block; margin-bottom: 4px; font-size: 14px; }
+
+  /* Badges */
+  .badges { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+  .badge {
+    display: flex; align-items: center; gap: 6px;
+    background: var(--panel2); border: 1px solid var(--border);
+    border-radius: 20px; padding: 6px 14px;
+    font-size: 13px; color: var(--muted);
+    filter: grayscale(1); opacity: .55;
+    transition: all .4s;
+  }
+  .badge.earned {
+    filter: none; opacity: 1;
+    color: var(--text); border-color: var(--yellow);
+    background: rgba(210,153,34,.12);
+    box-shadow: 0 0 12px rgba(210,153,34,.25);
+  }
+
+  /* Stage */
+  #stage {
+    position: relative; height: 340px;
+    background: var(--panel2);
+    border: 1px solid var(--border); border-radius: 10px;
+    overflow: hidden; margin-bottom: 16px;
+  }
+  .ball {
+    position: absolute; bottom: 30px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 700; color: #fff;
+    background: radial-gradient(circle at 32% 30%, #79b8ff, #1f6feb 70%);
+    box-shadow: 0 6px 14px rgba(0,0,0,.45), inset 0 -6px 10px rgba(0,0,0,.25);
+    transition: left 1s cubic-bezier(.34,1.56,.64,1), bottom .4s ease, background .3s, transform .3s;
+    user-select: none;
+  }
+  .ball.comparing {
+    background: radial-gradient(circle at 32% 30%, #ffd77a, #d29922 70%);
+    transform: translateY(-14px);
+  }
+  .ball.swapping {
+    background: radial-gradient(circle at 32% 30%, #ffab91, #f4511e 70%);
+    transform: translateY(-24px) scale(1.08);
+  }
+  .ball.sorted {
+    background: radial-gradient(circle at 32% 30%, #7ee787, #2ea043 70%);
+  }
+  /* Bar-chart mode */
+  .ball.bar-mode {
+    border-radius: 6px 6px 2px 2px;
+    align-items: flex-start; padding-top: 6px;
+    background: linear-gradient(180deg, #79b8ff, #1f6feb 85%);
+    box-shadow: 0 4px 10px rgba(0,0,0,.4);
+  }
+  .ball.bar-mode.comparing {
+    background: linear-gradient(180deg, #ffd77a, #d29922 85%);
+    transform: translateY(-10px);
+  }
+  .ball.bar-mode.swapping {
+    background: linear-gradient(180deg, #ffab91, #f4511e 85%);
+    transform: translateY(-16px) scale(1.04, 1);
+  }
+  .ball.bar-mode.sorted {
+    background: linear-gradient(180deg, #7ee787, #2ea043 85%);
+  }
+  /* Student mode — a small head + a body bar whose HEIGHT shows the value */
+  .ball.student-mode {
+    background: transparent; box-shadow: none;
+    flex-direction: column; justify-content: flex-end; align-items: center;
+    gap: 0; padding-bottom: 0;
+    border: none; border-radius: 0;
+  }
+  .student-head {
+    width: 28px; height: 28px; border-radius: 50%; flex-shrink: 0;
+    background: radial-gradient(circle at 35% 30%, #ffe0b8, #e8a765 75%);
+    box-shadow: 0 2px 4px rgba(0,0,0,.35);
+    position: relative; margin-bottom: 3px; z-index: 1;
+    transition: box-shadow .3s;
+  }
+  .student-head::before {
+    /* eyes */
+    content: ''; position: absolute; top: 13px; left: 7px;
+    width: 3px; height: 3px; border-radius: 50%;
+    background: #3a2a1a; box-shadow: 11px 0 0 #3a2a1a;
+  }
+  .student-head::after {
+    /* smile */
+    content: ''; position: absolute; top: 17px; left: 9px;
+    width: 10px; height: 5px; border-radius: 0 0 10px 10px;
+    border-bottom: 2px solid #3a2a1a; border-left: none; border-right: none;
+  }
+  .student-hair {
+    position: absolute; top: -7px; left: 50%; transform: translateX(-50%);
+    width: 26px; height: 17px;
+    border-radius: 50% 50% 4px 4px / 65% 65% 4px 4px;
+    background: var(--hair-color, #4a3222);
+    z-index: 2;
+  }
+  .student-hair::before {
+    /* side fringe so it doesn't look like a floating cap */
+    content: ''; position: absolute; bottom: -3px; left: -1px;
+    width: 6px; height: 8px; border-radius: 0 0 6px 6px;
+    background: var(--hair-color, #4a3222);
+  }
+  .student-hair::after {
+    content: ''; position: absolute; bottom: -3px; right: -1px;
+    width: 6px; height: 8px; border-radius: 0 0 6px 6px;
+    background: var(--hair-color, #4a3222);
+  }
+  /* Torso: trapezoid (shoulders wide, waist narrow) instead of a plain rectangle */
+  .student-body {
+    width: 100%; flex: 1; min-height: 22px;
+    background: linear-gradient(180deg, #79b8ff, #1f6feb 88%);
+    clip-path: polygon(10% 0%, 90% 0%, 78% 100%, 22% 100%);
+    display: flex; align-items: flex-start; justify-content: center;
+    padding-top: 6px; transition: background .3s;
+    position: relative;
+  }
+  /* Legs: two separate bars with a gap, so it doesn't read as one solid block */
+  .student-legs {
+    width: 62%; height: 14px; flex-shrink: 0;
+    background: linear-gradient(180deg, #1f6feb, #16468f);
+    -webkit-mask-image: linear-gradient(to right, #000 0 32%, transparent 32% 68%, #000 68% 100%);
+            mask-image: linear-gradient(to right, #000 0 32%, transparent 32% 68%, #000 68% 100%);
+    border-radius: 0 0 4px 4px;
+    transition: background .3s;
+  }
+  .student-tag {
+    font-size: 11px; font-weight: 800; color: #fff;
+    text-shadow: 0 1px 2px rgba(0,0,0,.4);
+  }
+  .ball.student-mode.comparing { transform: translateY(-10px); }
+  .ball.student-mode.comparing .student-head { box-shadow: 0 0 0 3px var(--yellow); }
+  .ball.student-mode.comparing .student-body { background: linear-gradient(180deg, #ffd77a, #d29922 88%); }
+  .ball.student-mode.comparing .student-legs { background: linear-gradient(180deg, #d29922, #a3720f); }
+  .ball.student-mode.swapping { transform: translateY(-16px) scale(1.05); }
+  .ball.student-mode.swapping .student-head { box-shadow: 0 0 0 3px var(--accent2); }
+  .ball.student-mode.swapping .student-body { background: linear-gradient(180deg, #ffab91, #f4511e 88%); }
+  .ball.student-mode.swapping .student-legs { background: linear-gradient(180deg, #f4511e, #b8330c); }
+  .ball.student-mode.sorted .student-head { box-shadow: 0 0 0 3px var(--green); }
+  .ball.student-mode.sorted .student-body { background: linear-gradient(180deg, #7ee787, #2ea043 88%); }
+  .ball.student-mode.sorted .student-legs { background: linear-gradient(180deg, #2ea043, #1c6b2b); }
+  #teacher {
+    position: absolute; top: 10px; font-size: 32px; line-height: 1;
+    transition: left 1s cubic-bezier(.34,1.56,.64,1), opacity .3s;
+    opacity: 0; pointer-events: none; z-index: 6;
+    filter: drop-shadow(0 3px 5px rgba(0,0,0,.5));
+  }
+  #teacher::after {
+    content: '👀 organizing…'; position: absolute; top: -18px; left: 50%;
+    transform: translateX(-50%); font-size: 10px; white-space: nowrap;
+    color: var(--muted); font-weight: 600;
+  }
+  #floor {
+    position: absolute; bottom: 0; left: 0; right: 0; height: 26px;
+    background: linear-gradient(#21262d, #161b22);
+    border-top: 1px solid var(--border);
+  }
+  #passBadge {
+    position: absolute; top: 12px; left: 14px;
+    background: rgba(88,166,255,.12); color: var(--accent);
+    border: 1px solid rgba(88,166,255,.35);
+    padding: 4px 12px; border-radius: 20px; font-size: 13px; font-weight: 600;
+  }
+  #streakBadge {
+    position: absolute; top: 12px; right: 14px;
+    background: rgba(210,153,34,.12); color: var(--yellow);
+    border: 1px solid rgba(210,153,34,.35);
+    padding: 4px 12px; border-radius: 20px; font-size: 13px; font-weight: 600;
+    display: none;
+  }
+
+  /* Controls */
+  .controls {
+    display: flex; flex-wrap: wrap; gap: 10px; align-items: center;
+    margin-bottom: 14px;
+  }
+  button {
+    background: var(--accent); color: #0d1117; border: none;
+    padding: 9px 18px; border-radius: 8px; font-size: 14px; font-weight: 700;
+    cursor: pointer; transition: filter .15s, transform .1s;
+  }
+  button:hover { filter: brightness(1.15); }
+  button:active { transform: scale(.96); }
+  button.secondary { background: var(--panel2); color: var(--text); border: 1px solid var(--border); }
+  button.on { background: var(--yellow); color: #0d1117; border-color: var(--yellow); }
+  button:disabled { opacity: .4; cursor: not-allowed; }
+  .speed { display: flex; align-items: center; gap: 8px; color: var(--muted); font-size: 13px; margin-left: auto; }
+  input[type=range] { accent-color: var(--accent); width: 120px; }
+  input[type=text] {
+    background: var(--panel2); border: 1px solid var(--border); color: var(--text);
+    padding: 9px 12px; border-radius: 8px; font-size: 14px; width: 220px;
+  }
+  select {
+    background: var(--panel2); border: 1px solid var(--border); color: var(--text);
+    padding: 8px 10px; border-radius: 8px; font-size: 14px;
+  }
+  .lab-label { font-size: 13px; color: var(--muted); font-weight: 600; }
+
+  /* Grouped toolbar */
+  .toolbar { display: flex; flex-direction: column; gap: 10px; margin-bottom: 14px; }
+  .tgroup {
+    display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+    padding: 10px 14px; background: var(--panel2);
+    border: 1px solid var(--border); border-radius: 10px;
+  }
+  .tlabel {
+    font-size: 12px; font-weight: 700; color: var(--muted);
+    text-transform: uppercase; letter-spacing: .4px;
+    min-width: 96px; flex-shrink: 0;
+  }
+  .tbtns { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; flex: 1; }
+  .tbtns.nowrap { flex-wrap: nowrap; overflow-x: auto; padding-bottom: 2px; }
+  .tbtns.nowrap button, .tbtns.nowrap select { flex-shrink: 0; }
+
+  /* Narration */
+  #narration {
+    background: var(--panel2); border-left: 4px solid var(--accent);
+    padding: 12px 16px; border-radius: 8px;
+    font-size: 15px; min-height: 48px;
+  }
+  #narration button { margin: 6px 8px 0 0; padding: 7px 16px; }
+
+  /* Code panel */
+  .code {
+    font-family: 'Cascadia Code', 'Fira Code', Consolas, monospace;
+    font-size: 14px; line-height: 1.5;
+    background: var(--panel2); border-radius: 10px;
+    padding: 14px 0; overflow-x: auto; max-width: 100%;
+  }
+  .code .line {
+    padding: 3px 12px; white-space: pre; color: var(--text);
+    border-left: 3px solid transparent;
+  }
+
+  /* Live variables under code */
+  .vars {
+    display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;
+  }
+  .var {
+    font-family: Consolas, monospace; font-size: 12.5px;
+    background: var(--panel2); border: 1px solid var(--border);
+    border-radius: 6px; padding: 4px 10px; color: var(--muted);
+  }
+  .var b { color: var(--accent); }
+  .var.hi { border-color: var(--yellow); color: var(--text); background: rgba(210,153,34,.1); }
+
+  /* Live array view */
+  #arrayView {
+    display: flex; flex-wrap: wrap; gap: 6px; align-items: center;
+    background: var(--panel2); border: 1px solid var(--border);
+    border-radius: 8px; padding: 10px 14px; margin-bottom: 14px;
+    font-family: Consolas, monospace; font-size: 14px;
+  }
+  #arrayView .lbl { color: var(--muted); margin-right: 4px; }
+  .cell {
+    min-width: 38px; text-align: center; padding: 6px 8px;
+    background: var(--bg); border: 1.5px solid var(--border);
+    border-radius: 6px; font-weight: 700;
+    transition: all .3s;
+  }
+  .cell .idx { display: block; font-size: 10px; font-weight: 400; color: var(--muted); }
+  .cell.comparing { border-color: var(--yellow); background: rgba(210,153,34,.15); transform: translateY(-3px); }
+  .cell.swapping { border-color: var(--accent2); background: rgba(247,129,102,.18); transform: translateY(-3px) scale(1.05); }
+  .cell.sorted { border-color: var(--green); background: rgba(63,185,80,.12); color: var(--green); }
+
+  /* Guided tour */
+  #tourOverlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,.7);
+    z-index: 100; display: none;
+  }
+  .tour-target {
+    position: relative !important; z-index: 101 !important;
+    box-shadow: 0 0 0 4px var(--accent), 0 0 24px rgba(88,166,255,.5) !important;
+    border-radius: 8px;
+  }
+  #tourTip {
+    position: fixed; z-index: 102; max-width: 320px;
+    background: var(--panel); border: 1px solid var(--accent);
+    border-radius: 12px; padding: 16px 18px; display: none;
+    box-shadow: 0 12px 32px rgba(0,0,0,.6);
+  }
+  #tourTip h4 { font-size: 15px; margin-bottom: 6px; color: var(--accent); }
+  #tourTip p { font-size: 13.5px; line-height: 1.55; color: var(--text); margin-bottom: 12px; }
+  #tourTip .row { display: flex; gap: 8px; align-items: center; }
+  #tourTip .cnt { margin-left: auto; font-size: 12px; color: var(--muted); }
+
+  /* AI Explainer */
+  #aiOverlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,.65);
+    z-index: 110; display: none;
+  }
+  #aiPanel {
+    position: fixed; top: 6%; left: 50%; transform: translateX(-50%);
+    width: min(560px, 90vw); max-height: 84vh; overflow-y: auto;
+    background: var(--panel); border: 1px solid var(--accent);
+    border-radius: 14px; padding: 20px 22px; display: none;
+    box-shadow: 0 20px 50px rgba(0,0,0,.6); z-index: 111;
+  }
+  .ai-header {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 4px;
+  }
+  .ai-header h4 { font-size: 17px; color: var(--accent); }
+  .ai-header button {
+    background: var(--panel2); color: var(--muted); border: 1px solid var(--border);
+    padding: 4px 10px; font-size: 13px; border-radius: 6px;
+  }
+  #aiNote {
+    font-size: 11.5px; color: var(--muted); margin-bottom: 12px;
+    padding-bottom: 10px; border-bottom: 1px dashed var(--border);
+  }
+  #aiBody { font-size: 14.5px; line-height: 1.7; color: var(--text); }
+  #aiBody h5 { color: var(--accent); font-size: 14px; margin: 14px 0 4px; }
+  #aiBody code {
+    font-family: Consolas, monospace; font-size: 13px;
+    background: var(--panel2); padding: 1px 6px; border-radius: 4px;
+  }
+  #aiBody .mistake-note {
+    background: rgba(210,153,34,.1); border-left: 3px solid var(--yellow);
+    padding: 8px 12px; border-radius: 6px; margin-top: 10px; font-size: 13.5px;
+  }
+  #aiChips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; }
+  .ai-chip {
+    background: var(--panel2); border: 1px solid var(--border); color: var(--text);
+    font-size: 12.5px; font-weight: 600; padding: 6px 12px; border-radius: 16px;
+  }
+  .ai-chip:hover { border-color: var(--accent); color: var(--accent); }
+  .code .line.active {
+    background: rgba(88,166,255,.14);
+    border-left-color: var(--accent);
+  }
+  .tabs { display: flex; gap: 6px; margin-bottom: 10px; }
+  .tab {
+    background: var(--panel2); color: var(--muted);
+    border: 1px solid var(--border);
+    padding: 6px 16px; border-radius: 8px 8px 0 0;
+    font-size: 13px; font-weight: 700; cursor: pointer;
+  }
+  .tab.on { background: var(--accent); color: #0d1117; border-color: var(--accent); }
+  .codeWrap { display: none; }
+  .codeWrap.on { display: block; }
+  .kw { color: #ff7b72; } .fn { color: #d2a8ff; } .num { color: #79c0ff; } .cm { color: #6e7681; }
+
+  .stats { display: flex; gap: 14px; margin-top: 14px; }
+  .stat {
+    flex: 1; background: var(--panel2); border: 1px solid var(--border);
+    border-radius: 8px; padding: 10px; text-align: center;
+  }
+  .stat .v { font-size: 22px; font-weight: 800; color: var(--accent); }
+  .stat .l { font-size: 12px; color: var(--muted); }
+
+  .learn { font-size: 14px; color: var(--muted); line-height: 1.6; }
+  .learn strong { color: var(--text); }
+  .complexity { display: flex; gap: 10px; margin-top: 10px; flex-wrap: wrap; }
+  .chip {
+    background: rgba(247,129,102,.12); color: var(--accent2);
+    border: 1px solid rgba(247,129,102,.35);
+    padding: 3px 10px; border-radius: 14px; font-size: 12.5px; font-weight: 600;
+  }
+  .chip.g { background: rgba(63,185,80,.12); color: var(--green); border-color: rgba(63,185,80,.35); }
+
+  /* Quiz */
+  .quiz-opt {
+    display: block; width: 100%; text-align: left; margin-bottom: 8px;
+    background: var(--panel2); color: var(--text);
+    border: 1px solid var(--border); font-weight: 500;
+  }
+  .quiz-opt.right { border-color: var(--green); background: rgba(63,185,80,.15); }
+  .quiz-opt.wrong { border-color: #f85149; background: rgba(248,81,73,.15); }
+  #quizFeedback { font-size: 13.5px; margin-top: 8px; color: var(--muted); min-height: 20px; }
+
+  /* Mistakes */
+  .mistake { margin-bottom: 12px; font-size: 13.5px; line-height: 1.55; color: var(--muted); }
+  .mistake b { color: var(--accent2); }
+  .mistake code {
+    font-family: Consolas, monospace; font-size: 12.5px;
+    background: var(--panel2); padding: 1px 6px; border-radius: 4px; color: var(--text);
+  }
+
+  /* Race */
+  .raceGrid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 12px; }
+  @media (max-width: 700px) { .raceGrid { grid-template-columns: 1fr; } }
+  .racer {
+    background: var(--panel2); border: 1px solid var(--border);
+    border-radius: 10px; padding: 14px; transition: border-color .3s, box-shadow .3s;
+  }
+  .racer.finished { border-color: var(--green); box-shadow: 0 0 14px rgba(63,185,80,.25); }
+  .racerHead { display: flex; justify-content: space-between; margin-bottom: 10px; font-size: 14px; }
+  .racerHead .ops { color: var(--muted); font-size: 13px; }
+  .bars { display: flex; align-items: flex-end; gap: 2px; height: 130px; }
+  .bar { flex: 1; border-radius: 2px 2px 0 0; background: var(--accent); transition: height .1s linear; }
+  .racer.m .bar { background: var(--purple); }
+  .bar.hot { background: var(--accent2) !important; }
+  #raceResult {
+    margin-top: 14px; padding: 12px 16px; border-radius: 8px;
+    background: rgba(63,185,80,.1); border: 1px solid rgba(63,185,80,.3);
+    font-size: 14.5px; display: none;
+  }
+
+  /* ===== MOBILE / SMALL SCREENS ===== */
+  @media (max-width: 640px) {
+    header { padding: 12px 16px; }
+    .logo { font-size: 19px; }
+    .tagline { font-size: 12px; }
+    .container { padding: 14px 12px 40px; gap: 14px; }
+    .card { padding: 15px; border-radius: 10px; }
+    h1 { font-size: 20px; }
+    h3 { font-size: 14px; }
+    .subtitle { font-size: 13px; margin-bottom: 12px; }
+    .intro { padding: 18px 16px; }
+    .intro h2 { font-size: 17px; }
+    .intro p { font-size: 14px; line-height: 1.6; }
+    .intro .analogy { padding: 10px 12px; font-size: 13.5px; }
+    .steps3 { gap: 8px; }
+    .step3 { min-width: 100%; font-size: 13px; }
+    .badges { gap: 6px; }
+    .badge { font-size: 11.5px; padding: 5px 10px; }
+    #stage { height: 280px; }
+    .toolbar { gap: 8px; }
+    .tgroup { flex-direction: column; align-items: stretch; gap: 8px; padding: 10px; }
+    .tlabel { min-width: 0; }
+    .tbtns { width: 100%; }
+    .tbtns.nowrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    button { padding: 8px 14px; font-size: 13.5px; }
+    input[type=text] { width: 100%; }
+    select { width: 100%; }
+    .tbtns.nowrap select { width: auto; }
+    .speed { margin-left: 0; }
+    #narration { font-size: 14px; padding: 10px 12px; }
+    #arrayView { font-size: 12.5px; padding: 8px 10px; gap: 4px; }
+    .cell { min-width: 30px; padding: 5px 6px; }
+    .cell .idx { font-size: 9px; }
+    .stats { gap: 8px; }
+    .stat { padding: 8px 6px; }
+    .stat .v { font-size: 18px; }
+    .stat .l { font-size: 11px; }
+    .code { font-size: 11.5px; }
+    .code .line { padding: 2px 10px; }
+    .vars { gap: 6px; }
+    .var { font-size: 11.5px; padding: 3px 8px; }
+    .learn { font-size: 13.5px; }
+    .mistake { font-size: 13px; }
+    .raceGrid { grid-template-columns: 1fr; }
+    .bars { height: 100px; }
+    #aiPanel { top: 3%; width: 94vw; padding: 16px 15px; max-height: 90vh; }
+    #aiBody { font-size: 14px; }
+    .ai-chip { font-size: 12px; }
+    #tourTip { max-width: calc(100vw - 24px); padding: 14px 15px; }
+    #tourTip p { font-size: 13px; }
+  }
+
+  /* ===== CLASSROOM / PROJECTOR MODE ===== */
+  body.classroom .intro,
+  body.classroom .card.full,
+  body.classroom .sidebar { display: none !important; }
+  body.classroom .container { grid-template-columns: 1fr !important; max-width: 1500px; }
+  body.classroom #stage { height: 58vh !important; min-height: 340px; }
+  body.classroom h1 { font-size: 34px; }
+  body.classroom #narration { font-size: 22px; line-height: 1.5; padding: 18px 22px; }
+  body.classroom #arrayView { font-size: 19px; }
+  body.classroom #arrayView .cell { min-width: 52px; padding: 9px 11px; font-size: 19px; }
+  body.classroom #arrayView .cell .idx { font-size: 12px; }
+  body.classroom .stat .v { font-size: 32px; }
+  body.classroom .stat .l { font-size: 15px; }
+  body.classroom .tgroup { padding: 12px 16px; }
+  body.classroom button, body.classroom select { font-size: 16px; padding: 11px 20px; }
+  body.classroom .subtitle { font-size: 17px; }
+  body.classroom #passBadge, body.classroom #streakBadge { font-size: 17px; padding: 6px 16px; }
+  body.classroom .ball { font-weight: 800 !important; }
+  #classBtn.on { background: var(--yellow); color: #0d1117; border-color: var(--yellow); }
+</style>
+<script>if(location.protocol.startsWith("http")){var m=document.createElement("link");m.rel="manifest";m.href="manifest.json";document.head.appendChild(m);}</script>
+<meta name="theme-color" content="#0d1117">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+</head>
+<body>
+
+<header>
+  <a href="mindaicode-home.html" style="display:flex; align-items:center; text-decoration:none; color:inherit;">
+    <div class="logo">🧠 MindAI<span>Code</span></div>
+  </a>
+  <div class="tagline" style="display:flex; gap:14px; align-items:center; flex-wrap:wrap;"><a href="mindaicode-race-all.html" style="color:var(--purple); text-decoration:none; font-weight:600;">🏁 Race all six</a><a href="mindaicode-home.html" style="color:var(--muted); text-decoration:none;">🏠 All algorithms</a></div>
+</header>
+
+<div class="container">
+
+  <!-- INTRO -->
+  <div class="intro">
+    <h2>👋 New to sorting? Start here (30 seconds)</h2>
+    <p><strong>Sorting</strong> just means arranging things in order — smallest to biggest. Computers sort marks lists, prices, names… millions of times a day. <strong>Bubble Sort</strong> is the simplest way to learn how.</p>
+    <div class="analogy">
+      🎓 <strong>Real-life example:</strong> Imagine students standing in a line for a class photo. The teacher compares <em>two neighbours at a time</em> — if the taller one is on the left, they swap places. She walks the line again and again until nobody needs to swap. That's Bubble Sort. The tallest student "bubbles" to the end first!
+    </div>
+    <div class="steps3">
+      <div class="step3"><b>1️⃣ Watch</b> Press ▶ Play below and just watch the balls. Don't worry about the code yet.</div>
+      <div class="step3"><b>2️⃣ Predict</b> Turn on 🎯 Predict mode and guess before each swap. Build a streak!</div>
+      <div class="step3"><b>3️⃣ Connect to code</b> Watch the highlighted line in the Python/Java panel — it lights up exactly when that line runs.</div>
+    </div>
+  </div>
+
+  <!-- BADGES -->
+  <div class="card full">
+    <div class="badges">
+      <strong style="margin-right: 6px;">🏆 Your badges:</strong>
+      <span class="badge" data-badge="sort">🏅 First Sort</span>
+      <span class="badge" data-badge="predict">🎯 Predictor ×5</span>
+      <span class="badge" data-badge="quiz">🧠 Quiz Master</span>
+      <span class="badge" data-badge="race">⚡ Race Watcher</span>
+      <span class="badge" data-badge="lab">🧪 Scientist</span>
+    </div>
+  </div>
+
+  <!-- MAIN VISUALIZER -->
+  <div class="card">
+    <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap;">
+      <h1 style="margin-bottom:0;">Bubble Sort 🫧</h1>
+      <div style="display:flex; gap:8px; flex-wrap:wrap;">
+        <button id="explainBtn" class="secondary">🤖 Explain step</button>
+        <button id="classBtn" class="secondary">🎥 Classroom</button>
+        <button id="tourBtn" class="secondary">❓ Take the tour</button>
+      </div>
+    </div>
+    <p class="subtitle" id="stageSubtitle">Watch the balls swap — bigger balls "bubble up" to the right, one pass at a time.</p>
+
+    <div id="stage">
+      <div id="passBadge">Pass 0</div>
+      <div id="streakBadge">🎯 Streak: 0</div>
+      <div id="teacher">🧑‍🏫</div>
+      <div id="floor"></div>
+    </div>
+
+    <div id="arrayView"></div>
+
+    <div class="toolbar">
+      <div class="tgroup">
+        <div class="tbtns nowrap">
+          <button id="playBtn">▶ Play</button>
+          <button id="stepBtn" class="secondary">⏭ Step</button>
+          <button id="predictBtn" class="secondary">🎯 Predict: Off</button>
+          <button id="shuffleBtn" class="secondary">🔀 Shuffle</button>
+          <button id="resetBtn" class="secondary">↺ Reset</button>
+          <select id="shapeSel" title="Visualization style">
+            <option value="circle">⚪ Balls</option>
+            <option value="bar">📊 Bars</option>
+            <option value="student">🧑‍🎓 Students</option>
+          </select>
+          <div class="speed" style="margin-left:0; flex-shrink:0;">
+            <span>🐢</span><input type="range" id="speed" min="1" max="10" value="5" style="width:80px;"><span>🐇</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="tgroup">
+        <span class="tlabel">🔊 Audio</span>
+        <div class="tbtns">
+          <button id="soundBtn" class="secondary">🔊 Sound: On</button>
+          <button id="voiceBtn" class="secondary">🗣 Voice: Off</button>
+          <select id="voiceSpeed" title="Voice speed">
+            <option value="0.65">🐢 Voice: Slow</option>
+            <option value="0.9" selected>🚶 Voice: Normal</option>
+            <option value="1.2">🐇 Voice: Fast</option>
+          </select>
+          <select id="langSel" title="Narration language">
+            <option value="en">🌐 English</option>
+            <option value="ta">🌐 தமிழ்</option>
+            <option value="hi">🌐 हिंदी</option>
+            <option value="te">🌐 తెలుగు</option>
+            <option value="kn">🌐 ಕನ್ನಡ</option>
+            <option value="bn">🌐 বাংলা</option>
+            <option value="mr">🌐 मराठी</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="tgroup">
+        <span class="tlabel">⌨️ Your data</span>
+        <div class="tbtns">
+          <input type="text" id="customInput" placeholder="e.g. 34, 7, 91, 12">
+          <button id="loadBtn" class="secondary">Load</button>
+        </div>
+      </div>
+
+      <div class="tgroup">
+        <span class="tlabel">🧪 Experiments</span>
+        <div class="tbtns">
+          <button id="expCorrect" class="secondary">✅ Correct code</button>
+          <button id="expNoswap" class="secondary">❌ Remove the swap</button>
+          <button id="expOnepass" class="secondary">❌ Only one pass</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="narration">Press <strong>Play</strong> to start, or <strong>Step</strong> to go one comparison at a time.</div>
+
+    <div class="stats">
+      <div class="stat"><div class="v" id="cmpCount">0</div><div class="l">Comparisons</div></div>
+      <div class="stat"><div class="v" id="swapCount">0</div><div class="l">Swaps</div></div>
+      <div class="stat"><div class="v" id="passCount">0</div><div class="l">Passes</div></div>
+    </div>
+  </div>
+
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+    <div class="card">
+      <h3>💻 The Code</h3>
+      <div class="tabs">
+        <button class="tab on" data-lang="py" type="button">Python</button>
+        <button class="tab" data-lang="java" type="button">Java</button>
+      </div>
+      <div class="codeWrap on" id="code-py">
+        <div class="code">
+          <div class="line" data-l="0"><span class="kw">def</span> <span class="fn">bubble_sort</span>(arr):</div>
+          <div class="line" data-l="1">    n = <span class="fn">len</span>(arr)</div>
+          <div class="line" data-l="2">    <span class="kw">for</span> i <span class="kw">in</span> <span class="fn">range</span>(n):</div>
+          <div class="line" data-l="3">        <span class="kw">for</span> j <span class="kw">in</span> <span class="fn">range</span>(n - i - <span class="num">1</span>):</div>
+          <div class="line" data-l="4">            <span class="kw">if</span> arr[j] &gt; arr[j + <span class="num">1</span>]:</div>
+          <div class="line" data-l="5">                <span class="cm"># swap them!</span></div>
+          <div class="line" data-l="6">                arr[j], arr[j+<span class="num">1</span>] = arr[j+<span class="num">1</span>], arr[j]</div>
+          <div class="line" data-l="7">    <span class="kw">return</span> arr</div>
+        </div>
+      </div>
+      <div class="codeWrap" id="code-java">
+        <div class="code">
+          <div class="line" data-l="0"><span class="kw">void</span> <span class="fn">bubbleSort</span>(<span class="kw">int</span>[] arr) {</div>
+          <div class="line" data-l="1">    <span class="kw">int</span> n = arr.length;</div>
+          <div class="line" data-l="2">    <span class="kw">for</span> (<span class="kw">int</span> i = <span class="num">0</span>; i &lt; n; i++) {</div>
+          <div class="line" data-l="3">        <span class="kw">for</span> (<span class="kw">int</span> j = <span class="num">0</span>; j &lt; n - i - <span class="num">1</span>; j++) {</div>
+          <div class="line" data-l="4">            <span class="kw">if</span> (arr[j] &gt; arr[j+<span class="num">1</span>]) {</div>
+          <div class="line" data-l="5">                <span class="cm">// swap them!</span></div>
+          <div class="line" data-l="6">                <span class="kw">int</span> t = arr[j];</div>
+          <div class="line" data-l="6">                arr[j] = arr[j+<span class="num">1</span>];</div>
+          <div class="line" data-l="6">                arr[j+<span class="num">1</span>] = t;</div>
+          <div class="line" data-l="7">            }</div>
+          <div class="line" data-l="8">        }</div>
+          <div class="line" data-l="9">    }</div>
+          <div class="line" data-l="10">}</div>
+        </div>
+      </div>
+      <div class="vars">
+        <span class="var" id="varN">n = <b>–</b></span>
+        <span class="var" id="varI">i = <b>–</b></span>
+        <span class="var" id="varJ">j = <b>–</b></span>
+        <span class="var" id="varAJ">arr[j] = <b>–</b></span>
+        <span class="var" id="varAJ1">arr[j+1] = <b>–</b></span>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top: 16px;">
+      <h3>📚 How it works</h3>
+      <div class="learn">
+        Compare <strong>neighbours</strong>. If the left ball is bigger, swap them.
+        After each full pass, the biggest remaining ball has "bubbled" to its final spot
+        (it turns <strong style="color: var(--green)">green</strong>).
+        Repeat until no swaps are needed.
+        <div class="complexity">
+          <span class="chip">Worst: O(n²)</span>
+          <span class="chip">Average: O(n²)</span>
+          <span class="chip g">Best: O(n)</span>
+          <span class="chip g">Space: O(1)</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top: 16px;">
+      <h3>🧠 Quick check</h3>
+      <div id="quizQ" style="font-size: 14px; margin-bottom: 10px;"></div>
+      <div id="quizOpts"></div>
+      <div id="quizFeedback"></div>
+    </div>
+
+    <div class="card" style="margin-top: 16px;">
+      <h3>⚠️ Common mistakes</h3>
+      <div class="mistake"><b>Inner loop goes too far.</b> Writing <code>range(n - 1)</code> instead of <code>range(n - i - 1)</code> still works but wastes time; writing <code>range(n)</code> crashes with index-out-of-range on <code>arr[j+1]</code>.</div>
+      <div class="mistake"><b>Forgetting the temp variable (Java/C).</b> <code>arr[j] = arr[j+1]; arr[j+1] = arr[j];</code> loses a value! You need <code>int t = arr[j]</code> first. (Python's <code>a, b = b, a</code> avoids this.)</div>
+      <div class="mistake"><b>Mixing up i and j.</b> <code>i</code> counts passes; <code>j</code> walks along the line comparing neighbours. Comparing <code>arr[i]</code> with <code>arr[j]</code> is a different (wrong) algorithm.</div>
+      <div class="mistake"><b>Comparing without swapping.</b> Try the 🧪 "Remove the swap" experiment to see why the swap line is the heart of the algorithm.</div>
+    </div>
+  </div>
+
+  <!-- RACE -->
+  <div class="card full">
+    <h3>⚡ The Race: Bubble Sort vs Merge Sort</h3>
+    <p class="subtitle" style="margin-bottom: 4px;">Same 30 numbers, same speed per operation. Watch why O(n²) matters — this is why nobody uses Bubble Sort on big data!</p>
+    <div class="controls" style="margin: 10px 0 0;">
+      <button id="raceBtn">🏁 Start Race</button>
+    </div>
+    <div class="raceGrid">
+      <div class="racer b" id="racerB">
+        <div class="racerHead"><strong>🫧 Bubble Sort — O(n²)</strong><span class="ops">Operations: <b id="opsB">0</b></span></div>
+        <div class="bars" id="barsB"></div>
+      </div>
+      <div class="racer m" id="racerM">
+        <div class="racerHead"><strong>🪄 Merge Sort — O(n log n)</strong><span class="ops">Operations: <b id="opsM">0</b></span></div>
+        <div class="bars" id="barsM"></div>
+      </div>
+    </div>
+    <div id="raceResult"></div>
+  </div>
+
+</div>
+
+<div id="aiOverlay"></div>
+<div id="aiPanel">
+  <div class="ai-header">
+    <h4>🤖 AI Explainer</h4>
+    <button id="aiClose">✕ Close</button>
+  </div>
+  <div id="aiNote">Playback is paused. This breaks down exactly what just happened — read it, then hit Close and Step to continue, or click a question below for more depth.</div>
+  <div id="aiBody"></div>
+  <div id="aiChips"></div>
+</div>
+
+<div id="tourOverlay"></div>
+<div id="tourTip">
+  <h4 id="tourTitle"></h4>
+  <p id="tourText"></p>
+  <div class="row">
+    <button id="tourNext">Next →</button>
+    <button id="tourSkip" class="secondary">Skip</button>
+    <span class="cnt" id="tourCnt"></span>
+  </div>
+</div>
+
+<script>
+/* ================= LANGUAGES ================= */
+const L = {
+  en: {
+    start: 'Press <strong>Play</strong> to start, or <strong>Step</strong> to go one comparison at a time.',
+    pass: n => `🔁 <strong>Pass ${n}</strong> begins — walk left to right, comparing neighbours.`,
+    cmpSwap: (a,b) => `🔍 Comparing <strong>${a}</strong> and <strong>${b}</strong> — ${a} &gt; ${b}, they must swap!`,
+    cmpOk: (a,b) => `🔍 Comparing <strong>${a}</strong> and <strong>${b}</strong> — already in order. ✓`,
+    swap: (a,b) => `🔄 <strong>Swap!</strong> ${a} and ${b} trade places.`,
+    lock: p => `✅ The biggest remaining ball is <strong>locked in</strong> at position ${p}.`,
+    early: '⚡ No swaps in that pass — the list is already sorted. Stopping early!',
+    done: (c,s,p) => `🎉 <strong>Sorted!</strong> ${c} comparisons, ${s} swaps, ${p} passes.`,
+    doneNoswap: '😅 <strong>Nothing got sorted!</strong> We compared but never swapped — and the algorithm even thinks it\'s finished, because "no swaps" is its stop signal. The swap line is the heart of Bubble Sort!',
+    doneOnepass: '🤔 <strong>Only the biggest ball</strong> reached its final place. One pass is not enough — that\'s why we repeat up to n passes.',
+    predictQ: (a,b) => `🎯 <strong>${a}</strong> vs <strong>${b}</strong> — will they swap?`,
+    yes: 'Swap!', no: 'No swap',
+    right: '✅ Correct prediction! ', wrong: '❌ Wrong — watch: ',
+    minNums: '⚠️ Enter at least 2 numbers separated by commas.',
+  },
+  ta: {
+    start: 'தொடங்க <strong>Play</strong> அழுத்தவும், ஒவ்வொரு ஒப்பீடாக பார்க்க <strong>Step</strong> அழுத்தவும்.',
+    pass: n => `🔁 <strong>சுற்று ${n}</strong> தொடங்குகிறது — பக்கத்துப் பந்துகளை ஒப்பிடுவோம்.`,
+    cmpSwap: (a,b) => `🔍 <strong>${a}</strong> மற்றும் <strong>${b}</strong> ஒப்பீடு — ${a} பெரியது, இடம் மாற வேண்டும்!`,
+    cmpOk: (a,b) => `🔍 <strong>${a}</strong> மற்றும் <strong>${b}</strong> ஒப்பீடு — ஏற்கனவே சரியான வரிசை. ✓`,
+    swap: (a,b) => `🔄 <strong>மாற்றம்!</strong> ${a} மற்றும் ${b} இடம் மாறின.`,
+    lock: p => `✅ மிகப்பெரிய பந்து இடம் ${p}-இல் <strong>நிலைபெற்றது</strong>.`,
+    early: '⚡ இந்தச் சுற்றில் மாற்றம் இல்லை — ஏற்கனவே வரிசையாக உள்ளது!',
+    done: (c,s,p) => `🎉 <strong>வரிசையானது!</strong> ${c} ஒப்பீடுகள், ${s} மாற்றங்கள், ${p} சுற்றுகள்.`,
+    doneNoswap: '😅 <strong>எதுவும் வரிசையாகவில்லை!</strong> ஒப்பிட்டோம், ஆனால் இடம் மாற்றவே இல்லை. மாற்றும் வரிதான் அல்காரிதத்தின் இதயம்!',
+    doneOnepass: '🤔 <strong>மிகப்பெரிய பந்து மட்டுமே</strong> தன் இடத்தை அடைந்தது. ஒரு சுற்று போதாது — அதனால்தான் n சுற்றுகள் தேவை.',
+    predictQ: (a,b) => `🎯 <strong>${a}</strong> மற்றும் <strong>${b}</strong> — இடம் மாறுமா?`,
+    yes: 'மாறும்!', no: 'மாறாது',
+    right: '✅ சரியான கணிப்பு! ', wrong: '❌ தவறு — பாருங்கள்: ',
+    minNums: '⚠️ குறைந்தது 2 எண்களை கமாவால் பிரித்து உள்ளிடவும்.',
+  },
+  hi: {
+    start: 'शुरू करने के लिए <strong>Play</strong> दबाएँ, या एक-एक तुलना देखने के लिए <strong>Step</strong> दबाएँ।',
+    pass: n => `🔁 <strong>चक्कर ${n}</strong> शुरू — बगल वाली गेंदों की तुलना करेंगे।`,
+    cmpSwap: (a,b) => `🔍 <strong>${a}</strong> और <strong>${b}</strong> की तुलना — ${a} बड़ा है, जगह बदलनी होगी!`,
+    cmpOk: (a,b) => `🔍 <strong>${a}</strong> और <strong>${b}</strong> की तुलना — पहले से सही क्रम में। ✓`,
+    swap: (a,b) => `🔄 <strong>अदला-बदली!</strong> ${a} और ${b} ने जगह बदल ली।`,
+    lock: p => `✅ सबसे बड़ी गेंद स्थान ${p} पर <strong>पक्की</strong> हो गई।`,
+    early: '⚡ इस चक्कर में कोई अदला-बदली नहीं — सूची पहले से क्रम में है!',
+    done: (c,s,p) => `🎉 <strong>क्रमबद्ध!</strong> ${c} तुलनाएँ, ${s} अदला-बदली, ${p} चक्कर।`,
+    doneNoswap: '😅 <strong>कुछ भी क्रमबद्ध नहीं हुआ!</strong> हमने तुलना की पर अदला-बदली नहीं की। स्वैप वाली लाइन ही एल्गोरिथ्म का दिल है!',
+    doneOnepass: '🤔 <strong>सिर्फ़ सबसे बड़ी गेंद</strong> अपनी जगह पहुँची। एक चक्कर काफ़ी नहीं — इसीलिए n चक्कर चाहिए।',
+    predictQ: (a,b) => `🎯 <strong>${a}</strong> और <strong>${b}</strong> — क्या जगह बदलेंगे?`,
+    yes: 'बदलेंगे!', no: 'नहीं बदलेंगे',
+    right: '✅ सही अनुमान! ', wrong: '❌ ग़लत — देखिए: ',
+    minNums: '⚠️ कम से कम 2 संख्याएँ कॉमा से अलग करके लिखें।',
+  },
+  te: {
+    start: 'ప్రారంభించడానికి <strong>Play</strong> నొక్కండి, లేదా ఒక్కో పోలిక చూడటానికి <strong>Step</strong> నొక్కండి.',
+    pass: n => `🔁 <strong>రౌండ్ ${n}</strong> ప్రారంభం — పక్కపక్క బంతులను పోల్చుతాం.`,
+    cmpSwap: (a,b) => `🔍 <strong>${a}</strong> మరియు <strong>${b}</strong> పోలిక — ${a} పెద్దది, స్థానాలు మార్చాలి!`,
+    cmpOk: (a,b) => `🔍 <strong>${a}</strong> మరియు <strong>${b}</strong> పోలిక — ఇప్పటికే సరైన క్రమంలో ఉన్నాయి. ✓`,
+    swap: (a,b) => `🔄 <strong>మార్పిడి!</strong> ${a} మరియు ${b} స్థానాలు మారాయి.`,
+    lock: p => `✅ అతిపెద్ద బంతి ${p} స్థానంలో <strong>స్థిరపడింది</strong>.`,
+    early: '⚡ ఈ రౌండ్‌లో ఒక్క మార్పిడి కూడా లేదు — జాబితా ఇప్పటికే క్రమంలో ఉంది!',
+    done: (c,s,p) => `🎉 <strong>క్రమబద్ధం అయ్యింది!</strong> ${c} పోలికలు, ${s} మార్పిడులు, ${p} రౌండ్లు.`,
+    doneNoswap: '😅 <strong>ఏదీ క్రమబద్ధం కాలేదు!</strong> పోల్చాం కానీ మార్చలేదు. మార్పిడి లైనే అల్గోరిథం గుండె!',
+    doneOnepass: '🤔 <strong>అతిపెద్ద బంతి మాత్రమే</strong> తన స్థానానికి చేరింది. ఒక్క రౌండ్ సరిపోదు — అందుకే n రౌండ్లు కావాలి.',
+    predictQ: (a,b) => `🎯 <strong>${a}</strong> మరియు <strong>${b}</strong> — స్థానాలు మారతాయా?`,
+    yes: 'మారతాయి!', no: 'మారవు',
+    right: '✅ సరైన అంచనా! ', wrong: '❌ తప్పు — చూడండి: ',
+    minNums: '⚠️ కనీసం 2 సంఖ్యలను కామాతో వేరు చేసి ఇవ్వండి.',
+  },
+  kn: {
+    start: 'ಪ್ರಾರಂಭಿಸಲು <strong>Play</strong> ಒತ್ತಿರಿ, ಅಥವಾ ಒಂದೊಂದೇ ಹೋಲಿಕೆ ನೋಡಲು <strong>Step</strong> ಒತ್ತಿರಿ.',
+    pass: n => `🔁 <strong>ಸುತ್ತು ${n}</strong> ಪ್ರಾರಂಭ — ಪಕ್ಕಪಕ್ಕದ ಚೆಂಡುಗಳನ್ನು ಹೋಲಿಸುತ್ತೇವೆ.`,
+    cmpSwap: (a,b) => `🔍 <strong>${a}</strong> ಮತ್ತು <strong>${b}</strong> ಹೋಲಿಕೆ — ${a} ದೊಡ್ಡದು, ಸ್ಥಾನ ಬದಲಾಯಿಸಬೇಕು!`,
+    cmpOk: (a,b) => `🔍 <strong>${a}</strong> ಮತ್ತು <strong>${b}</strong> ಹೋಲಿಕೆ — ಈಗಾಗಲೇ ಸರಿಯಾದ ಕ್ರಮದಲ್ಲಿವೆ. ✓`,
+    swap: (a,b) => `🔄 <strong>ಅದಲುಬದಲು!</strong> ${a} ಮತ್ತು ${b} ಸ್ಥಾನ ಬದಲಾಯಿಸಿಕೊಂಡವು.`,
+    lock: p => `✅ ಅತಿ ದೊಡ್ಡ ಚೆಂಡು ${p} ಸ್ಥಾನದಲ್ಲಿ <strong>ಖಚಿತವಾಯಿತು</strong>.`,
+    early: '⚡ ಈ ಸುತ್ತಿನಲ್ಲಿ ಒಂದೂ ಅದಲುಬದಲು ಇಲ್ಲ — ಪಟ್ಟಿ ಈಗಾಗಲೇ ಕ್ರಮದಲ್ಲಿದೆ!',
+    done: (c,s,p) => `🎉 <strong>ವಿಂಗಡಿಸಲಾಗಿದೆ!</strong> ${c} ಹೋಲಿಕೆಗಳು, ${s} ಅದಲುಬದಲುಗಳು, ${p} ಸುತ್ತುಗಳು.`,
+    doneNoswap: '😅 <strong>ಏನೂ ವಿಂಗಡಣೆಯಾಗಲಿಲ್ಲ!</strong> ಹೋಲಿಸಿದೆವು ಆದರೆ ಬದಲಾಯಿಸಲಿಲ್ಲ. ಅದಲುಬದಲು ಸಾಲೇ ಅಲ್ಗಾರಿದಂನ ಹೃದಯ!',
+    doneOnepass: '🤔 <strong>ಅತಿ ದೊಡ್ಡ ಚೆಂಡು ಮಾತ್ರ</strong> ತನ್ನ ಸ್ಥಾನ ತಲುಪಿತು. ಒಂದು ಸುತ್ತು ಸಾಕಾಗದು — ಅದಕ್ಕೇ n ಸುತ್ತುಗಳು ಬೇಕು.',
+    predictQ: (a,b) => `🎯 <strong>${a}</strong> ಮತ್ತು <strong>${b}</strong> — ಸ್ಥಾನ ಬದಲಾಗುತ್ತವೆಯೇ?`,
+    yes: 'ಬದಲಾಗುತ್ತವೆ!', no: 'ಬದಲಾಗುವುದಿಲ್ಲ',
+    right: '✅ ಸರಿಯಾದ ಊಹೆ! ', wrong: '❌ ತಪ್ಪು — ನೋಡಿ: ',
+    minNums: '⚠️ ಕನಿಷ್ಠ 2 ಸಂಖ್ಯೆಗಳನ್ನು ಅಲ್ಪವಿರಾಮದಿಂದ ಬೇರ್ಪಡಿಸಿ ಬರೆಯಿರಿ.',
+  },
+  bn: {
+    start: 'শুরু করতে <strong>Play</strong> চাপুন, বা এক এক করে তুলনা দেখতে <strong>Step</strong> চাপুন।',
+    pass: n => `🔁 <strong>রাউন্ড ${n}</strong> শুরু — পাশাপাশি বলগুলো তুলনা করব।`,
+    cmpSwap: (a,b) => `🔍 <strong>${a}</strong> ও <strong>${b}</strong> তুলনা — ${a} বড়, জায়গা বদলাতে হবে!`,
+    cmpOk: (a,b) => `🔍 <strong>${a}</strong> ও <strong>${b}</strong> তুলনা — আগে থেকেই সঠিক ক্রমে আছে। ✓`,
+    swap: (a,b) => `🔄 <strong>অদলবদল!</strong> ${a} ও ${b} জায়গা বদল করল।`,
+    lock: p => `✅ সবচেয়ে বড় বলটি ${p} স্থানে <strong>পাকা</strong> হয়ে গেল।`,
+    early: '⚡ এই রাউন্ডে কোনো অদলবদল হয়নি — তালিকা আগে থেকেই সাজানো!',
+    done: (c,s,p) => `🎉 <strong>সাজানো হয়ে গেছে!</strong> ${c} তুলনা, ${s} অদলবদল, ${p} রাউন্ড।`,
+    doneNoswap: '😅 <strong>কিছুই সাজানো হয়নি!</strong> তুলনা করেছি কিন্তু বদল করিনি। অদলবদলের লাইনটাই অ্যালগরিদমের প্রাণ!',
+    doneOnepass: '🤔 <strong>শুধু সবচেয়ে বড় বলটি</strong> নিজের জায়গায় পৌঁছেছে। এক রাউন্ড যথেষ্ট নয় — তাই n রাউন্ড দরকার।',
+    predictQ: (a,b) => `🎯 <strong>${a}</strong> ও <strong>${b}</strong> — জায়গা বদল হবে কি?`,
+    yes: 'হবে!', no: 'হবে না',
+    right: '✅ সঠিক অনুমান! ', wrong: '❌ ভুল — দেখুন: ',
+    minNums: '⚠️ অন্তত ২টি সংখ্যা কমা দিয়ে আলাদা করে লিখুন।',
+  },
+  mr: {
+    start: 'सुरू करण्यासाठी <strong>Play</strong> दाबा, किंवा एक-एक तुलना पाहण्यासाठी <strong>Step</strong> दाबा.',
+    pass: n => `🔁 <strong>फेरी ${n}</strong> सुरू — शेजारच्या चेंडूंची तुलना करू.`,
+    cmpSwap: (a,b) => `🔍 <strong>${a}</strong> आणि <strong>${b}</strong> तुलना — ${a} मोठा आहे, जागा बदलावी लागेल!`,
+    cmpOk: (a,b) => `🔍 <strong>${a}</strong> आणि <strong>${b}</strong> तुलना — आधीच योग्य क्रमात आहेत. ✓`,
+    swap: (a,b) => `🔄 <strong>अदलाबदल!</strong> ${a} आणि ${b} यांनी जागा बदलली.`,
+    lock: p => `✅ सर्वात मोठा चेंडू ${p} स्थानी <strong>पक्का</strong> झाला.`,
+    early: '⚡ या फेरीत एकही अदलाबदल नाही — यादी आधीच क्रमात आहे!',
+    done: (c,s,p) => `🎉 <strong>क्रमवारी पूर्ण!</strong> ${c} तुलना, ${s} अदलाबदल, ${p} फेऱ्या.`,
+    doneNoswap: '😅 <strong>काहीच क्रमात आले नाही!</strong> तुलना केली पण बदल केला नाही. अदलाबदलीची ओळच अल्गोरिदमचे हृदय आहे!',
+    doneOnepass: '🤔 <strong>फक्त सर्वात मोठा चेंडू</strong> त्याच्या जागी पोहोचला. एक फेरी पुरेशी नाही — म्हणून n फेऱ्या लागतात.',
+    predictQ: (a,b) => `🎯 <strong>${a}</strong> आणि <strong>${b}</strong> — जागा बदलतील का?`,
+    yes: 'बदलतील!', no: 'बदलणार नाहीत',
+    right: '✅ बरोबर अंदाज! ', wrong: '❌ चूक — पाहा: ',
+    minNums: '⚠️ किमान 2 संख्या स्वल्पविरामाने वेगळ्या करून लिहा.',
+  },
+};
+let lang = 'en';
+const voiceLang = { en: 'en-US', ta: 'ta-IN', hi: 'hi-IN', te: 'te-IN', kn: 'kn-IN', bn: 'bn-IN', mr: 'mr-IN' };
+function T() { return L[lang]; }
+document.getElementById('langSel').onchange = function () { lang = this.value; };
+
+/* ================= BADGES ================= */
+function award(id) {
+  const el = document.querySelector(`.badge[data-badge="${id}"]`);
+  if (!el || el.classList.contains('earned')) return;
+  el.classList.add('earned');
+  try { localStorage.setItem('mac_badge_' + id, '1'); } catch (e) {}
+  tone(880, .2, 'triangle', .12); setTimeout(() => tone(1320, .3, 'triangle', .12), 180);
+}
+try {
+  ['sort','predict','quiz','race','lab'].forEach(id => {
+    if (localStorage.getItem('mac_badge_' + id))
+      document.querySelector(`.badge[data-badge="${id}"]`).classList.add('earned');
+  });
+} catch (e) {}
+
+/* ================= AUDIO ================= */
+let soundOn = true, voiceOn = false, actx = null;
+function ctx() {
+  if (!actx) actx = new (window.AudioContext || window.webkitAudioContext)();
+  if (actx.state === 'suspended') actx.resume();
+  return actx;
+}
+function tone(freq, dur, type, vol) {
+  if (!soundOn) return;
+  try {
+    const c = ctx(), o = c.createOscillator(), g = c.createGain();
+    o.type = type || 'sine'; o.frequency.value = freq;
+    g.gain.setValueAtTime(vol || 0.15, c.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.001, c.currentTime + dur);
+    o.connect(g); g.connect(c.destination);
+    o.start(); o.stop(c.currentTime + dur);
+  } catch (e) {}
+}
+function sfxCompare(a, b) { tone(300 + a * 4, .18, 'sine'); setTimeout(() => tone(300 + b * 4, .18, 'sine'), 200); }
+function sfxSwap() { tone(220, .12, 'square', .1); setTimeout(() => tone(440, .15, 'square', .1), 110); }
+function sfxLock() { tone(660, .25, 'triangle', .12); }
+function sfxDone() { [523, 659, 784, 1047].forEach((f, i) => setTimeout(() => tone(f, .3, 'triangle', .14), i * 160)); }
+// Returns a Promise that resolves once the utterance finishes (or a fallback
+// timeout elapses). Playback pacing awaits this so speech never gets cut off
+// mid-sentence when the next step's speak() call would otherwise cancel it.
+let lastSpeechPromise = null;
+function speak(text) {
+  lastSpeechPromise = null;
+  if (!voiceOn || !window.speechSynthesis) return null;
+  speechSynthesis.cancel();
+  const clean = text.replace(/[🔁🔍🔄✅⚡🎉⚠️🎯😅🤔]/g, '');
+  const u = new SpeechSynthesisUtterance(clean);
+  const rate = parseFloat(document.getElementById('voiceSpeed').value);
+  u.rate = rate; u.lang = voiceLang[lang];
+  const p = new Promise(resolve => {
+    let done = false;
+    const finish = () => { if (!done) { done = true; resolve(); } };
+    u.onend = finish;
+    u.onerror = finish;
+    // Safety net: some browsers occasionally never fire onend.
+    const estMs = Math.max(1000, (clean.length * 65) / rate) + 700;
+    setTimeout(finish, estMs);
+  });
+  lastSpeechPromise = p;
+  speechSynthesis.speak(u);
+  return p;
+}
+document.getElementById('soundBtn').onclick = function () {
+  soundOn = !soundOn;
+  this.textContent = soundOn ? '🔊 Sound: On' : '🔇 Sound: Off';
+};
+document.getElementById('voiceBtn').onclick = function () {
+  voiceOn = !voiceOn;
+  this.textContent = voiceOn ? '🗣 Voice: On' : '🗣 Voice: Off';
+  if (!voiceOn) speechSynthesis.cancel();
+};
+
+/* ================= MAIN VISUALIZER ================= */
+const stage = document.getElementById('stage');
+const narration = document.getElementById('narration');
+const passBadge = document.getElementById('passBadge');
+const streakBadge = document.getElementById('streakBadge');
+const playBtn = document.getElementById('playBtn');
+
+let values = [34, 7, 91, 12, 55, 28, 76, 3];
+let balls = [], steps = [], stepIdx = 0;
+let playing = false, timer = null;
+let stats = { cmp: 0, swap: 0, pass: 0 };
+let variant = 'correct';
+let predictOn = false, waitingPredict = false, streak = 0;
+let cur = [], curI = null, curJ = null, lockedFrom = Infinity, markMode = null;
+let shapeMode = 'circle';
+const stageSubtitle = document.getElementById('stageSubtitle');
+const subtitles = {
+  circle: 'Watch the balls swap — bigger balls "bubble up" to the right, one pass at a time.',
+  bar: 'Bars grow taller for bigger values — watch the tallest bars migrate to the right.',
+  student: 'A teacher walks the line comparing two students at a time — taller students bubble to the end!',
+};
+document.getElementById('shapeSel').onchange = function () {
+  shapeMode = this.value;
+  stageSubtitle.textContent = subtitles[shapeMode];
+  buildBalls();
+  render_all();
+  updateTeacher();
+};
+function render_all() {
+  balls.forEach((b, i) => {
+    if (i >= lockedFrom) b.classList.add('sorted');
+    if (markMode && (i === curJ || i === curJ + 1)) b.classList.add(markMode);
+  });
+}
+
+const teacherEl = document.getElementById('teacher');
+function updateTeacher() {
+  if (shapeMode !== 'student' || curJ === null || !balls[curJ] || !balls[curJ + 1]) {
+    teacherEl.style.opacity = '0';
+    return;
+  }
+  const b1 = balls[curJ], b2 = balls[curJ + 1];
+  const l1 = parseFloat(b1.style.left), w1 = parseFloat(b1.style.width) || 0;
+  const l2 = parseFloat(b2.style.left), w2 = parseFloat(b2.style.width) || 0;
+  const mid = (l1 + w1 / 2 + l2 + w2 / 2) / 2;
+  teacherEl.style.left = (mid - 17) + 'px';
+  teacherEl.style.opacity = '1';
+}
+
+function renderArray() {
+  const box = document.getElementById('arrayView');
+  box.innerHTML = '<span class="lbl">arr =</span>';
+  cur.forEach((v, i) => {
+    const c = document.createElement('span');
+    c.className = 'cell';
+    if (i >= lockedFrom) c.classList.add('sorted');
+    if (markMode && (i === curJ || i === curJ + 1)) c.classList.add(markMode);
+    c.innerHTML = `${v}<span class="idx">[${i}]</span>`;
+    box.appendChild(c);
+  });
+}
+function renderVars() {
+  document.getElementById('varN').innerHTML = 'n = <b>' + cur.length + '</b>';
+  document.getElementById('varI').innerHTML = 'i = <b>' + (curI === null ? '–' : curI) + '</b>';
+  document.getElementById('varJ').innerHTML = 'j = <b>' + (curJ === null ? '–' : curJ) + '</b>';
+  document.getElementById('varAJ').innerHTML = 'arr[j] = <b>' + (curJ === null ? '–' : cur[curJ]) + '</b>';
+  document.getElementById('varAJ1').innerHTML = 'arr[j+1] = <b>' + (curJ === null ? '–' : cur[curJ + 1]) + '</b>';
+  document.getElementById('varAJ').classList.toggle('hi', curJ !== null);
+  document.getElementById('varAJ1').classList.toggle('hi', curJ !== null);
+}
+
+function ballSize() {
+  const w = stage.clientWidth;
+  return Math.min(64, Math.max(38, Math.floor((w - 40) / values.length) - 12));
+}
+function xFor(i, size) {
+  const w = stage.clientWidth;
+  const gap = (w - values.length * size) / (values.length + 1);
+  return gap + i * (size + gap);
+}
+function buildBalls() {
+  balls.forEach(b => b.remove());
+  balls = [];
+  const size = ballSize();
+  const maxV = Math.max(...values);
+  const stageH = stage.clientHeight;
+  const maxBarH = stageH - 70;
+  values.forEach((v, i) => {
+    const b = document.createElement('div');
+    if (shapeMode === 'bar') {
+      b.textContent = v;
+      b.className = 'ball bar-mode';
+      const h = Math.max(28, Math.round(maxBarH * (v / maxV)));
+      const w = Math.max(30, size * 0.72);
+      b.style.width = w + 'px'; b.style.height = h + 'px';
+      b.style.fontSize = Math.max(11, Math.round(size * 0.26)) + 'px';
+      b.style.left = xFor(i, size) + (size - w) / 2 + 'px';
+    } else if (shapeMode === 'student') {
+      b.className = 'ball student-mode';
+      // Fixed head + fixed legs, and a torso whose height encodes the value —
+      // height is the signal here, not face size, and the shape (head/torso/legs)
+      // reads as a person rather than a plain bar.
+      const HEAD = 28, LEGS = 14;
+      const torsoH = Math.max(20, Math.round(maxBarH * 0.66 * (v / maxV)));
+      const h = HEAD + 3 + torsoH + LEGS;
+      const w = Math.max(34, size * 0.68);
+      b.style.width = w + 'px'; b.style.height = h + 'px';
+      b.style.left = xFor(i, size) + (size - w) / 2 + 'px';
+      b.innerHTML = `<div class="student-head"></div><div class="student-body"><span class="student-tag">${v}</span></div><div class="student-legs"></div>`;
+    } else {
+      b.textContent = v;
+      b.className = 'ball';
+      const s = Math.round(size * (0.72 + 0.28 * (v / maxV)));
+      b.style.width = s + 'px'; b.style.height = s + 'px';
+      b.style.fontSize = Math.max(12, Math.round(s * 0.32)) + 'px';
+      b.style.left = xFor(i, size) + (size - s) / 2 + 'px';
+    }
+    stage.appendChild(b);
+    balls.push(b);
+  });
+}
+
+function computeSteps() {
+  steps = [];
+  const a = [...values];
+  const n = a.length;
+  const passes = variant === 'onepass' ? 1 : n;
+  for (let i = 0; i < passes; i++) {
+    let swapped = false;
+    steps.push({ t: 'pass', num: i + 1 });
+    for (let j = 0; j < n - i - 1; j++) {
+      steps.push({ t: 'compare', j, a: a[j], b: a[j + 1] });
+      if (a[j] > a[j + 1] && variant !== 'noswap') {
+        steps.push({ t: 'swap', j, a: a[j], b: a[j + 1] });
+        [a[j], a[j + 1]] = [a[j + 1], a[j]];
+        swapped = true;
+      }
+    }
+    if (variant === 'correct') steps.push({ t: 'lock', idx: n - i - 1 });
+    if (variant === 'onepass') steps.push({ t: 'lock', idx: n - i - 1 });
+    if (!swapped && variant === 'correct') { steps.push({ t: 'early' }); break; }
+    if (variant === 'noswap' && i === 0) break; // one demo pass is enough
+  }
+  steps.push({ t: 'done', variant });
+}
+
+function highlight(lines) {
+  document.querySelectorAll('.codeWrap .line').forEach(el =>
+    el.classList.toggle('active', lines.includes(+el.dataset.l)));
+}
+document.querySelectorAll('.tab').forEach(tab => {
+  tab.onclick = () => {
+    document.querySelectorAll('.tab').forEach(t => t.classList.toggle('on', t === tab));
+    document.querySelectorAll('.codeWrap').forEach(w =>
+      w.classList.toggle('on', w.id === 'code-' + tab.dataset.lang));
+  };
+});
+function clearMarks() { balls.forEach(b => b.classList.remove('comparing', 'swapping')); }
+function updateStats() {
+  document.getElementById('cmpCount').textContent = stats.cmp;
+  document.getElementById('swapCount').textContent = stats.swap;
+  document.getElementById('passCount').textContent = stats.pass;
+}
+function delay() { return 4000 - document.getElementById('speed').value * 300; }
+
+function execStep(prefix) {
+  if (stepIdx >= steps.length) return false;
+  const s = steps[stepIdx++];
+  clearMarks();
+  if (s.t === 'pass') {
+    stats.pass = s.num;
+    curI = s.num - 1; curJ = null; markMode = null;
+    passBadge.textContent = 'Pass ' + s.num;
+    narration.innerHTML = T().pass(s.num);
+    highlight([2]);
+  } else if (s.t === 'compare') {
+    stats.cmp++;
+    curJ = s.j; markMode = 'comparing';
+    balls[s.j].classList.add('comparing');
+    balls[s.j + 1].classList.add('comparing');
+    narration.innerHTML = (prefix || '') + (s.a > s.b ? T().cmpSwap(s.a, s.b) : T().cmpOk(s.a, s.b));
+    highlight([3, 4]);
+    sfxCompare(s.a, s.b);
+  } else if (s.t === 'swap') {
+    stats.swap++;
+    curJ = s.j; markMode = 'swapping';
+    [cur[s.j], cur[s.j + 1]] = [cur[s.j + 1], cur[s.j]];
+    const b1 = balls[s.j], b2 = balls[s.j + 1];
+    b1.classList.add('swapping'); b2.classList.add('swapping');
+    // Recompute each ball's own centered left for its NEW slot (using its own
+    // width) instead of transplanting the partner's raw left value — balls have
+    // different diameters, so swapping raw left px caused visual drift over time.
+    const slotSize = ballSize();
+    const w1 = parseFloat(b1.style.width), w2 = parseFloat(b2.style.width);
+    b1.style.left = xFor(s.j + 1, slotSize) + (slotSize - w1) / 2 + 'px';
+    b2.style.left = xFor(s.j, slotSize) + (slotSize - w2) / 2 + 'px';
+    [balls[s.j], balls[s.j + 1]] = [b2, b1];
+    narration.innerHTML = T().swap(s.a, s.b);
+    highlight([5, 6]);
+    sfxSwap();
+  } else if (s.t === 'lock') {
+    lockedFrom = s.idx; curJ = null; markMode = null;
+    if (balls[s.idx]) balls[s.idx].classList.add('sorted');
+    narration.innerHTML = T().lock(s.idx + 1);
+    highlight([2]);
+    sfxLock();
+  } else if (s.t === 'early') {
+    narration.innerHTML = T().early;
+  } else if (s.t === 'done') {
+    curJ = null; markMode = null;
+    if (s.variant === 'correct') {
+      lockedFrom = 0;
+      balls.forEach(b => b.classList.add('sorted'));
+      narration.innerHTML = T().done(stats.cmp, stats.swap, stats.pass);
+      sfxDone();
+      award('sort');
+    } else if (s.variant === 'noswap') {
+      narration.innerHTML = T().doneNoswap;
+    } else if (s.variant === 'onepass') {
+      narration.innerHTML = T().doneOnepass;
+    }
+    highlight([7]);
+    stopPlay();
+  }
+  renderArray();
+  renderVars();
+  updateTeacher();
+  speak(narration.textContent);
+  updateStats();
+  return stepIdx < steps.length;
+}
+
+function doStep() {
+  if (stepIdx >= steps.length) return false;
+  const s = steps[stepIdx];
+  if (predictOn && s.t === 'compare' && !waitingPredict) {
+    waitingPredict = true;
+    clearMarks();
+    curJ = s.j; markMode = 'comparing';
+    balls[s.j].classList.add('comparing');
+    balls[s.j + 1].classList.add('comparing');
+    updateTeacher();
+    narration.innerHTML = T().predictQ(s.a, s.b) +
+      `<br><button id="pYes">${T().yes}</button><button id="pNo" class="secondary">${T().no}</button>`;
+    speak(narration.textContent);
+    document.getElementById('pYes').onclick = () => answerPredict(true, s);
+    document.getElementById('pNo').onclick = () => answerPredict(false, s);
+    return true;
+  }
+  return execStep();
+}
+function answerPredict(saidSwap, s) {
+  waitingPredict = false;
+  const correct = (s.a > s.b) === saidSwap;
+  if (correct) { streak++; tone(780, .15, 'triangle', .12); }
+  else { streak = 0; tone(180, .25, 'sawtooth', .08); }
+  streakBadge.textContent = '🎯 Streak: ' + streak;
+  if (streak >= 5) award('predict');
+  const more = execStep(correct ? T().right : T().wrong);
+  if (playing) scheduleNext(more);
+}
+
+// Waits for the base speed-slider delay AND (if voice is on) for the spoken
+// narration to finish — whichever takes longer — before advancing. This is
+// what stops the voice from being cut off mid-sentence during Play.
+function scheduleNext(more) {
+  if (!more) { stopPlay(); return; }
+  const baseDelay = delay();
+  const speechP = lastSpeechPromise;
+  const start = Date.now();
+  if (voiceOn && speechP) {
+    speechP.then(() => {
+      if (!playing) return;
+      const remaining = Math.max(0, baseDelay - (Date.now() - start));
+      timer = setTimeout(playLoop, remaining);
+    });
+  } else {
+    timer = setTimeout(playLoop, baseDelay);
+  }
+}
+
+function playLoop() {
+  if (!playing) return;
+  const more = doStep();
+  if (waitingPredict) return;
+  scheduleNext(more);
+}
+function stopPlay() {
+  playing = false;
+  clearTimeout(timer);
+  playBtn.textContent = '▶ Play';
+}
+playBtn.onclick = () => {
+  if (playing) { stopPlay(); return; }
+  if (stepIdx >= steps.length) reset(false);
+  playing = true;
+  playBtn.textContent = '⏸ Pause';
+  playLoop();
+};
+document.getElementById('stepBtn').onclick = () => { if (!waitingPredict) { stopPlay(); doStep(); } };
+document.getElementById('predictBtn').onclick = function () {
+  predictOn = !predictOn;
+  this.textContent = '🎯 Predict: ' + (predictOn ? 'On' : 'Off');
+  this.classList.toggle('on', predictOn);
+  streakBadge.style.display = predictOn ? 'block' : 'none';
+};
+
+function reset(newOrder) {
+  stopPlay();
+  waitingPredict = false;
+  if (newOrder) values = values.map(() => Math.floor(Math.random() * 97) + 3);
+  stepIdx = 0;
+  stats = { cmp: 0, swap: 0, pass: 0 };
+  cur = [...values]; curI = null; curJ = null; markMode = null;
+  lockedFrom = values.length;
+  updateStats();
+  passBadge.textContent = 'Pass 0';
+  narration.innerHTML = T().start;
+  highlight([]);
+  buildBalls();
+  computeSteps();
+  renderArray();
+  renderVars();
+  updateTeacher();
+}
+document.getElementById('shuffleBtn').onclick = () => { variant = 'correct'; reset(true); };
+document.getElementById('resetBtn').onclick = () => { variant = 'correct'; reset(false); };
+document.getElementById('loadBtn').onclick = () => {
+  const nums = document.getElementById('customInput').value
+    .split(/[\s,]+/).map(Number).filter(v => !isNaN(v)).slice(0, 12);
+  if (nums.length >= 2) { values = nums; variant = 'correct'; reset(false); }
+  else narration.innerHTML = T().minNums;
+};
+
+/* Experiments */
+function runExperiment(v) {
+  variant = v;
+  reset(false);
+  if (v !== 'correct') award('lab');
+  playing = true;
+  playBtn.textContent = '⏸ Pause';
+  playLoop();
+}
+document.getElementById('expCorrect').onclick = () => runExperiment('correct');
+document.getElementById('expNoswap').onclick = () => runExperiment('noswap');
+document.getElementById('expOnepass').onclick = () => runExperiment('onepass');
+
+window.addEventListener('resize', () => {
+  const size = ballSize();
+  balls.forEach((b, i) => {
+    const s = parseInt(b.style.width);
+    b.style.left = xFor(i, size) + (size - s) / 2 + 'px';
+  });
+});
+
+reset(false);
+
+/* ================= QUIZ ================= */
+const quiz = [
+  { q: 'In Bubble Sort, which two items do we compare each time?',
+    opts: ['The first and last items', 'Two neighbours (side-by-side items)', 'Two random items'],
+    ans: 1, why: 'We always compare side-by-side neighbours and swap if the left one is bigger.' },
+  { q: 'After the FIRST full pass, what is guaranteed?',
+    opts: ['The smallest item is first', 'The biggest item is at the end', 'The list is fully sorted'],
+    ans: 1, why: 'Each pass "bubbles" the biggest remaining item to the end — that\'s the green ball!' },
+  { q: 'When can Bubble Sort stop early?',
+    opts: ['After exactly n passes', 'When a pass finishes with zero swaps', 'It can never stop early'],
+    ans: 1, why: 'If a whole pass needs no swaps, everything is already in order.' },
+];
+let qi = 0, quizCorrect = 0;
+function showQuiz() {
+  const item = quiz[qi];
+  document.getElementById('quizQ').innerHTML = `<strong>Q${qi + 1}/${quiz.length}:</strong> ${item.q}`;
+  const box = document.getElementById('quizOpts');
+  box.innerHTML = '';
+  document.getElementById('quizFeedback').textContent = '';
+  item.opts.forEach((o, i) => {
+    const b = document.createElement('button');
+    b.className = 'quiz-opt'; b.textContent = o;
+    b.onclick = () => {
+      box.querySelectorAll('button').forEach(x => x.disabled = true);
+      const ok = i === item.ans;
+      if (ok) quizCorrect++;
+      b.classList.add(ok ? 'right' : 'wrong');
+      if (!ok) box.children[item.ans].classList.add('right');
+      let tail;
+      if (qi < quiz.length - 1) tail = ' <a href="#" id="nextQ" style="color:var(--accent)">Next →</a>';
+      else {
+        tail = ` 🎉 Quiz done — ${quizCorrect}/${quiz.length} correct!`;
+        if (quizCorrect === quiz.length) award('quiz');
+        else tail += ' <a href="#" id="retryQ" style="color:var(--accent)">Try again</a>';
+      }
+      document.getElementById('quizFeedback').innerHTML =
+        (ok ? '✅ Correct! ' : '❌ Not quite. ') + item.why + tail;
+      const n = document.getElementById('nextQ');
+      if (n) n.onclick = e => { e.preventDefault(); qi++; showQuiz(); };
+      const r = document.getElementById('retryQ');
+      if (r) r.onclick = e => { e.preventDefault(); qi = 0; quizCorrect = 0; showQuiz(); };
+    };
+    box.appendChild(b);
+  });
+}
+showQuiz();
+
+/* ================= RACE ================= */
+const RN = 30;
+let raceTimer = null;
+function buildRaceBars(id, vals) {
+  const box = document.getElementById(id);
+  box.innerHTML = '';
+  vals.forEach(v => {
+    const b = document.createElement('div');
+    b.className = 'bar';
+    b.style.height = v + '%';
+    box.appendChild(b);
+  });
+  return [...box.children];
+}
+function bubbleOps(vals) {
+  const a = [...vals], ops = [];
+  for (let i = 0; i < a.length; i++) {
+    for (let j = 0; j < a.length - i - 1; j++) {
+      ops.push({ t: 'c', i: j });
+      if (a[j] > a[j + 1]) {
+        [a[j], a[j + 1]] = [a[j + 1], a[j]];
+        ops.push({ t: 'w', i: j, v: a[j] }, { t: 'w', i: j + 1, v: a[j + 1] });
+      }
+    }
+  }
+  return ops;
+}
+function mergeOps(vals) {
+  const a = [...vals], ops = [];
+  function ms(lo, hi) {
+    if (hi - lo < 2) return;
+    const mid = (lo + hi) >> 1;
+    ms(lo, mid); ms(mid, hi);
+    const merged = [];
+    let i = lo, j = mid;
+    while (i < mid && j < hi) {
+      ops.push({ t: 'c', i });
+      merged.push(a[i] <= a[j] ? a[i++] : a[j++]);
+    }
+    while (i < mid) merged.push(a[i++]);
+    while (j < hi) merged.push(a[j++]);
+    merged.forEach((v, k) => { a[lo + k] = v; ops.push({ t: 'w', i: lo + k, v }); });
+  }
+  ms(0, a.length);
+  return ops;
+}
+document.getElementById('raceBtn').onclick = () => {
+  clearInterval(raceTimer);
+  document.getElementById('raceResult').style.display = 'none';
+  document.getElementById('racerB').classList.remove('finished');
+  document.getElementById('racerM').classList.remove('finished');
+  const vals = Array.from({ length: RN }, () => Math.floor(Math.random() * 90) + 8);
+  const barsB = buildRaceBars('barsB', vals);
+  const barsM = buildRaceBars('barsM', vals);
+  const opsB = bubbleOps(vals), opsM = mergeOps(vals);
+  let bi = 0, mi = 0;
+  const apply = (ops, idx, bars) => {
+    const op = ops[idx];
+    bars.forEach(b => b.classList.remove('hot'));
+    if (op.t === 'w') bars[op.i].style.height = op.v + '%';
+    if (bars[op.i]) bars[op.i].classList.add('hot');
+  };
+  raceTimer = setInterval(() => {
+    if (bi < opsB.length) {
+      apply(opsB, bi++, barsB);
+      document.getElementById('opsB').textContent = bi;
+      if (bi >= opsB.length) {
+        document.getElementById('racerB').classList.add('finished');
+        barsB.forEach(b => b.classList.remove('hot'));
+      }
+    }
+    if (mi < opsM.length) {
+      apply(opsM, mi++, barsM);
+      document.getElementById('opsM').textContent = mi;
+      if (mi >= opsM.length) {
+        document.getElementById('racerM').classList.add('finished');
+        barsM.forEach(b => b.classList.remove('hot'));
+        sfxLock();
+      }
+    }
+    if (bi >= opsB.length && mi >= opsM.length) {
+      clearInterval(raceTimer);
+      const r = document.getElementById('raceResult');
+      r.style.display = 'block';
+      r.innerHTML = `🏆 <strong>Merge Sort wins!</strong> It needed <strong>${opsM.length}</strong> operations vs Bubble Sort's <strong>${opsB.length}</strong> — about <strong>${(opsB.length / opsM.length).toFixed(1)}× faster</strong> on just ${RN} numbers. With 1 million numbers the gap becomes ~50,000×. That's what O(n²) vs O(n log n) means!`;
+      sfxDone();
+      award('race');
+    }
+  }, 14);
+};
+
+/* ================= GUIDED TOUR ================= */
+const tourSteps = [
+  { sel: '#playBtn', title: '▶ Play / Pause', text: 'Starts the animation. The balls compare and swap automatically. Press again to pause any time.' },
+  { sel: '#stepBtn', title: '⏭ Step', text: 'Moves ONE comparison at a time. Best way to learn — go at your own pace and read the explanation box after each step.' },
+  { sel: '#predictBtn', title: '🎯 Predict mode', text: 'Turn this on and the page asks YOU before every comparison: "will they swap?" Guess 5 in a row to earn a badge!' },
+  { sel: '#speed', title: '🐢 Animation speed', text: 'Drag left for slow (good for beginners), right for fast.' },
+  { sel: '#soundBtn', title: '🔊 Sound effects', text: 'Beeps for compares, whoosh for swaps, a melody when sorted. Toggle off if you prefer silence.' },
+  { sel: '#voiceBtn', title: '🗣 Voice narration', text: 'The page reads every explanation aloud. Use the dropdown next to it to make the voice slower or faster.' },
+  { sel: '#langSel', title: '🌐 Language', text: 'Switch the narration (text AND voice) to Tamil or Hindi.' },
+  { sel: '#customInput', title: '⌨️ Your own numbers', text: 'Type numbers like "34, 7, 91, 12" and press Load to sort YOUR list.' },
+  { sel: '#expNoswap', title: '🧪 Experiments', text: 'Run intentionally broken versions of the code — remove the swap or do only one pass — and see exactly why each line matters.' },
+  { sel: '#explainBtn', title: '🤖 AI Explainer', text: 'Stuck on a step? Click this any time to pause and get a detailed, line-by-line explanation of exactly what just happened — plus click-to-expand answers to common questions like "why n-i-1?" or "why does Java need a temp variable?".' },
+  { sel: '#arrayView', title: '🔢 Live array', text: 'This is the actual array in memory. Watch values move between positions [0], [1], [2]… as swaps happen.' },
+  { sel: '#code-py', title: '💻 Live code', text: 'The exact line running right now lights up blue. Below it, the real values of n, i, j, arr[j] update live. Use the tabs for Python or Java.' },
+  { sel: '#quizOpts', title: '🧠 Quiz', text: 'Three quick questions to test yourself. Get all 3 right for the Quiz Master badge.' },
+  { sel: '#raceBtn', title: '⚡ The Race', text: 'Bubble Sort vs Merge Sort on the same numbers. Watch why speed (Big-O) matters!' },
+];
+let tourIdx = -1, tourEl = null;
+const tourOverlay = document.getElementById('tourOverlay');
+const tourTip = document.getElementById('tourTip');
+function tourShow(i) {
+  if (tourEl) tourEl.classList.remove('tour-target');
+  if (i >= tourSteps.length) { tourEnd(); return; }
+  tourIdx = i;
+  const st = tourSteps[i];
+  tourEl = document.querySelector(st.sel);
+  if (!tourEl) { tourShow(i + 1); return; }
+  tourOverlay.style.display = 'block';
+  tourEl.classList.add('tour-target');
+  tourEl.scrollIntoView({ block: 'center', behavior: 'instant' });
+  document.getElementById('tourTitle').textContent = st.title;
+  document.getElementById('tourText').textContent = st.text;
+  document.getElementById('tourCnt').textContent = (i + 1) + '/' + tourSteps.length;
+  document.getElementById('tourNext').textContent = i === tourSteps.length - 1 ? 'Finish ✓' : 'Next →';
+  const r = tourEl.getBoundingClientRect();
+  tourTip.style.display = 'block';
+  const tw = 320, th = tourTip.offsetHeight || 140;
+  let top = r.bottom + 12;
+  if (top + th > window.innerHeight - 10) top = Math.max(10, r.top - th - 12);
+  let left = Math.min(Math.max(10, r.left), window.innerWidth - tw - 10);
+  tourTip.style.top = top + 'px';
+  tourTip.style.left = left + 'px';
+}
+function tourEnd() {
+  if (tourEl) tourEl.classList.remove('tour-target');
+  tourEl = null; tourIdx = -1;
+  tourOverlay.style.display = 'none';
+  tourTip.style.display = 'none';
+  try { localStorage.setItem('mac_toured', '1'); } catch (e) {}
+}
+document.getElementById('tourBtn').onclick = () => tourShow(0);
+document.getElementById('tourNext').onclick = () => tourShow(tourIdx + 1);
+document.getElementById('tourSkip').onclick = tourEnd;
+tourOverlay.onclick = tourEnd;
+/* Auto-start tour on first visit */
+try { if (!localStorage.getItem('mac_toured')) setTimeout(() => tourShow(0), 800); } catch (e) {}
+
+/* ================= AI EXPLAINER ================= */
+// No live model is called here (this is a static, offline page — there's no
+// server to hold an API key safely). Instead this is a knowledge base of
+// detailed, step-aware explanations, written the way a tutor would talk you
+// through the exact line that just ran, using the REAL values from your run.
+const aiOverlay = document.getElementById('aiOverlay');
+const aiPanel = document.getElementById('aiPanel');
+const aiBody = document.getElementById('aiBody');
+const aiChips = document.getElementById('aiChips');
+
+function currentCodeLang() {
+  return document.querySelector('.tab.on')?.dataset.lang === 'java' ? 'java' : 'py';
+}
+
+function explainForStep() {
+  const s = steps[stepIdx - 1]; // the step that just executed
+  const codeLang = currentCodeLang();
+  if (!s) {
+    return `<p>Nothing has run yet. Press <strong>Step</strong> or <strong>Play</strong> once, then click this button again — I'll explain exactly what just happened.</p>`;
+  }
+  const n = cur.length;
+  let html = '';
+  if (s.t === 'pass') {
+    html = `
+      <p>We just started a new <strong>outer loop pass</strong> — pass <strong>${s.num}</strong> (that's <code>i = ${s.num - 1}</code>).</p>
+      <h5>What does the outer loop do?</h5>
+      <p>The outer loop (<code>for i in range(n)</code>) just counts how many passes we've made. Each full pass guarantees ONE more value bubbles into its correct final spot at the end of the array — so after pass <code>i</code>, the last <code>i</code> elements are already sorted and locked (shown in green).</p>
+      <h5>Why <code>n - i - 1</code> for the inner loop?</h5>
+      <p>Because the last <code>i</code> positions are already sorted from previous passes — there's no point comparing them again. Each pass, the "unsorted zone" shrinks by one from the right. With <code>n = ${n}</code> and <code>i = ${s.num - 1}</code>, this pass will only compare positions 0 through ${n - (s.num - 1) - 2 >= 0 ? n - (s.num - 1) - 2 : 0}.</p>`;
+  } else if (s.t === 'compare') {
+    const willSwap = s.a > s.b;
+    html = `
+      <p>We're comparing two <strong>neighbours</strong>: <code>arr[${s.j}] = ${s.a}</code> and <code>arr[${s.j + 1}] = ${s.b}</code>.</p>
+      <h5>The condition being checked</h5>
+      <p>The code checks <code>${codeLang === 'java' ? `arr[j] > arr[j+1]` : `arr[j] > arr[j + 1]`}</code>. Right now that's <code>${s.a} > ${s.b}</code>, which is <strong>${willSwap ? 'TRUE' : 'FALSE'}</strong>.</p>
+      <p>${willSwap
+        ? `Since ${s.a} is bigger and it's on the LEFT, it's out of order — the next step will swap them so the smaller value (${s.b}) moves left.`
+        : `Since ${s.a} is not bigger than ${s.b}, they're already in the correct relative order, so <strong>no swap happens</strong> — the loop just moves on to compare the next pair.`}</p>
+      <h5>Why compare only neighbours?</h5>
+      <p>Bubble Sort never jumps across the array — it only ever looks at two adjacent items at a time. That's what makes it simple to understand, but also what makes it slow (O(n²)): moving one value far from where it started can take many separate neighbour-swaps.</p>`;
+  } else if (s.t === 'swap') {
+    html = `
+      <p>We just <strong>swapped</strong> <code>arr[${s.j}]</code> and <code>arr[${s.j + 1}]</code> — ${s.a} and ${s.b} traded places.</p>
+      <h5>How the swap actually works</h5>
+      ${codeLang === 'java' ? `
+      <p>In Java you can't do <code>arr[j] = arr[j+1]; arr[j+1] = arr[j];</code> directly — the first line would already have overwritten <code>arr[j]</code>'s old value before you use it! That's why we need a temporary variable:</p>
+      <p><code>int t = arr[j]; arr[j] = arr[j+1]; arr[j+1] = t;</code> — <code>t</code> holds onto the original value just long enough to complete the trade.</p>` : `
+      <p>Python lets you swap in one line: <code>arr[j], arr[j+1] = arr[j+1], arr[j]</code>. Python builds a small temporary tuple <code>(arr[j+1], arr[j])</code> first, THEN assigns it — so it never loses a value, without needing an explicit temp variable like Java does.</p>`}
+      <div class="mistake-note">⚠️ <strong>Common bug:</strong> forgetting the temp variable in Java/C is one of the most common Bubble Sort mistakes — it silently duplicates a value and loses another one, and the array ends up wrong with no error thrown.</div>`;
+  } else if (s.t === 'lock') {
+    html = `
+      <p>Position <strong>${s.idx}</strong> is now <strong style="color:var(--green)">locked in</strong> — its final, sorted value will never change again.</p>
+      <h5>Why can we be sure?</h5>
+      <p>We just finished walking left-to-right comparing every neighbour pair in the unsorted zone. Any time a bigger value showed up, it got swapped rightward — so by the time we reach the end of the pass, the single biggest remaining value MUST have been pushed all the way to the last unsorted position. That's the "bubble" in Bubble Sort.</p>`;
+  } else if (s.t === 'early') {
+    html = `
+      <p>This pass completed with <strong>zero swaps</strong> — that's the early-exit signal.</p>
+      <h5>Why this matters</h5>
+      <p>If a full pass makes no swaps, it means every neighbour pair was already in order — the whole array is sorted. Continuing to loop would just waste time re-checking an already-sorted list, so a well-written Bubble Sort tracks a <code>swapped</code> flag and breaks out immediately.</p>
+      <p>This is also why Bubble Sort's <strong>best case</strong> is O(n) — a single pass over an already-sorted array, instead of the usual O(n²).</p>`;
+  } else if (s.t === 'done') {
+    if (s.variant === 'correct') {
+      html = `
+        <p>🎉 Sorting is complete: <strong>${stats.cmp}</strong> comparisons, <strong>${stats.swap}</strong> swaps, across <strong>${stats.pass}</strong> pass(es).</p>
+        <h5>Was this the best or worst case?</h5>
+        <p>${stats.swap === 0 ? 'Zero swaps means the array was already sorted — this was the BEST case, O(n).' : `${stats.swap} swaps happened, so this was somewhere between best and worst case, O(n²) in general.`}</p>
+        <h5>Recap of the whole algorithm</h5>
+        <p>Outer loop = number of passes. Inner loop = walks the unsorted zone comparing neighbours. Swap = fixes an out-of-order pair. Lock = the unsorted zone shrinks by one from the right each pass. Early exit = stop as soon as a pass makes no swaps.</p>`;
+    } else if (s.variant === 'noswap') {
+      html = `
+        <p>This was the <strong>"Remove the swap"</strong> experiment — the comparison line still ran, but the swap line was deliberately skipped.</p>
+        <h5>Why nothing got sorted</h5>
+        <p>Comparing without swapping is like a teacher noticing two students are out of height order but never actually moving them. The <code>if arr[j] > arr[j+1]</code> line only DETECTS a problem — the swap line is what FIXES it. Without it, the array is untouched.</p>`;
+    } else if (s.variant === 'onepass') {
+      html = `
+        <p>This was the <strong>"Only one pass"</strong> experiment — the outer loop ran just once instead of up to <code>n</code> times.</p>
+        <h5>Why only the last value is correct</h5>
+        <p>One pass only guarantees the SINGLE biggest value bubbles to the end. Every other value may have only moved partway. You need up to <code>n</code> passes because, in the worst case, the smallest value could start at the very end and needs one full pass just to move one step left each time.</p>`;
+    }
+  }
+  return html || `<p>Step through the animation and I'll explain exactly what happened.</p>`;
+}
+
+const AI_FAQ = {
+  ni1: {
+    label: 'Why n − i − 1, not just n?',
+    body: `<h5>Why <code>n - i - 1</code>?</h5>
+      <p>After <code>i</code> passes, the last <code>i</code> elements are already sorted (proven correct — see the "lock" explanation). Comparing them again would be wasted work, and could even go out of bounds: <code>arr[j+1]</code> would crash if <code>j</code> ever reached <code>n-1</code> without the <code>-1</code>.</p>`,
+  },
+  temp: {
+    label: 'Why does Java need a temp variable?',
+    body: `<h5>Java's temp variable</h5>
+      <p><code>arr[j] = arr[j+1]; arr[j+1] = arr[j];</code> is WRONG — after line 1, <code>arr[j]</code> already equals <code>arr[j+1]</code>'s value, so line 2 just copies it back onto itself. One of the two original values is permanently lost.</p>
+      <p>The fix: <code>int t = arr[j]; arr[j] = arr[j+1]; arr[j+1] = t;</code> — save the original value in <code>t</code> BEFORE overwriting it.</p>`,
+  },
+  complexity: {
+    label: "What do O(n²) and O(n) mean here?",
+    body: `<h5>Time complexity</h5>
+      <p><strong>O(n²)</strong> (worst/average case): for <code>n</code> items, the number of comparisons grows roughly with <code>n × n</code>. Double the list size, and the work roughly QUADRUPLES.</p>
+      <p><strong>O(n)</strong> (best case): if the list is already sorted, one pass with zero swaps finishes the whole thing — work grows linearly with size.</p>
+      <p>Try the ⚡ Race further down the page — it shows Bubble Sort's O(n²) against Merge Sort's O(n log n) on the same numbers.</p>`,
+  },
+  stable: {
+    label: 'Is Bubble Sort "stable"?',
+    body: `<h5>Stability</h5>
+      <p>Yes — Bubble Sort only swaps when the left value is STRICTLY greater (<code>&gt;</code>, not <code>&gt;=</code>) than the right. Equal values never swap past each other, so if two equal items started in a particular relative order, they stay in that order after sorting. This matters when sorting, say, students by score but wanting ties to keep their original name order.</p>`,
+  },
+  why_slow: {
+    label: 'Why is Bubble Sort rarely used in real software?',
+    body: `<h5>Why it's mostly educational</h5>
+      <p>O(n²) means Bubble Sort becomes painfully slow on large data — sorting 1 million items could take trillions of comparisons. Algorithms like Merge Sort, Quick Sort, and Tim Sort (Python and Java's built-in sort) achieve O(n log n), which is dramatically faster at scale. Bubble Sort is taught because it's the easiest algorithm to trace by hand and builds intuition for how sorting works at all.</p>`,
+  },
+};
+
+function renderAiChips() {
+  aiChips.innerHTML = '';
+  Object.entries(AI_FAQ).forEach(([key, item]) => {
+    const chip = document.createElement('button');
+    chip.className = 'ai-chip';
+    chip.textContent = '❓ ' + item.label;
+    chip.onclick = () => {
+      aiBody.innerHTML += `<hr style="border-color:var(--border); margin:16px 0;">` + item.body;
+      aiPanel.scrollTop = aiPanel.scrollHeight;
+    };
+    aiChips.appendChild(chip);
+  });
+}
+
+function openAiExplainer() {
+  stopPlay();
+  if (waitingPredict) {
+    // Answer isn't in yet — just explain the last completed step instead of a half-state.
+  }
+  aiBody.innerHTML = explainForStep();
+  renderAiChips();
+  aiOverlay.style.display = 'block';
+  aiPanel.style.display = 'block';
+}
+function closeAiExplainer() {
+  aiOverlay.style.display = 'none';
+  aiPanel.style.display = 'none';
+}
+document.getElementById('explainBtn').onclick = openAiExplainer;
+document.getElementById('aiClose').onclick = closeAiExplainer;
+aiOverlay.onclick = closeAiExplainer;
+
+/* ===== Classroom mode: hide everything except the animation ===== */
+(function () {
+  var btn = document.getElementById('classBtn');
+  if (!btn) return;
+  function apply(on) {
+    document.body.classList.toggle('classroom', on);
+    btn.classList.toggle('on', on);
+    btn.textContent = on ? '\u2715 Exit classroom' : '\U0001F3A5 Classroom';
+    try { localStorage.setItem('mac_classroom', on ? '1' : '0'); } catch (e) {}
+    window.dispatchEvent(new Event('resize'));
+  }
+  btn.onclick = function () { apply(!document.body.classList.contains('classroom')); };
+  var want = false;
+  try {
+    want = localStorage.getItem('mac_classroom') === '1' ||
+           /[?&]classroom=1/.test(location.search);
+  } catch (e) { want = /[?&]classroom=1/.test(location.search); }
+  if (want) apply(true);
+})();
+</script>
+<script>
+/* ===== Offline support (works when served over http/https) ===== */
+if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
+  window.addEventListener('load', function () {
+    navigator.serviceWorker.register('sw.js').catch(function () { /* offline mode simply unavailable */ });
+  });
+}
+</script>
+<script src="firebase-config.js"></script>
+<script src="mindaicode-auth.js"></script>
+</body>
+</html>

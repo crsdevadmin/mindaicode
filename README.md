@@ -1,98 +1,107 @@
-# vinext-starter
+# 🧠 MindAICode
 
-A clean full-stack starter running on
-[vinext](https://github.com/cloudflare/vinext), with optional Cloudflare D1 and
-Drizzle support.
+**Learn. Visualize. Code. Master.**
 
-## Prerequisites
+A free, animated Data Structures & Algorithms course for college students. Every algorithm is
+animated with a real-world metaphor, explained line by line as it runs, and paired with quizzes,
+prediction games and progress badges.
 
-- Node.js `>=22.13.0`
+No build step, no backend, no dependencies — every page is a single self-contained HTML file that
+works offline once loaded.
 
-## Quick Start
+---
+
+## Live site
+
+Once GitHub Pages is enabled (see below), the site is served at:
+
+```
+https://<your-username>.github.io/<repo-name>/
+```
+
+---
+
+## The course
+
+Start at **Programming Basics** if you've never written code. Otherwise jump straight to Module 0.
+
+| | Module | Page |
+|---|---|---|
+| — | **Programming Basics** — variables, arrays, indexing, loops, functions, recursion, taught as six games | `mindaicode-programming-basics.html` |
+| 0 | Foundations — Big-O notation | `mindaicode-big-o.html` |
+| 1 | Sorting — Bubble, Selection, Insertion, Merge, Quick, Heap | `mindaicode-bubble-sort.html` … `mindaicode-heap-sort.html` |
+| 2 | Searching — Linear vs Jump vs Binary | `mindaicode-binary-search.html` |
+| 3 | Linear Data Structures — Stack, Queue, Linked List | `mindaicode-linear-structures.html` |
+| 4 | Hashing — chaining vs open addressing | `mindaicode-hashing.html` |
+| 5 | Trees — BST, traversals, min-heap | `mindaicode-trees.html` |
+| 6 | Graphs — BFS, DFS, Dijkstra | `mindaicode-graphs.html` |
+| 7 | Recursion & Dynamic Programming — Fibonacci, Knapsack, LCS | `mindaicode-recursion-dp.html` |
+| 8 | Interview Prep Capstone — timed challenge, leaderboard, mock interview | `mindaicode-capstone.html` |
+
+**Extras:** all-six sorting race (`mindaicode-race-all.html`), editable code sandbox
+(`mindaicode-sandbox.html`), stability explainer (`mindaicode-stability.html`), revision mode
+(`mindaicode-revision.html`), and a course roadmap (`mindaicode-course-path.html`).
+
+---
+
+## Features
+
+- **Animated visualizations** — balls, bars and students, with real-world metaphors throughout
+- **Predict mode** — guess the next step before the algorithm takes it
+- **AI Explainer** — pause any sort and ask what a line does (on the six sorting pages)
+- **7 languages** on the sorting pages — English, தமிழ், हिंदी, తెలుగు, ಕನ್ನಡ, বাংলা, मराठी
+- **Classroom mode** — larger text and slower animations for projecting to a class
+- **Progress & badges** — saved locally in the browser, with a course-wide roadmap
+- **Works offline** — installable as an app (PWA) once served over HTTPS
+
+---
+
+## Running it
+
+**Locally** — just open `mindaicode-home.html` in a browser. Everything works except the offline
+service worker and app install, which browsers only permit over `http://` or `https://`.
+
+To get those locally too, serve the folder:
 
 ```bash
-npm install
-npm run dev
-npm run build
+python3 -m http.server 8000
+# then visit http://localhost:8000
 ```
 
-This starter does not use `wrangler.jsonc`.
+---
 
-## Included Shape
+## Deploying to GitHub Pages
 
-- edit site code under `app/`
-- `.openai/hosting.json` declares optional Sites D1 and R2 bindings
-- `vite.config.ts` simulates declared bindings for local development
-- `db/schema.ts` starts intentionally empty
-- `examples/d1/` contains an optional D1 example surface
-- `drizzle.config.ts` supports local migration generation when needed
+1. Create a new repository on GitHub.
+2. Upload every file in this folder to the repository root (or `git push` it).
+3. In the repo, go to **Settings → Pages**.
+4. Under **Source**, choose **Deploy from a branch**, pick branch `main` and folder `/ (root)`.
+5. Save. After a minute the site is live at `https://<username>.github.io/<repo>/`.
 
-## Workspace Auth Headers
+`index.html` redirects to the home page, so the bare URL works.
 
-OpenAI workspace sites can read the current user's email from
-`oai-authenticated-user-email`.
+---
 
-SIWC-authenticated workspace sites may also receive
-`oai-authenticated-user-full-name` when the user's SIWC profile has a non-empty
-`name` claim. The full-name value is percent-encoded UTF-8 and is accompanied by
-`oai-authenticated-user-full-name-encoding: percent-encoded-utf-8`.
+## Tests
 
-Treat the full name as optional and fall back to email when it is absent:
+Every page has an automated test suite built on [jsdom](https://github.com/jsdom/jsdom) — 20 files
+covering algorithm correctness, UI wiring, edge cases and accessibility of the teaching content.
+Algorithm results are cross-checked against independent brute-force implementations rather than
+against themselves.
 
-```tsx
-import { headers } from "next/headers";
-
-export default async function Home() {
-  const requestHeaders = await headers();
-  const email = requestHeaders.get("oai-authenticated-user-email");
-  const encodedFullName = requestHeaders.get("oai-authenticated-user-full-name");
-  const fullName =
-    encodedFullName &&
-    requestHeaders.get("oai-authenticated-user-full-name-encoding") ===
-      "percent-encoded-utf-8"
-      ? decodeURIComponent(encodedFullName)
-      : null;
-
-  const displayName = fullName ?? email;
-  // ...
-}
+```bash
+npm install jsdom
+node basicstest.js      # Programming Basics — 175 assertions
+node searchtest.js      # Linear / Jump / Binary Search
+node graphtest.js       # BFS / DFS / Dijkstra
+# …and so on for each *test.js file
 ```
 
-## Optional Dispatch-Owned ChatGPT Sign-In
+---
 
-Import the ready-to-use helpers from `app/chatgpt-auth.ts` when the site needs
-optional or required ChatGPT sign-in:
+## Licence
 
-- Use `getChatGPTUser()` for optional signed-in UI.
-- Use `requireChatGPTUser(returnTo)` for server-rendered pages that should send
-  anonymous visitors through Sign in with ChatGPT.
-- Use `chatGPTSignInPath(returnTo)` and `chatGPTSignOutPath(returnTo)` for
-  browser links or actions.
-- Pass a same-origin relative `returnTo` path for the destination after sign-in
-  or sign-out. The helper validates and safely encodes it.
-- Mark protected pages with `export const dynamic = "force-dynamic"` because
-  they depend on per-request identity headers.
+Free to use for teaching and learning.
 
-Dispatch owns `/signin-with-chatgpt`, `/signout-with-chatgpt`, `/callback`, the
-OAuth cookies, and identity header injection. Do not implement app routes for
-those reserved paths. Routes that do not import and call the helper remain
-anonymous-compatible.
-
-SIWC establishes identity only; it does not prove workspace membership. Use the
-Sites hosting platform's access policy controls for workspace-wide restrictions,
-or enforce explicit server-side membership or allowlist checks.
-
-Use SIWC for account pages, user-specific dashboards, saved records, and write
-actions tied to the current ChatGPT user. Leave public content anonymous.
-
-## Useful Commands
-
-- `npm run dev`: start local development
-- `npm run build`: verify the vinext build output
-- `npm test`: build the starter and verify its rendered loading skeleton
-- `npm run db:generate`: generate Drizzle migrations after schema changes
-
-## Learn More
-
-- [vinext Documentation](https://github.com/cloudflare/vinext)
-- [Drizzle D1 Guide](https://orm.drizzle.team/docs/get-started/d1-new)
+> **Note on translations:** the Telugu, Kannada, Bengali and Marathi translations were machine-generated
+> and have **not** yet been reviewed by native speakers. Corrections are very welcome.

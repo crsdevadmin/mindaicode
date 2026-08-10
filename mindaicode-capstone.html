@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MindAICode — Interview Prep Capstone</title>
+<style>
+  :root {
+    --bg:#0d1117; --panel:#161b22; --panel2:#1c2333; --accent:#58a6ff; --accent2:#f78166;
+    --purple:#d2a8ff; --green:#3fb950; --yellow:#d29922; --red:#f85149;
+    --text:#e6edf3; --muted:#8b949e; --border:#30363d;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family:'Segoe UI', system-ui, sans-serif; background:var(--bg); color:var(--text); min-height:100vh; }
+  header {
+    display:flex; align-items:center; justify-content:space-between;
+    padding:14px 28px; background:var(--panel); border-bottom:1px solid var(--border); flex-wrap:wrap; gap:8px;
+  }
+  .logo { font-size:22px; font-weight:800; }
+  .logo span { color:var(--accent); }
+  .tagline { display:flex; gap:14px; align-items:center; flex-wrap:wrap; font-size:13px; }
+  .tagline a { text-decoration:none; color:var(--muted); }
+  .container { max-width:1080px; margin:0 auto; padding:24px 20px 60px; }
+
+  .card { background:var(--panel); border:1px solid var(--border); border-radius:12px; padding:20px; margin-bottom:18px; }
+  h1 { font-size:24px; margin-bottom:6px; }
+  h2.secH { font-size:19px; margin-bottom:4px; }
+  h3 { font-size:16px; margin-bottom:10px; }
+  .subtitle { color:var(--muted); font-size:14px; margin-bottom:16px; }
+
+  .intro {
+    background:linear-gradient(135deg, rgba(210,168,255,.12), rgba(88,166,255,.08));
+    border:1px solid var(--border); border-radius:12px; padding:22px 24px; margin-bottom:18px;
+  }
+  .intro h1 { font-size:24px; margin-bottom:8px; }
+  .intro p { font-size:15px; line-height:1.7; margin-bottom:10px; }
+
+  .controls { display:flex; flex-wrap:wrap; gap:10px; align-items:center; margin-bottom:14px; }
+  button {
+    background:var(--accent); color:#0d1117; border:none; padding:9px 16px;
+    border-radius:8px; font-size:13.5px; font-weight:700; cursor:pointer; font-family:inherit;
+    transition:filter .15s, transform .1s;
+  }
+  button:hover { filter:brightness(1.14); }
+  button:active { transform:scale(.97); }
+  button.secondary { background:var(--panel2); color:var(--text); border:1px solid var(--border); }
+  button.danger { background:rgba(248,81,73,.16); color:var(--red); border:1px solid rgba(248,81,73,.4); }
+  button:disabled { opacity:.4; cursor:not-allowed; }
+
+  .badgeLbl {
+    display:inline-block; font-size:11px; font-weight:700; padding:3px 10px; border-radius:10px;
+    background:rgba(210,168,255,.12); color:var(--purple); border:1px solid rgba(210,168,255,.35); margin-left:8px;
+  }
+  .badgeLbl.on { background:rgba(63,185,80,.14); color:var(--green); border-color:rgba(63,185,80,.4); }
+
+  .statRow { display:flex; gap:14px; flex-wrap:wrap; margin-bottom:14px; font-size:13.5px; }
+  .statBox { background:var(--panel2); border:1px solid var(--border); border-radius:8px; padding:8px 14px; min-width:90px; }
+  .statBox b { font-size:17px; display:block; font-variant-numeric:tabular-nums; }
+
+  .topicTag {
+    display:inline-block; font-size:11px; font-weight:700; padding:2px 9px; border-radius:10px;
+    background:rgba(88,166,255,.12); color:var(--accent); border:1px solid rgba(88,166,255,.32); margin-bottom:8px;
+  }
+  #quizOpts button { display:block; width:100%; text-align:left; margin-bottom:8px; font-weight:500; }
+
+  .lbTable { width:100%; border-collapse:collapse; font-size:13.5px; }
+  .lbTable th, .lbTable td { text-align:left; padding:8px 10px; border-bottom:1px solid var(--border); }
+  .lbTable th { color:var(--muted); font-size:11.5px; text-transform:uppercase; letter-spacing:.4px; }
+  .lbTable tr.best td { color:var(--green); font-weight:700; }
+  .emptyLb { color:var(--muted); font-size:13px; font-style:italic; }
+
+  .flashCard { background:var(--bg); border:1px dashed var(--border); border-radius:10px; padding:18px; margin-bottom:12px; }
+  .flashCard .name { font-size:18px; font-weight:700; margin-bottom:4px; }
+  .flashCard .prompt { color:var(--muted); font-size:14px; margin-bottom:12px; }
+  .checklist { display:none; }
+  .checklist.on { display:block; }
+  .checklist ul { padding-left:20px; line-height:1.8; font-size:14px; }
+  .checklist li { color:var(--text); }
+
+  .note { font-size:13.5px; color:var(--muted); min-height:20px; margin-top:8px; line-height:1.55; }
+  .note b { color:var(--text); }
+
+  @media (max-width:640px) {
+    header { padding:12px 16px; } .logo { font-size:19px; }
+    .container { padding:16px 14px 40px; }
+    .card, .intro { padding:16px; }
+    h1, .intro h1 { font-size:20px; }
+    .controls { flex-direction:column; align-items:stretch; }
+    button { width:100%; }
+  }
+</style>
+<script>if(location.protocol.startsWith("http")){var m=document.createElement("link");m.rel="manifest";m.href="manifest.json";document.head.appendChild(m);}</script>
+<meta name="theme-color" content="#0d1117">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+</head>
+<body>
+
+<header>
+  <a href="mindaicode-home.html" style="text-decoration:none; color:inherit;">
+    <div class="logo">🧠 MindAI<span>Code</span></div>
+  </a>
+  <div class="tagline">
+    <a href="mindaicode-course-path.html" style="color:var(--purple); font-weight:600;">🗺️ Course path</a>
+    <a href="mindaicode-home.html">🏠 All algorithms</a>
+  </div>
+</header>
+
+<div class="container">
+
+  <div class="intro">
+    <h1>🏆 Interview Prep Capstone</h1>
+    <p>Everything from every module, mixed together and timed — the way an actual interview or exam would test it. Race the clock, beat your own best score, then practice explaining an algorithm out loud in Mock Interview mode.</p>
+    <p style="margin-bottom:0; color:var(--muted); font-size:14px;">Module 8 · The final stop on the course path.</p>
+  </div>
+
+  <!-- ================= TIMED CHALLENGE ================= -->
+  <div class="card">
+    <h2 class="secH">⏱️ Timed Challenge <span id="challengeBadge" class="badgeLbl">not earned</span> <span id="perfectBadge" class="badgeLbl">not earned</span></h2>
+    <p class="subtitle">10 questions, pulled from every module you've covered. The clock keeps running the whole time.</p>
+    <div class="controls">
+      <button id="startChallengeBtn">▶ Start Challenge</button>
+      <button id="quitChallengeBtn" class="secondary" style="display:none;">⏹ Quit</button>
+    </div>
+    <div class="statRow" id="challengeStats" style="display:none;">
+      <div class="statBox">Question<b id="qNum">–</b></div>
+      <div class="statBox">Score<b id="qScore">0</b></div>
+      <div class="statBox">Time<b id="qTime">0.0s</b></div>
+    </div>
+    <div id="challengeBody" style="display:none;">
+      <div class="topicTag" id="quizTopic"></div>
+      <div id="quizQ" style="font-size:15px; margin-bottom:12px;"></div>
+      <div id="quizOpts"></div>
+      <div id="quizFb" style="font-size:13.5px; margin-top:10px; color:var(--muted); min-height:20px; line-height:1.6;"></div>
+    </div>
+    <div class="note" id="challengeNote">Press Start Challenge to begin. Your best runs are saved to the leaderboard below.</div>
+  </div>
+
+  <!-- ================= LEADERBOARD ================= -->
+  <div class="card">
+    <h2 class="secH">📋 Your Leaderboard <span id="leaderboardBadge" class="badgeLbl">not earned</span></h2>
+    <p class="subtitle">Your best runs on this device, ranked by score, then by speed.</p>
+    <div class="controls">
+      <button id="clearLbBtn" class="danger">Clear leaderboard</button>
+    </div>
+    <div id="lbWrap"></div>
+  </div>
+
+  <!-- ================= MOCK INTERVIEW ================= -->
+  <div class="card">
+    <h2 class="secH">🎤 Mock Interview <span id="mockBadge" class="badgeLbl">not earned</span></h2>
+    <p class="subtitle">Explain an algorithm out loud in your own words first — <em>then</em> reveal the checklist to see what a strong answer covers.</p>
+    <div class="controls">
+      <button id="newMockBtn">🔀 New question</button>
+      <button id="revealBtn" class="secondary">👁 Reveal checklist</button>
+    </div>
+    <div class="flashCard">
+      <div class="name" id="mockName">—</div>
+      <div class="prompt" id="mockPrompt">Press "New question" to get started.</div>
+      <div class="checklist" id="mockChecklist"><ul id="mockList"></ul></div>
+    </div>
+    <div class="note" id="mockNote"></div>
+  </div>
+
+</div>
+
+<script>
+/* ================= QUESTION BANK (spans every built module) ================= */
+const BANK = [
+  { topic:'Big-O', q:'Doubling the input size roughly quadruples the running time. What complexity class is this?', opts:['O(n)','O(n²)','O(log n)'], ans:1, why:'If work grows with the square of n, doubling n multiplies the work by 2² = 4 — the signature of O(n²).' },
+  { topic:'Big-O', q:'Which grows fastest as n gets large?', opts:['O(n log n)','O(2ⁿ)','O(n)'], ans:1, why:'Exponential growth O(2ⁿ) eventually outpaces every polynomial complexity, no matter how it looks for small n.' },
+  { topic:'Sorting', q:'Which of these sorts is NOT O(n²) in the worst case?', opts:['Bubble Sort','Insertion Sort','Merge Sort'], ans:2, why:'Merge Sort\'s divide-and-conquer structure guarantees O(n log n) even in the worst case, unlike the simple O(n²) sorts.' },
+  { topic:'Sorting', q:'Which sort is NOT guaranteed to be stable?', opts:['Insertion Sort','Merge Sort','Quick Sort (typical in-place partition)'], ans:2, why:'A typical in-place Quick Sort partition can swap equal elements past each other, breaking their original relative order.' },
+  { topic:'Sorting', q:'Heap Sort builds which structure before extracting elements?', opts:['A max-heap','A binary search tree','A hash table'], ans:0, why:'Heap Sort builds a max-heap so the largest remaining value is always at the root, ready to be pulled off one at a time.' },
+  { topic:'Searching', q:'Binary search requires the data to be:', opts:['Sorted','Unique values only','Stored in a linked list'], ans:0, why:'Binary search decides which half to discard by comparing to the middle — that only works if the data is already in order.' },
+  { topic:'Searching', q:'Jump Search\'s optimal block size is approximately:', opts:['log₂(n)','√n','n / 2'], ans:1, why:'A block size of √n balances the cost of hopping between blocks against the cost of scanning within one, giving O(√n) overall.' },
+  { topic:'Linear Structures', q:'A stack follows which discipline?', opts:['FIFO','LIFO','Random access'], ans:1, why:'Only the top of a stack can be added to or removed from — last in, first out.' },
+  { topic:'Linear Structures', q:'Why is a plain array a poor fit for a queue\'s dequeue operation?', opts:['Arrays can\'t hold strings','Removing from the front forces every other element to shift, which is O(n)','Arrays are always sorted'], ans:1, why:'Shifting every remaining element down by one after removing the front is O(n) — a linked list or deque avoids this by removing from the front in O(1).' },
+  { topic:'Linear Structures', q:'Deleting the head of a singly linked list requires updating:', opts:['Every node in the list','Just the head pointer, to the second node','Nothing — lists fix themselves'], ans:1, why:'The head pointer is the only way in to the list. Move it to the second node and the old head is safely detached.' },
+  { topic:'Hashing', q:'Two different keys land on the same slot. This is called a:', opts:['Collision','Tombstone','Resize'], ans:0, why:'Any time two distinct keys hash to the same slot, that is a collision — every hash table needs a strategy for it.' },
+  { topic:'Hashing', q:'Why must deleting a key in open addressing leave a tombstone instead of clearing the slot to empty?', opts:['Tombstones look nicer','A later search could stop too early at an empty slot and miss a key that probed past it','It\'s required for the hash function to work'], ans:1, why:'Search probes forward until hitting a truly empty slot. Clearing a deleted slot to empty could make it stop early and wrongly report "not found" for a key placed further along.' },
+  { topic:'Hashing', q:'What does "load factor" measure?', opts:['CPU usage','Number of stored keys divided by table size','The length of the longest key'], ans:1, why:'Load factor tracks how full a hash table is getting — the number you watch to decide when to resize.' },
+  { topic:'Trees', q:'In a Binary Search Tree, an inorder traversal always visits nodes in:', opts:['Random order','Sorted order','Reverse insertion order'], ans:1, why:'Inorder visits left subtree (smaller), then the node, then right subtree (bigger) — recursively that always yields sorted order.' },
+  { topic:'Trees', q:'Deleting a BST node with two children replaces it with:', opts:['Its parent','A random leaf','Its in-order successor'], ans:2, why:'The in-order successor (smallest value in the right subtree) is guaranteed to keep the BST property valid when swapped in.' },
+  { topic:'Trees', q:'In a min-heap, where is the smallest value always located?', opts:['At a leaf','At the root','Position depends on insert order'], ans:1, why:'The heap property (parent ≤ children), applied all the way up, guarantees the minimum can only be at the root.' },
+  { topic:'Graphs', q:'BFS uses which data structure to decide what to visit next?', opts:['A stack','A queue','A priority queue'], ans:1, why:'BFS explores in the order things were discovered — first discovered, first explored — which is exactly queue (FIFO) behavior.' },
+  { topic:'Graphs', q:'Why can Dijkstra\'s cheapest path use MORE roads than BFS\'s fewest-hops path?', opts:['Dijkstra has a bug','Dijkstra minimizes total weight, not hop count — more, shorter roads can beat fewer, longer ones','Dijkstra always visits nodes alphabetically'], ans:1, why:'BFS only counts hops. Dijkstra adds up actual edge weights, so a route with more (but cheaper) roads can beat a route with fewer (but pricier) ones.' },
+  { topic:'Graphs', q:'What must be true of every edge weight for Dijkstra\'s algorithm to work correctly?', opts:['They must all be equal','They must be zero or positive','They must be prime numbers'], ans:1, why:'Dijkstra finalizes a node\'s distance the moment it\'s settled and never revisits it — a negative edge discovered later could invalidate that, so weights must stay non-negative.' },
+  { topic:'Recursion & DP', q:'Why is naive recursive Fibonacci so slow for larger n?', opts:['JavaScript is slow', 'It recomputes the exact same sub-problems repeatedly', 'Recursion always doubles speed'], ans:1, why:'Both branches of the call tree end up requesting the same smaller Fibonacci values many times over — memoization is what eliminates that repeated work.' },
+  { topic:'Recursion & DP', q:'In the 0/1 Knapsack DP table, dp[i][c] represents:', opts:['The weight of item i', 'The best value achievable using the first i items with capacity c', 'The number of items remaining'], ans:1, why:'Each cell answers a smaller version of the same question — the final answer is just the bottom-right cell.' },
+  { topic:'Recursion & DP', q:'A "subsequence" (as in Longest Common Subsequence) does NOT need its matching characters to be:', opts:['In the same relative order', 'Touching / contiguous', 'The same case'], ans:1, why:'A subsequence can skip characters as long as it doesn\'t reorder them — that\'s the difference from a contiguous "substring."' },
+];
+
+/* ================= TIMED CHALLENGE ================= */
+const CHALLENGE_SIZE = 10;
+let session = null; // { questions, idx, score, startTime, finished }
+let challengeTimer = null;
+
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+function startChallenge() {
+  const picked = shuffle(BANK).slice(0, Math.min(CHALLENGE_SIZE, BANK.length));
+  session = { questions: picked, idx: 0, score: 0, startTime: Date.now(), finished: false };
+  document.getElementById('challengeStats').style.display = 'flex';
+  document.getElementById('challengeBody').style.display = 'block';
+  document.getElementById('startChallengeBtn').style.display = 'none';
+  document.getElementById('quitChallengeBtn').style.display = 'inline-block';
+  document.getElementById('challengeNote').textContent = '';
+  clearInterval(challengeTimer);
+  challengeTimer = setInterval(updateTimerDisplay, 100);
+  showChallengeQuestion();
+}
+function updateTimerDisplay() {
+  if (!session) return;
+  const elapsed = (Date.now() - session.startTime) / 1000;
+  document.getElementById('qTime').textContent = elapsed.toFixed(1) + 's';
+}
+function showChallengeQuestion() {
+  const item = session.questions[session.idx];
+  document.getElementById('qNum').textContent = `${session.idx + 1}/${session.questions.length}`;
+  document.getElementById('qScore').textContent = session.score;
+  document.getElementById('quizTopic').textContent = item.topic;
+  document.getElementById('quizQ').textContent = item.q;
+  const box = document.getElementById('quizOpts');
+  box.innerHTML = '';
+  document.getElementById('quizFb').textContent = '';
+  item.opts.forEach((o, i) => {
+    const b = document.createElement('button');
+    b.className = 'secondary';
+    b.textContent = o;
+    b.onclick = () => {
+      box.querySelectorAll('button').forEach(x => x.disabled = true);
+      const correct = i === item.ans;
+      if (correct) session.score++;
+      b.style.borderColor = correct ? 'var(--green)' : 'var(--red)';
+      b.style.background = correct ? 'rgba(63,185,80,.15)' : 'rgba(248,81,73,.15)';
+      if (!correct) {
+        const right = box.children[item.ans];
+        right.style.borderColor = 'var(--green)';
+        right.style.background = 'rgba(63,185,80,.15)';
+      }
+      document.getElementById('qScore').textContent = session.score;
+      const isLast = session.idx >= session.questions.length - 1;
+      const tail = isLast ? ' <a href="#" id="nq" style="color:var(--accent)">Finish →</a>' : ' <a href="#" id="nq" style="color:var(--accent)">Next →</a>';
+      document.getElementById('quizFb').innerHTML = (correct ? '✅ ' : '❌ ') + item.why + tail;
+      document.getElementById('nq').onclick = e => {
+        e.preventDefault();
+        session.idx++;
+        if (session.idx >= session.questions.length) finishChallenge();
+        else showChallengeQuestion();
+      };
+    };
+    box.appendChild(b);
+  });
+}
+function finishChallenge() {
+  clearInterval(challengeTimer);
+  const elapsedMs = Date.now() - session.startTime;
+  session.finished = true;
+  document.getElementById('challengeBody').style.display = 'none';
+  document.getElementById('challengeStats').style.display = 'none';
+  document.getElementById('startChallengeBtn').style.display = 'inline-block';
+  document.getElementById('startChallengeBtn').textContent = '▶ Try again';
+  document.getElementById('quitChallengeBtn').style.display = 'none';
+  const total = session.questions.length;
+  document.getElementById('challengeNote').innerHTML =
+    `🏁 Finished: <b>${session.score}/${total}</b> correct in <b>${(elapsedMs / 1000).toFixed(1)}s</b>.`;
+  saveLbEntry(session.score, total, elapsedMs);
+  setFlag('mcap_badge_challenge');
+  if (session.score === total) setFlag('mcap_badge_perfect');
+  updateBadgeLabels();
+  renderLeaderboard();
+}
+document.getElementById('startChallengeBtn').onclick = startChallenge;
+document.getElementById('quitChallengeBtn').onclick = () => {
+  clearInterval(challengeTimer);
+  session = null;
+  document.getElementById('challengeBody').style.display = 'none';
+  document.getElementById('challengeStats').style.display = 'none';
+  document.getElementById('startChallengeBtn').style.display = 'inline-block';
+  document.getElementById('quitChallengeBtn').style.display = 'none';
+  document.getElementById('challengeNote').textContent = 'Challenge cancelled — no leaderboard entry was saved.';
+};
+
+/* ================= LEADERBOARD ================= */
+const LB_KEY = 'mcap_leaderboard';
+function loadLb() { try { return JSON.parse(localStorage.getItem(LB_KEY) || '[]'); } catch (e) { return []; } }
+function saveLb(arr) { try { localStorage.setItem(LB_KEY, JSON.stringify(arr)); } catch (e) {} }
+function sortLb(arr) {
+  return [...arr].sort((a, b) => (b.score - a.score) || (a.timeMs - b.timeMs));
+}
+function saveLbEntry(score, total, timeMs) {
+  let arr = loadLb();
+  arr.push({ score, total, timeMs, date: new Date().toISOString() });
+  arr = sortLb(arr).slice(0, 10);
+  saveLb(arr);
+  if (arr.length >= 3) setFlag('mcap_badge_leaderboard');
+  updateBadgeLabels();
+}
+function renderLeaderboard() {
+  const arr = sortLb(loadLb());
+  const wrap = document.getElementById('lbWrap');
+  if (arr.length === 0) { wrap.innerHTML = '<div class="emptyLb">No runs yet — finish a Timed Challenge to appear here.</div>'; return; }
+  let html = '<table class="lbTable"><thead><tr><th>#</th><th>Score</th><th>Time</th><th>Date</th></tr></thead><tbody>';
+  arr.forEach((e, i) => {
+    html += `<tr class="${i === 0 ? 'best' : ''}"><td>${i + 1}</td><td>${e.score}/${e.total}</td><td>${(e.timeMs / 1000).toFixed(1)}s</td><td>${new Date(e.date).toLocaleDateString()}</td></tr>`;
+  });
+  html += '</tbody></table>';
+  wrap.innerHTML = html;
+}
+document.getElementById('clearLbBtn').onclick = () => {
+  saveLb([]);
+  renderLeaderboard();
+};
+
+/* ================= MOCK INTERVIEW ================= */
+const MOCK_TOPICS = [
+  { name:'Bubble Sort', href:'mindaicode-bubble-sort.html', points:['Compares each pair of neighbouring elements','Swaps them if they\'re in the wrong order','Repeats passes until a full pass makes no swaps','Worst case O(n²), best case O(n) if already sorted'] },
+  { name:'Merge Sort', href:'mindaicode-merge-sort.html', points:['Splits the list in half recursively until pieces are size 1','Merges sorted halves back together in order','Needs extra space for the merge step','Guaranteed O(n log n), even worst case'] },
+  { name:'Binary Search', href:'mindaicode-binary-search.html', points:['Requires the data to already be sorted','Compares the target to the middle element','Discards half the remaining range each step','O(log n) time'] },
+  { name:'Stack', href:'mindaicode-linear-structures.html', points:['Add and remove only from the "top"','Last In, First Out (LIFO)','Push and pop are both O(1)','Real examples: undo history, call stack, browser back button'] },
+  { name:'Hash Table (chaining)', href:'mindaicode-hashing.html', points:['A hash function maps a key to a slot index','Collisions store multiple keys in the same slot\'s list','Average O(1) insert/search/delete if load factor stays low','Never "fills up" the way open addressing can'] },
+  { name:'Binary Search Tree', href:'mindaicode-trees.html', points:['Left subtree smaller, right subtree bigger, at every node','Inorder traversal always yields sorted order','Search/insert/delete are O(log n) if balanced, O(n) if skewed','Deleting a two-child node uses its in-order successor'] },
+  { name:'BFS (Breadth-First Search)', href:'mindaicode-graphs.html', points:['Uses a queue, explores level by level','Finds the path with the fewest edges in an unweighted graph','O(V + E) time','Does NOT guarantee the cheapest-weight path'] },
+  { name:'Dijkstra\'s Algorithm', href:'mindaicode-graphs.html', points:['Always settles the closest unsettled node next','Guarantees the cheapest total-weight path','Requires all edge weights to be non-negative','Typically O((V+E) log V) with a priority queue'] },
+  { name:'Memoized Fibonacci', href:'mindaicode-recursion-dp.html', points:['Caches each sub-problem\'s answer the first time it\'s computed','Turns exponential naive recursion into O(n)','Trades memory for time','Same idea as tabulated DP, just top-down instead of bottom-up'] },
+  { name:'0/1 Knapsack', href:'mindaicode-recursion-dp.html', points:['Each item is taken whole or not at all','dp[i][c] = best value using first i items with capacity c','O(n × capacity) time and space','Backtracking through the table reveals which items were chosen'] },
+];
+let mockCurrent = null;
+let mockRevealCount = 0;
+function newMockQuestion() {
+  mockCurrent = MOCK_TOPICS[Math.floor(Math.random() * MOCK_TOPICS.length)];
+  document.getElementById('mockName').textContent = mockCurrent.name;
+  document.getElementById('mockPrompt').innerHTML = `Explain how <b>${mockCurrent.name}</b> works, out loud, in your own words. Then reveal the checklist.`;
+  document.getElementById('mockChecklist').classList.remove('on');
+  document.getElementById('mockList').innerHTML = '';
+  document.getElementById('mockNote').innerHTML = `<a href="${mockCurrent.href}" style="color:var(--accent);">Review this page →</a>`;
+}
+document.getElementById('newMockBtn').onclick = newMockQuestion;
+document.getElementById('revealBtn').onclick = () => {
+  if (!mockCurrent) return;
+  document.getElementById('mockList').innerHTML = mockCurrent.points.map(p => `<li>${p}</li>`).join('');
+  document.getElementById('mockChecklist').classList.add('on');
+  mockRevealCount++;
+  if (mockRevealCount >= 3) setFlag('mcap_badge_mock');
+  updateBadgeLabels();
+};
+
+/* ================= BADGES ================= */
+function readFlag(key) { try { return localStorage.getItem(key) === '1'; } catch (e) { return false; } }
+function setFlag(key) { try { localStorage.setItem(key, '1'); } catch (e) {} }
+function updateBadgeLabels() {
+  const map = { challengeBadge: 'mcap_badge_challenge', perfectBadge: 'mcap_badge_perfect', leaderboardBadge: 'mcap_badge_leaderboard', mockBadge: 'mcap_badge_mock' };
+  Object.entries(map).forEach(([elId, key]) => {
+    const el = document.getElementById(elId);
+    const on = readFlag(key);
+    el.textContent = (elId === 'perfectBadge' ? 'perfect run: ' : '') + (on ? 'earned ✓' : 'not earned');
+    el.classList.toggle('on', on);
+  });
+}
+
+renderLeaderboard();
+updateBadgeLabels();
+</script>
+<script>
+/* ===== Offline support (works when served over http/https) ===== */
+if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
+  window.addEventListener('load', function () {
+    navigator.serviceWorker.register('sw.js').catch(function () { /* offline mode simply unavailable */ });
+  });
+}
+</script>
+<script src="firebase-config.js"></script>
+<script src="mindaicode-auth.js"></script>
+</body>
+</html>
