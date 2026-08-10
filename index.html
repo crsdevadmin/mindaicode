@@ -4,25 +4,546 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>MindAICode — Learn. Visualize. Code. Master.</title>
-<link rel="canonical" href="mindaicode-home.html">
-<meta http-equiv="refresh" content="0; url=mindaicode-home.html">
-<meta name="theme-color" content="#0d1117">
 <style>
-  body {
-    font-family:'Segoe UI', system-ui, sans-serif; background:#0d1117; color:#e6edf3;
-    min-height:100vh; display:flex; align-items:center; justify-content:center; margin:0; text-align:center;
+  :root {
+    --bg: #0d1117;
+    --panel: #161b22;
+    --panel2: #1c2333;
+    --accent: #58a6ff;
+    --accent2: #f78166;
+    --purple: #d2a8ff;
+    --green: #3fb950;
+    --yellow: #d29922;
+    --text: #e6edf3;
+    --muted: #8b949e;
+    --border: #30363d;
   }
-  a { color:#58a6ff; }
-  .logo { font-size:26px; font-weight:800; margin-bottom:10px; }
-  .logo span { color:#58a6ff; }
-  p { color:#8b949e; font-size:14px; }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+  }
+  header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 14px 28px;
+    background: var(--panel);
+    border-bottom: 1px solid var(--border);
+  }
+  .logo { font-size: 22px; font-weight: 800; letter-spacing: .5px; }
+  .logo span { color: var(--accent); }
+  .tagline { display:flex; align-items:center; gap:14px; flex-wrap:wrap; color: var(--muted); font-size: 13px; }
+
+  .container { max-width: 1200px; margin: 0 auto; padding: 24px; }
+
+  /* Hero */
+  .hero {
+    background: linear-gradient(135deg, rgba(88,166,255,.12), rgba(63,185,80,.08));
+    border: 1px solid var(--border); border-radius: 16px;
+    padding: 40px 36px; margin-bottom: 28px; text-align: center;
+  }
+  .hero h1 { font-size: 32px; margin-bottom: 10px; }
+  .hero h1 span { color: var(--accent); }
+  .hero p { color: var(--muted); font-size: 16px; max-width: 640px; margin: 0 auto; line-height: 1.6; }
+  .hero .pills { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin-top: 18px; }
+  .pill {
+    background: var(--panel2); border: 1px solid var(--border);
+    padding: 6px 14px; border-radius: 20px; font-size: 13px; color: var(--text);
+  }
+
+  .section-title {
+    display: flex; align-items: baseline; justify-content: space-between;
+    margin: 32px 0 14px;
+  }
+  .section-title h2 { font-size: 19px; }
+  .section-title span { color: var(--muted); font-size: 13px; }
+
+  /* Card grid */
+  .grid {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(270px, 1fr));
+    gap: 18px;
+  }
+  .card {
+    background: var(--panel); border: 1px solid var(--border); border-radius: 14px;
+    padding: 22px; display: flex; flex-direction: column; gap: 10px;
+    text-decoration: none; color: var(--text);
+    transition: transform .15s, border-color .15s, box-shadow .15s;
+    position: relative; overflow: hidden;
+  }
+  .card.live { cursor: pointer; }
+  .card.live:hover {
+    transform: translateY(-4px);
+    border-color: var(--accent);
+    box-shadow: 0 10px 28px rgba(88,166,255,.15);
+  }
+  .card.soon { opacity: .55; cursor: default; }
+  .card .icon { font-size: 34px; }
+  .card h3 { font-size: 17px; }
+  .card p { font-size: 13.5px; color: var(--muted); line-height: 1.5; flex: 1; }
+  .card .foot { display: flex; align-items: center; justify-content: space-between; margin-top: 6px; }
+  .chip {
+    font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 12px;
+    background: rgba(247,129,102,.12); color: var(--accent2); border: 1px solid rgba(247,129,102,.35);
+  }
+  .chip.g { background: rgba(63,185,80,.12); color: var(--green); border-color: rgba(63,185,80,.35); }
+  .go { font-size: 13px; font-weight: 700; color: var(--accent); }
+  .badge-soon {
+    position: absolute; top: 14px; right: 14px;
+    font-size: 10.5px; font-weight: 700; letter-spacing: .3px;
+    background: var(--panel2); color: var(--muted); border: 1px solid var(--border);
+    padding: 3px 9px; border-radius: 10px; text-transform: uppercase;
+  }
+  .badge-new {
+    position: absolute; top: 14px; right: 14px;
+    font-size: 10.5px; font-weight: 700; letter-spacing: .3px;
+    background: rgba(63,185,80,.15); color: var(--green); border: 1px solid rgba(63,185,80,.4);
+    padding: 3px 9px; border-radius: 10px; text-transform: uppercase;
+  }
+
+  footer {
+    text-align: center; color: var(--muted); font-size: 12.5px;
+    padding: 30px 20px 40px;
+  }
+
+  /* Progress dashboard */
+  .progressCard {
+    display: flex; gap: 26px; align-items: center; flex-wrap: wrap;
+    background: var(--panel); border: 1px solid var(--border);
+    border-radius: 14px; padding: 20px 24px;
+  }
+  .ringWrap { position: relative; width: 120px; height: 120px; flex-shrink: 0; }
+  .ring { width: 120px; height: 120px; transform: rotate(-90deg); }
+  .ring circle { fill: none; stroke-width: 9; }
+  .ringBg { stroke: var(--panel2); }
+  .ringFg {
+    stroke: var(--green); stroke-linecap: round;
+    stroke-dasharray: 326.7; stroke-dashoffset: 326.7;
+    transition: stroke-dashoffset .9s cubic-bezier(.4,0,.2,1);
+  }
+  .ringLabel {
+    position: absolute; inset: 0; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; gap: 1px;
+  }
+  .ringLabel span { font-size: 24px; font-weight: 800; }
+  .ringLabel small { font-size: 11px; color: var(--muted); }
+  .progList { flex: 1; min-width: 260px; display: flex; flex-direction: column; gap: 9px; }
+  .progRow { display: flex; align-items: center; gap: 10px; font-size: 13.5px; }
+  .progRow .nm { width: 128px; flex-shrink: 0; }
+  .progRow .nm a { color: var(--text); text-decoration: none; }
+  .progRow .nm a:hover { color: var(--accent); }
+  .dots { display: flex; gap: 4px; }
+  .dot {
+    width: 13px; height: 13px; border-radius: 50%;
+    background: var(--panel2); border: 1px solid var(--border);
+  }
+  .dot.on { background: var(--yellow); border-color: var(--yellow); box-shadow: 0 0 7px rgba(210,153,34,.45); }
+  .progRow .cnt { margin-left: auto; color: var(--muted); font-size: 12px; font-variant-numeric: tabular-nums; }
+  .progActions { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-top: 12px; }
+  .revBtn {
+    background: rgba(210,168,255,.12); border: 1px solid rgba(210,168,255,.42);
+    color: var(--purple); text-decoration: none; font-weight: 700; font-size: 13.5px;
+    padding: 9px 16px; border-radius: 9px; transition: filter .15s;
+  }
+  .revBtn:hover { filter: brightness(1.2); }
+  .resetBtn {
+    background: transparent; border: 1px solid var(--border); color: var(--muted);
+    font-size: 12.5px; padding: 9px 14px; border-radius: 9px; cursor: pointer; font-weight: 600;
+  }
+  .resetBtn:hover { color: var(--text); border-color: var(--muted); }
+
+  /* Featured wide card */
+  .feature {
+    display: block; text-decoration: none; color: var(--text);
+    background: linear-gradient(135deg, rgba(210,168,255,.14), rgba(88,166,255,.08));
+    border: 1px solid rgba(210,168,255,.4); border-radius: 14px;
+    padding: 22px 24px; margin-bottom: 4px;
+    transition: transform .15s, box-shadow .15s, border-color .15s;
+  }
+  .feature:hover { transform: translateY(-3px); border-color: var(--purple); box-shadow: 0 10px 28px rgba(210,168,255,.18); }
+  .feature .row { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+  .feature .icon { font-size: 32px; }
+  .feature h3 { font-size: 18px; margin-bottom: 4px; }
+  .feature p { font-size: 13.5px; color: var(--muted); line-height: 1.55; }
+  .feature .go { margin-left: auto; font-size: 13px; font-weight: 700; color: var(--purple); white-space: nowrap; }
+
+  @media (max-width: 640px) {
+    header { padding: 12px 16px; }
+    .logo { font-size: 19px; }
+    .tagline { font-size: 12px; }
+    .container { padding: 16px 14px 30px; }
+    .hero { padding: 26px 18px; border-radius: 12px; margin-bottom: 20px; }
+    .hero h1 { font-size: 23px; }
+    .hero p { font-size: 14.5px; }
+    .pill { font-size: 12px; padding: 5px 12px; }
+    .grid { grid-template-columns: 1fr; gap: 14px; }
+    .card { padding: 18px; }
+    .section-title { margin: 24px 0 12px; }
+    .section-title h2 { font-size: 17px; }
+    .feature { padding: 18px; }
+    .feature .go { margin-left: 0; width: 100%; }
+    .progressCard { gap: 16px; padding: 16px; justify-content: center; }
+    .progList { min-width: 0; width: 100%; }
+    .progRow { font-size: 12.5px; }
+    .progRow .nm { width: 108px; }
+    .progActions { flex-direction: column; align-items: stretch; }
+    .revBtn { text-align: center; }
+  }
 </style>
+<script>if(location.protocol.startsWith("http")){var m=document.createElement("link");m.rel="manifest";m.href="manifest.json";document.head.appendChild(m);}</script>
+<meta name="theme-color" content="#0d1117">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 </head>
 <body>
-  <div>
-    <div class="logo">🧠 MindAI<span>Code</span></div>
-    <p>Loading… if nothing happens, <a href="mindaicode-home.html">open the home page</a>.</p>
+
+<header>
+  <div class="logo">🧠 MindAI<span>Code</span></div>
+  <div class="tagline">
+    <a href="mindaicode-course-path.html" style="color:var(--purple); font-weight:600; text-decoration:none;">🗺️ Course path</a>
+    <span style="color:var(--muted);">Learn. Visualize. Code. Master.</span>
   </div>
-  <script>location.replace('mindaicode-home.html');</script>
+</header>
+
+<div class="container">
+
+  <div class="hero">
+    <h1>See the algorithm. <span>Don't just read it.</span></h1>
+    <p>Every algorithm here is animated with a real-world metaphor, explained line by line as it runs, and paired with an AI tutor you can pause and question at any point.</p>
+    <div class="pills">
+      <span class="pill">⚪ Balls · 📊 Bars · 🧑‍🎓 Students</span>
+      <span class="pill">🤖 AI Explainer</span>
+      <span class="pill">🎯 Predict Mode</span>
+      <span class="pill">🌐 English · தமிழ் · हिंदी</span>
+    </div>
+  </div>
+
+  <div class="section-title">
+    <h2>📈 Your progress</h2>
+    <span id="progSummary">—</span>
+  </div>
+  <div class="progressCard">
+    <div class="ringWrap">
+      <svg viewBox="0 0 120 120" class="ring">
+        <circle cx="60" cy="60" r="52" class="ringBg"></circle>
+        <circle cx="60" cy="60" r="52" class="ringFg" id="ringFg"></circle>
+      </svg>
+      <div class="ringLabel"><span id="ringPct">0%</span><small>complete</small></div>
+    </div>
+    <div class="progList" id="progList"></div>
+  </div>
+  <div class="progActions">
+    <a class="revBtn" href="mindaicode-revision.html">🔁 Revision mode — practise everything</a>
+    <button id="resetProg" class="resetBtn">Reset my progress</button>
+  </div>
+
+  <div class="section-title">
+    <h2>🧩 Start here</h2>
+    <span>New to programming? Begin below</span>
+  </div>
+  <a class="feature" href="mindaicode-programming-basics.html">
+    <div class="row">
+      <div class="icon">🧩</div>
+      <div style="flex:1; min-width:200px;">
+        <h3>Programming Basics</h3>
+        <p>Variables, arrays &amp; 0-based indexing, loops, functions, and recursion — the six words every other page on this site uses without explaining. Start here if any of that sounds unfamiliar.</p>
+      </div>
+      <span class="go">Start here →</span>
+    </div>
+  </a>
+
+  <div class="section-title">
+    <h2>🧮 Foundations</h2>
+    <span>Module 0</span>
+  </div>
+  <div class="grid">
+    <a class="card live" href="mindaicode-big-o.html">
+      <span class="badge-new">Live</span>
+      <div class="icon">🧮</div>
+      <h3>Big-O Foundations</h3>
+      <p>O(1), O(log n), O(n), O(n log n), O(n²), O(2ⁿ) on one chart — the shared vocabulary every other module leans on.</p>
+      <div class="foot"><span class="chip">Module 0</span><span class="go">Start →</span></div>
+    </a>
+  </div>
+
+  <div class="section-title">
+    <h2>📊 Sorting Algorithms</h2>
+    <span>Module 1 · 6 of 6 live</span>
+  </div>
+  <div class="grid">
+
+    <a class="card live" href="mindaicode-bubble-sort.html">
+      <span class="badge-new">Live</span>
+      <div class="icon">🫧</div>
+      <h3>Bubble Sort</h3>
+      <p>Neighbours compare and swap, one pass at a time, until the biggest values "bubble" to the end.</p>
+      <div class="foot"><span class="chip">O(n²)</span><span class="go">Start →</span></div>
+    </a>
+
+    <a class="card live" href="mindaicode-selection-sort.html">
+      <span class="badge-new">Live</span>
+      <div class="icon">🔎</div>
+      <h3>Selection Sort</h3>
+      <p>Scan everything for the smallest value, then place it — just one confirmed swap per round.</p>
+      <div class="foot"><span class="chip">O(n²)</span><span class="go">Start →</span></div>
+    </a>
+
+    <a class="card live" href="mindaicode-insertion-sort.html">
+      <span class="badge-new">Live</span>
+      <div class="icon">🃏</div>
+      <h3>Insertion Sort</h3>
+      <p>Hold each value out like a playing card, shift bigger ones right, then slide it into its gap.</p>
+      <div class="foot"><span class="chip">O(n²)</span><span class="go">Start →</span></div>
+    </a>
+
+    <a class="card live" href="mindaicode-merge-sort.html">
+      <span class="badge-new">Live</span>
+      <div class="icon">🪄</div>
+      <h3>Merge Sort</h3>
+      <p>Split the list in half again and again, then merge the sorted halves back together.</p>
+      <div class="foot"><span class="chip g">O(n log n)</span><span class="go">Start →</span></div>
+    </a>
+
+    <a class="card live" href="mindaicode-quick-sort.html">
+      <span class="badge-new">Live</span>
+      <div class="icon">⚡</div>
+      <h3>Quick Sort</h3>
+      <p>Pick a pivot, partition everything around it, and recurse — usually the fastest in practice.</p>
+      <div class="foot"><span class="chip g">O(n log n)</span><span class="go">Start →</span></div>
+    </a>
+
+    <a class="card live" href="mindaicode-heap-sort.html">
+      <span class="badge-new">Live</span>
+      <div class="icon">🌲</div>
+      <h3>Heap Sort</h3>
+      <p>Build a max-heap, then repeatedly pull the largest value off the top.</p>
+      <div class="foot"><span class="chip g">O(n log n)</span><span class="go">Start →</span></div>
+    </a>
+
+  </div>
+
+  <a class="feature" href="mindaicode-race-all.html" style="margin-bottom:18px;">
+    <div class="row">
+      <div class="icon">🏁</div>
+      <div style="flex:1; min-width:200px;">
+        <h3>Now race all six</h3>
+        <p>Once you've seen a few of these individually, give every algorithm the same numbers and watch them go. Change the starting data — already sorted, reversed, nearly sorted — and watch the winner change completely.</p>
+      </div>
+      <span class="go">Race them →</span>
+    </div>
+  </a>
+
+  <div class="section-title">
+    <h2>🔍 Searching</h2>
+    <span>Module 2 · Why sorting was worth it</span>
+  </div>
+  <div class="grid">
+    <a class="card live" href="mindaicode-binary-search.html">
+      <span class="badge-new">Live</span>
+      <div class="icon">🔍</div>
+      <h3>Linear vs Jump vs Binary Search</h3>
+      <p>Race all three head to head on a sorted list. Binary search finds anything in a million items in 20 steps — this is the payoff for sorting.</p>
+      <div class="foot"><span class="chip g">O(log n)</span><span class="go">Start →</span></div>
+    </a>
+  </div>
+
+  <div class="section-title">
+    <h2>🧱 Linear Data Structures</h2>
+    <span>Module 3</span>
+  </div>
+  <div class="grid">
+    <a class="card live" href="mindaicode-linear-structures.html">
+      <span class="badge-new">Live</span>
+      <div class="icon">🧱</div>
+      <h3>Stack, Queue &amp; Linked List</h3>
+      <p>Push and pop a stack of trays, run a ticket-counter queue, and hook train-carriage nodes into a linked list.</p>
+      <div class="foot"><span class="chip g">O(1) ops</span><span class="go">Start →</span></div>
+    </a>
+  </div>
+
+  <div class="section-title">
+    <h2>🔐 Hashing</h2>
+    <span>Module 4</span>
+  </div>
+  <div class="grid">
+    <a class="card live" href="mindaicode-hashing.html">
+      <span class="badge-new">Live</span>
+      <div class="icon">🔐</div>
+      <h3>Chaining vs Open Addressing</h3>
+      <p>Type a key and watch it land in a locker two different ways — see exactly what happens when two keys collide.</p>
+      <div class="foot"><span class="chip g">O(1) avg</span><span class="go">Start →</span></div>
+    </a>
+  </div>
+
+  <div class="section-title">
+    <h2>🌳 Trees</h2>
+    <span>Module 5</span>
+  </div>
+  <div class="grid">
+    <a class="card live" href="mindaicode-trees.html">
+      <span class="badge-new">Live</span>
+      <div class="icon">🌳</div>
+      <h3>BST &amp; Min-Heap</h3>
+      <p>Grow a Binary Search Tree node by node, run all three traversals, then explore a heap as an array-backed priority queue.</p>
+      <div class="foot"><span class="chip g">O(log n)</span><span class="go">Start →</span></div>
+    </a>
+  </div>
+
+  <div class="section-title">
+    <h2>🗺️ Graphs</h2>
+    <span>Module 6</span>
+  </div>
+  <div class="grid">
+    <a class="card live" href="mindaicode-graphs.html">
+      <span class="badge-new">Live</span>
+      <div class="icon">🗺️</div>
+      <h3>BFS, DFS &amp; Dijkstra</h3>
+      <p>An 8-city road map, explored three different ways — flood outward, dive down one corridor, or chase the cheapest route.</p>
+      <div class="foot"><span class="chip g">O(V + E)</span><span class="go">Start →</span></div>
+    </a>
+  </div>
+
+  <div class="section-title">
+    <h2>🌀 Recursion &amp; Dynamic Programming</h2>
+    <span>Module 7</span>
+  </div>
+  <div class="grid">
+    <a class="card live" href="mindaicode-recursion-dp.html">
+      <span class="badge-new">Live</span>
+      <div class="icon">🌀</div>
+      <h3>Fibonacci, Knapsack &amp; LCS</h3>
+      <p>Watch a recursion tree explode without memoization, then collapse the moment repeated work gets cached.</p>
+      <div class="foot"><span class="chip g">O(n)</span><span class="go">Start →</span></div>
+    </a>
+  </div>
+
+  <div class="section-title">
+    <h2>🏆 Interview Prep</h2>
+    <span>Module 8 · Capstone</span>
+  </div>
+  <div class="grid">
+    <a class="card live" href="mindaicode-capstone.html">
+      <span class="badge-new">Live</span>
+      <div class="icon">🏆</div>
+      <h3>Timed Challenge &amp; Mock Interview</h3>
+      <p>Race the clock across every module you've learned, chase your own leaderboard, then practice explaining an algorithm out loud.</p>
+      <div class="foot"><span class="chip g">Final module</span><span class="go">Start →</span></div>
+    </a>
+  </div>
+
+  <div class="section-title">
+    <h2>🛠️ Practise &amp; understand</h2>
+    <span>Write it yourself</span>
+  </div>
+  <div class="grid">
+    <a class="card live" href="mindaicode-sandbox.html">
+      <span class="badge-new">Live</span>
+      <div class="icon">🛠️</div>
+      <h3>Code Sandbox</h3>
+      <p>Real, editable code. Change a character, press Run, and watch it break. Includes three "find the bug" challenges.</p>
+      <div class="foot"><span class="chip g">Hands on</span><span class="go">Open →</span></div>
+    </a>
+
+    <a class="card live" href="mindaicode-stability.html">
+      <span class="badge-new">Live</span>
+      <div class="icon">⚖️</div>
+      <h3>What "Stable" Means</h3>
+      <p>That Stable Yes/No column in every textbook table, finally explained — with five students and one screen.</p>
+      <div class="foot"><span class="chip g">Concept</span><span class="go">Open →</span></div>
+    </a>
+
+    <a class="card live" href="mindaicode-revision.html">
+      <span class="badge-new">Live</span>
+      <div class="icon">🔁</div>
+      <h3>Revision Mode</h3>
+      <p>Mixed questions across all six sorts. Anything you get wrong comes back until you get it right.</p>
+      <div class="foot"><span class="chip g">Practice</span><span class="go">Open →</span></div>
+    </a>
+  </div>
+
+</div>
+
+<footer>
+  🧠 MindAICode — Learn. Visualize. Code. Master.<br>
+  Full course structure covers Sorting → Searching → Data Structures → Hashing → Trees → Graphs → Recursion &amp; DP → Interview Prep.
+</footer>
+
+<script>
+/* ===== Unified progress across all six algorithm pages =====
+   Each page stores its own badges under its own prefix; we just read them all. */
+const ALGOS = [
+  { key: 'mac',  name: 'Bubble Sort',    icon: '🫧', href: 'mindaicode-bubble-sort.html' },
+  { key: 'msel', name: 'Selection Sort', icon: '🔎', href: 'mindaicode-selection-sort.html' },
+  { key: 'mins', name: 'Insertion Sort', icon: '🃏', href: 'mindaicode-insertion-sort.html' },
+  { key: 'mmrg', name: 'Merge Sort',     icon: '🪄', href: 'mindaicode-merge-sort.html' },
+  { key: 'mqs',  name: 'Quick Sort',     icon: '⚡', href: 'mindaicode-quick-sort.html' },
+  { key: 'mhp',  name: 'Heap Sort',      icon: '🌲', href: 'mindaicode-heap-sort.html' },
+];
+const BADGES = [
+  { id: 'sort',    label: 'Watched a full sort' },
+  { id: 'predict', label: 'Predicted 5 in a row' },
+  { id: 'quiz',    label: 'Aced the quiz' },
+  { id: 'race',    label: 'Watched the race' },
+  { id: 'lab',     label: 'Ran an experiment' },
+];
+function readBadge(prefix, id) {
+  try { return localStorage.getItem(prefix + '_badge_' + id) === '1'; }
+  catch (e) { return false; }
+}
+function renderProgress() {
+  const list = document.getElementById('progList');
+  list.innerHTML = '';
+  let earned = 0;
+  const total = ALGOS.length * BADGES.length;
+  ALGOS.forEach(a => {
+    const got = BADGES.map(b => readBadge(a.key, b.id));
+    const n = got.filter(Boolean).length;
+    earned += n;
+    const row = document.createElement('div');
+    row.className = 'progRow';
+    row.innerHTML =
+      `<span class="nm">${a.icon} <a href="${a.href}">${a.name}</a></span>
+       <span class="dots">${got.map((g, i) =>
+         `<span class="dot${g ? ' on' : ''}" title="${BADGES[i].label}"></span>`).join('')}</span>
+       <span class="cnt">${n}/${BADGES.length}</span>`;
+    list.appendChild(row);
+  });
+  const pct = Math.round((earned / total) * 100);
+  document.getElementById('ringPct').textContent = pct + '%';
+  const CIRC = 2 * Math.PI * 52;
+  const fg = document.getElementById('ringFg');
+  fg.style.strokeDasharray = CIRC;
+  requestAnimationFrame(() => { fg.style.strokeDashoffset = CIRC * (1 - earned / total); });
+  const done = ALGOS.filter(a => BADGES.every(b => readBadge(a.key, b.id))).length;
+  const started = ALGOS.filter(a => BADGES.some(b => readBadge(a.key, b.id))).length;
+  const sum = document.getElementById('progSummary');
+  if (earned === 0) sum.textContent = 'Nothing yet — pick any algorithm to begin';
+  else if (done === ALGOS.length) sum.textContent = '🎉 All six mastered!';
+  else sum.textContent = `${earned}/${total} badges · ${done} mastered · ${started} started`;
+}
+document.getElementById('resetProg').onclick = () => {
+  if (!confirm('Clear all your badges and progress? This cannot be undone.')) return;
+  try {
+    ALGOS.forEach(a => {
+      BADGES.forEach(b => localStorage.removeItem(a.key + '_badge_' + b.id));
+      localStorage.removeItem(a.key + '_toured');
+    });
+    localStorage.removeItem('mrev_wrong');
+    localStorage.removeItem('mrev_seen');
+  } catch (e) {}
+  renderProgress();
+};
+renderProgress();
+</script>
+<script>
+/* ===== Offline support (works when served over http/https) ===== */
+if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
+  window.addEventListener('load', function () {
+    navigator.serviceWorker.register('sw.js').catch(function () { /* offline mode simply unavailable */ });
+  });
+}
+</script>
+<script src="firebase-config.js"></script>
+<script src="mindaicode-auth.js"></script>
 </body>
 </html>

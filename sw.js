@@ -1,7 +1,7 @@
 /* MindAICode service worker — makes every page usable with no internet.
    Strategy: cache-first for our own files, with a background refresh. */
 
-const CACHE = 'mindaicode-v13';
+const CACHE = 'mindaicode-v14';
 
 const FILES = [
   'index.html',
@@ -75,7 +75,7 @@ self.addEventListener('fetch', event => {
           return res;
         })
         // offline: fall back to whatever we stored last
-        .catch(() => caches.match(req).then(hit => hit || caches.match('mindaicode-home.html')))
+        .catch(() => caches.match(req).then(hit => hit || caches.match('index.html')))
     );
     return;
   }
@@ -91,7 +91,7 @@ self.addEventListener('fetch', event => {
           }
           return res;
         })
-        .catch(() => cached || caches.match('mindaicode-home.html'));
+        .catch(() => cached || caches.match('index.html'));
       return cached || network;
     })
   );
