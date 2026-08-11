@@ -72,6 +72,13 @@ function renderRail() {
   document.getElementById('stepLabel').textContent = `Step ${currentStep + 1} of ${STEP_IDS.length}`;
 }
 
+/* Things that should happen the moment a step comes on screen — used so an
+   illustration plays itself the first time a student reaches it, rather than
+   sitting still until they notice the button. */
+const STEP_HOOKS = {};
+function onStepShown(i, fn) { (STEP_HOOKS[i] = STEP_HOOKS[i] || []).push(fn); }
+function fireStepHooks(i) { (STEP_HOOKS[i] || []).forEach(fn => { try { fn(); } catch (e) {} }); }
+
 function showStep(i) {
   if (i < 0 || i >= STEP_IDS.length) return;
   currentStep = i;
@@ -83,6 +90,7 @@ function showStep(i) {
   const panel = document.getElementById('hintPanel');
   if (panel && panel.classList.contains('on')) renderHint();
   if (typeof window.scrollTo === 'function') window.scrollTo(0, 0);
+  fireStepHooks(i);
 }
 
 let toastTimer = null;
@@ -147,6 +155,132 @@ function seatSVG() {
     <rect class="seatArm" x="48" y="32" width="7" height="20" rx="3.5"/>
     <rect class="seatBack" x="10" y="24" width="38" height="30" rx="7"/>
   </svg>`;
+}
+
+/* The attendance register — the picture for the loop analogy.
+   The teacher walks down it one row at a time, ticking each name exactly once.
+   That IS the loop, so the animation is driven by the same counter the code uses. */
+const REGISTER = ['Aarav', 'Diya', 'Kabir', 'Meera', 'Rohan'];
+
+function registerSVG() {
+  const rowH = 30, top = 46;
+  let rows = '';
+  REGISTER.forEach((nm, i) => {
+    const y = top + i * rowH;
+    rows += `<g class="regRow" id="regRow_${i}">
+      <rect class="regRowBg" x="10" y="${y}" width="248" height="26" rx="4"/>
+      <text class="regNo"   x="24"  y="${y + 17}">${i + 1}</text>
+      <text class="regName" x="46"  y="${y + 17}">${nm}</text>
+      <rect class="regTickBox" x="216" y="${y + 4}" width="18" height="18" rx="3"/>
+      <path class="regTick" id="regTick_${i}" d="M219.5 ${y + 13} l3.5 4 l7.5 -8"/>
+      <text class="regIdx" x="248" y="${y + 17}">i=${i}</text>
+    </g>`;
+  });
+  return `<svg viewBox="0 0 268 210" role="img" aria-label="class attendance register">
+    <rect class="regPad" x="4" y="4" width="260" height="202" rx="8"/>
+    <text class="regTitle" x="16" y="26">CLASS 10-A &middot; ATTENDANCE</text>
+    <line class="regRule" x1="10" y1="36" x2="258" y2="36"/>
+    ${rows}
+    <g class="regHand" id="regHand" style="opacity:0"><text x="0" y="0">&#128072;</text></g>
+  </svg>`;
+}
+
+let regTimer = null;
+/* Walk the register. onRow fires per name so the caller can keep the code in step. */
+function playRegister(onRow, done, speed) {
+  clearInterval(regTimer);
+  const hand = document.getElementById('regHand');
+  REGISTER.forEach((_, i) => {
+    const r = document.getElementById('regRow_' + i);
+    if (r) r.classList.remove('now', 'ticked');
+  });
+  let i = 0;
+  const stepOnce = () => {
+    if (i > 0) {
+      const p = document.getElementById('regRow_' + (i - 1));
+      if (p) { p.classList.remove('now'); p.classList.add('ticked'); }
+    }
+    if (i >= REGISTER.length) {
+      clearInterval(regTimer);
+      if (hand) hand.style.opacity = '0';
+      if (done) done();
+      return;
+    }
+    const row = document.getElementById('regRow_' + i);
+    if (row) row.classList.add('now');
+    if (hand) {
+      hand.style.opacity = '1';
+      hand.setAttribute('transform', `translate(-14, ${46 + i * 30 + 19})`);
+    }
+    if (onRow) onRow(i, REGISTER[i]);
+    i++;
+  };
+  stepOnce();
+  regTimer = setInterval(stepOnce, speed || 750);
+}
+
+/* The vending machine — the picture for the function analogy.
+   Something goes in, a decision happens inside, something comes out. */
+function vendingSVG() {
+  return `<svg viewBox="0 0 180 210" role="img" aria-label="vending machine">
+    <rect class="vmBody"  x="14" y="10" width="152" height="176" rx="10"/>
+    <rect class="vmLeg"   x="26" y="186" width="14" height="12" rx="3"/>
+    <rect class="vmLeg"   x="140" y="186" width="14" height="12" rx="3"/>
+    <rect class="vmGlass" x="26" y="22" width="88" height="96" rx="6"/>
+    <text class="vmLabelIn" x="70" y="16">INPUT</text>
+
+    <g class="vmSlotG">
+      <rect class="vmSlot" x="128" y="34" width="26" height="6" rx="3"/>
+      <text class="vmSlotLbl" x="141" y="30">slot</text>
+    </g>
+
+    <circle class="vmCoin" id="vmCoin" cx="141" cy="12" r="9" style="opacity:0"/>
+    <text  class="vmCoinTxt" id="vmCoinTxt" x="141" y="16" style="opacity:0"></text>
+
+    <g class="vmGears" id="vmGears">
+      <circle class="vmGear" cx="132" cy="86" r="13"/>
+      <circle class="vmGearHole" cx="132" cy="86" r="4"/>
+      <text class="vmThink" id="vmThink" x="70" y="76"></text>
+    </g>
+
+    <rect class="vmTray"    x="26" y="132" width="128" height="42" rx="6"/>
+    <rect class="vmTrayLip" x="26" y="132" width="128" height="7"  rx="3"/>
+    <text class="vmLabelOut" x="90" y="182">OUTPUT</text>
+    <text class="vmOut" id="vmOut" x="90" y="160" style="opacity:0"></text>
+  </svg>`;
+}
+
+let vmTimer = null;
+/* drop a value in, think, pop the answer out */
+function playVending(inputTxt, outputTxt) {
+  clearTimeout(vmTimer);
+  const coin = document.getElementById('vmCoin'), coinTxt = document.getElementById('vmCoinTxt');
+  const think = document.getElementById('vmThink'), out = document.getElementById('vmOut');
+  const gears = document.getElementById('vmGears');
+  if (!coin || !out) return;
+  out.style.opacity = '0';
+  if (think) think.textContent = '';
+  if (gears) gears.classList.remove('spin');
+  coinTxt.textContent = inputTxt;
+  coin.style.opacity = '1'; coinTxt.style.opacity = '1';
+  coin.setAttribute('cy', '12'); coinTxt.setAttribute('y', '16');
+  // 1. the value drops into the slot
+  vmTimer = setTimeout(() => {
+    coin.setAttribute('cy', '37'); coinTxt.setAttribute('y', '41');
+    // 2. the machine decides
+    vmTimer = setTimeout(() => {
+      coin.style.opacity = '0'; coinTxt.style.opacity = '0';
+      if (gears) gears.classList.add('spin');
+      if (think) think.textContent = 'deciding...';
+      // 3. the answer drops into the tray
+      vmTimer = setTimeout(() => {
+        if (gears) gears.classList.remove('spin');
+        if (think) think.textContent = '';
+        out.textContent = outputTxt;
+        out.style.opacity = '1';
+      }, 750);
+    }, 550);
+  }, 350);
 }
 
 /* =========================================================== GAME 1 — THE SWAP */
@@ -762,6 +896,41 @@ function initBasics() {
   document.getElementById('lockerRetryBtn').onclick = resetLocker;
   document.getElementById('loopNextBtn').onclick = () => { loopRound++; loopLocked = false; renderLoopRound(); };
   document.getElementById('loopRetryBtn').onclick = resetLoops;
+
+  /* --- the attendance register: the picture for the loop analogy --- */
+  const regArt = document.getElementById('regArt');
+  if (regArt) {
+    regArt.innerHTML = registerSVG();
+    const echo = document.getElementById('regEcho');
+    const runRegister = () => playRegister(
+      (i, nm) => {
+        // keep the words in step with the picture, so the counter means something
+        echo.innerHTML = `i = <b>${i}</b> &nbsp;&rarr;&nbsp; marking <b>${nm}</b> present ` +
+                         `<span style="color:var(--muted)">(name number ${i + 1})</span>`;
+      },
+      () => {
+        echo.innerHTML = `Done. <b>5</b> names, <b>5</b> ticks &mdash; nobody skipped, nobody done twice. ` +
+                         `That is exactly what <code>for i in range(5)</code> does.`;
+      });
+    const btn = document.getElementById('regPlayBtn');
+    if (btn) btn.onclick = runRegister;
+    // play it once when the student first arrives at the loops step
+    onStepShown(2, () => { if (!regArt.dataset.played) { regArt.dataset.played = '1'; runRegister(); } });
+  }
+
+  /* --- the vending machine: the picture for the function analogy --- */
+  const vmArt = document.getElementById('vmArt');
+  if (vmArt) {
+    vmArt.innerHTML = vendingSVG();
+    let vmN = 4;
+    const runVending = () => {
+      vmN = vmN >= 9 ? 2 : vmN + 1;      // a different number each press
+      playVending(String(vmN), String(vmN * vmN));
+    };
+    const vb = document.getElementById('vmPlayBtn');
+    if (vb) vb.onclick = runVending;
+    onStepShown(3, () => { if (!vmArt.dataset.played) { vmArt.dataset.played = '1'; runVending(); } });
+  }
   document.getElementById('fnNextBtn').onclick = () => { fnRound++; fnLocked = false; renderFnRound(); };
   document.getElementById('fnRetryBtn').onclick = resetFns;
   document.getElementById('cinemaAskBtn').onclick = cinemaAsk;

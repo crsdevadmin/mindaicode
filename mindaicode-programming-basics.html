@@ -52,6 +52,61 @@
     background:var(--panel2); border-left:4px solid var(--green); padding:13px 16px;
     border-radius:8px; margin:0 0 16px; font-size:14.5px; line-height:1.65;
   }
+  /* an analogy with a picture beside the words */
+  .analogyPic { display:flex; gap:18px; align-items:center; flex-wrap:wrap; }
+  .analogyPic .apWords { flex:1 1 260px; min-width:240px; }
+  .analogyPic .apArt { flex:0 0 auto; text-align:center; }
+  .analogyPic .apArt svg { display:block; }
+  .apCaption { font-size:11.5px; color:var(--muted); margin-top:6px; font-style:italic; }
+  .apBtn { margin-top:10px; }
+
+  /* --- the attendance register (loops) --- */
+  .apArt.reg svg { width:268px; max-width:100%; height:auto; }
+  .regPad { fill:var(--bg); stroke:var(--border); stroke-width:1.5; }
+  .regTitle { fill:var(--muted); font-size:10px; font-weight:800; letter-spacing:.8px; font-family:inherit; }
+  .regRule { stroke:var(--border); stroke-width:1; }
+  .regRowBg { fill:transparent; transition:fill .2s; }
+  .regNo   { fill:var(--muted); font-size:10px; font-family:Consolas, monospace; }
+  .regName { fill:var(--text); font-size:12.5px; font-weight:600; font-family:inherit; }
+  .regIdx  { fill:var(--border); font-size:9.5px; font-family:Consolas, monospace; transition:fill .2s; }
+  .regTickBox { fill:var(--panel2); stroke:var(--border); stroke-width:1.5; transition:all .2s; }
+  .regTick { fill:none; stroke:var(--green); stroke-width:2.4; stroke-linecap:round; stroke-linejoin:round;
+    stroke-dasharray:18; stroke-dashoffset:18; transition:stroke-dashoffset .3s ease-out; }
+  .regRow.now .regRowBg { fill:rgba(210,153,34,.18); }
+  .regRow.now .regTickBox { stroke:var(--yellow); }
+  .regRow.now .regIdx { fill:var(--yellow); }
+  .regRow.ticked .regTick { stroke-dashoffset:0; }
+  .regRow.ticked .regTickBox { stroke:rgba(63,185,80,.6); }
+  .regRow.ticked .regIdx { fill:var(--muted); }
+  .regHand text { font-size:15px; }
+  .regHand { transition:transform .25s ease-out; }
+  .regEcho { font-family:Consolas, monospace; font-size:12.5px; color:var(--muted); margin-top:8px; min-height:18px; }
+  .regEcho b { color:var(--yellow); }
+
+  /* --- the vending machine (functions) --- */
+  .apArt.vend svg { width:150px; max-width:100%; height:auto; }
+  .vmBody { fill:var(--panel2); stroke:var(--border); stroke-width:2; }
+  .vmLeg  { fill:var(--border); }
+  .vmGlass { fill:var(--bg); stroke:var(--border); stroke-width:1.5; }
+  .vmSlot { fill:#0b0f14; stroke:var(--border); stroke-width:1.5; }
+  .vmSlotLbl, .vmLabelIn, .vmLabelOut { fill:var(--muted); font-size:9px; font-weight:700;
+    letter-spacing:.6px; text-anchor:middle; font-family:inherit; }
+  .vmCoin { fill:var(--yellow); transition:cy .35s ease-in, opacity .2s; }
+  .vmCoinTxt { fill:#0d1117; font-size:9px; font-weight:800; text-anchor:middle;
+    font-family:Consolas, monospace; transition:y .35s ease-in, opacity .2s; }
+  .vmGear { fill:none; stroke:var(--border); stroke-width:3; stroke-dasharray:5 4; }
+  .vmGearHole { fill:var(--panel2); stroke:var(--border); stroke-width:1.5; }
+  .vmGears.spin .vmGear { stroke:var(--accent); animation:vmSpin 1s linear infinite; transform-origin:132px 86px; }
+  @keyframes vmSpin { to { transform:rotate(360deg); } }
+  .vmThink { fill:var(--accent); font-size:10px; text-anchor:middle; font-family:Consolas, monospace; }
+  .vmTray { fill:var(--bg); stroke:var(--border); stroke-width:1.5; }
+  .vmTrayLip { fill:var(--border); }
+  .vmOut { fill:var(--green); font-size:17px; font-weight:800; text-anchor:middle;
+    font-family:Consolas, monospace; transition:opacity .3s; }
+  @media (prefers-reduced-motion: reduce) {
+    .regTick, .regHand, .vmCoin, .vmCoinTxt, .vmOut { transition:none; }
+    .vmGears.spin .vmGear { animation:none; }
+  }
 
   .gameBox { background:var(--bg); border:1px dashed var(--border); border-radius:12px; padding:18px; margin-bottom:14px; }
   .gameTitle { font-size:14px; font-weight:800; margin-bottom:4px; }
@@ -516,8 +571,16 @@
       <h1>Guess the output before the computer does &#128257;</h1>
       <div class="techName">The real word for this is a <code>loop</code></div>
 
-      <div class="analogy">
-        &#127891; <strong>Think of a teacher taking attendance.</strong> She goes down the register one name at a time and does the same thing for each. She does not skip anyone and does not do anyone twice. That is a <b>loop</b>.
+      <div class="analogy analogyPic">
+        <div class="apWords">
+          &#127891; <strong>Think of a teacher taking attendance.</strong> She goes down the register one name at a time and does the same thing for each. She does not skip anyone and does not do anyone twice. That is a <b>loop</b>.
+          <div class="regEcho" id="regEcho">Press play and watch the counter <b>i</b> move down the register.</div>
+          <button id="regPlayBtn" class="ghost apBtn">&#9654; Watch her take attendance</button>
+        </div>
+        <div class="apArt reg">
+          <div id="regArt"></div>
+          <div class="apCaption">5 names, 5 ticks &mdash; <code>for i in range(5)</code></div>
+        </div>
       </div>
 
       <div class="gameBox">
@@ -560,8 +623,15 @@
       <h1>You be the machine &#129302;</h1>
       <div class="techName">The real words are <code>function</code> and <code>if / else</code></div>
 
-      <div class="analogy">
-        &#127891; <strong>Think of a vending machine.</strong> Something goes <em>in</em>, it makes a <em>decision</em>, something comes <em>out</em>. Same input, same output, every time. A <b>function</b> is exactly that.
+      <div class="analogy analogyPic">
+        <div class="apWords">
+          &#127891; <strong>Think of a vending machine.</strong> Something goes <em>in</em>, it makes a <em>decision</em>, something comes <em>out</em>. Same input, same output, every time. A <b>function</b> is exactly that.
+          <button id="vmPlayBtn" class="ghost apBtn">&#9654; Put a number in</button>
+        </div>
+        <div class="apArt vend">
+          <div id="vmArt"></div>
+          <div class="apCaption">in &rarr; decide &rarr; out</div>
+        </div>
       </div>
 
       <div class="gameBox">
