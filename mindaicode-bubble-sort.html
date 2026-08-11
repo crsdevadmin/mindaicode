@@ -685,10 +685,14 @@
           <div class="line" data-l="0"><span class="kw">def</span> <span class="fn">bubble_sort</span>(arr):</div>
           <div class="line" data-l="1">    n = <span class="fn">len</span>(arr)</div>
           <div class="line" data-l="2">    <span class="kw">for</span> i <span class="kw">in</span> <span class="fn">range</span>(n):</div>
+          <div class="line" data-l="2">        swapped = <span class="kw">False</span></div>
           <div class="line" data-l="3">        <span class="kw">for</span> j <span class="kw">in</span> <span class="fn">range</span>(n - i - <span class="num">1</span>):</div>
           <div class="line" data-l="4">            <span class="kw">if</span> arr[j] &gt; arr[j + <span class="num">1</span>]:</div>
           <div class="line" data-l="5">                <span class="cm"># swap them!</span></div>
           <div class="line" data-l="6">                arr[j], arr[j+<span class="num">1</span>] = arr[j+<span class="num">1</span>], arr[j]</div>
+          <div class="line" data-l="6">                swapped = <span class="kw">True</span></div>
+          <div class="line" data-l="11">        <span class="kw">if not</span> swapped:</div>
+          <div class="line" data-l="11">            <span class="kw">break</span>   <span class="cm"># a clean pass means it's sorted</span></div>
           <div class="line" data-l="7">    <span class="kw">return</span> arr</div>
         </div>
       </div>
@@ -697,14 +701,17 @@
           <div class="line" data-l="0"><span class="kw">void</span> <span class="fn">bubbleSort</span>(<span class="kw">int</span>[] arr) {</div>
           <div class="line" data-l="1">    <span class="kw">int</span> n = arr.length;</div>
           <div class="line" data-l="2">    <span class="kw">for</span> (<span class="kw">int</span> i = <span class="num">0</span>; i &lt; n; i++) {</div>
+          <div class="line" data-l="2">        <span class="kw">boolean</span> swapped = <span class="kw">false</span>;</div>
           <div class="line" data-l="3">        <span class="kw">for</span> (<span class="kw">int</span> j = <span class="num">0</span>; j &lt; n - i - <span class="num">1</span>; j++) {</div>
           <div class="line" data-l="4">            <span class="kw">if</span> (arr[j] &gt; arr[j+<span class="num">1</span>]) {</div>
           <div class="line" data-l="5">                <span class="cm">// swap them!</span></div>
           <div class="line" data-l="6">                <span class="kw">int</span> t = arr[j];</div>
           <div class="line" data-l="6">                arr[j] = arr[j+<span class="num">1</span>];</div>
           <div class="line" data-l="6">                arr[j+<span class="num">1</span>] = t;</div>
+          <div class="line" data-l="6">                swapped = <span class="kw">true</span>;</div>
           <div class="line" data-l="7">            }</div>
           <div class="line" data-l="8">        }</div>
+          <div class="line" data-l="11">        <span class="kw">if</span> (!swapped) <span class="kw">break</span>;  <span class="cm">// a clean pass means it's sorted</span></div>
           <div class="line" data-l="9">    }</div>
           <div class="line" data-l="10">}</div>
         </div>
@@ -725,7 +732,7 @@
         After each full pass, the biggest remaining ball has "bubbled" to its final spot
         (it turns <strong style="color: var(--green)">green</strong>).
         Repeat until no swaps are needed.
-        <div class="complexity">
+        <div class="complexity" data-cx="bubble">
           <span class="chip">Worst: O(n²)</span>
           <span class="chip">Average: O(n²)</span>
           <span class="chip g">Best: O(n)</span>
@@ -1195,6 +1202,7 @@ function execStep(prefix) {
     sfxLock();
   } else if (s.t === 'early') {
     narration.innerHTML = T().early;
+    highlight([11]);   // the `if not swapped: break` line
   } else if (s.t === 'done') {
     curJ = null; markMode = null;
     if (s.variant === 'correct') {
@@ -1720,5 +1728,6 @@ if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
 <script src="firebase-config.js"></script>
 <script src="mindaicode-auth.js"></script>
 <script src="code-langs.js"></script>
+<script src="complexity.js"></script>
 </body>
 </html>

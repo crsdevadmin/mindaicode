@@ -620,7 +620,7 @@
       <h3>📚 How it works</h3>
       <div class="learn">
         A binary heap stored in an array uses simple index math: for node <code>i</code>, its children live at <code>2i+1</code> and <code>2i+2</code>. No pointers needed! Heap Sort builds a max-heap in O(n), then extracts the max n times, each costing O(log n) — giving a <strong>guaranteed</strong> O(n log n) with no bad-input worst case.
-        <div class="complexity">
+        <div class="complexity" data-cx="heap">
           <span class="chip g">Worst: O(n log n)</span>
           <span class="chip g">Average: O(n log n)</span>
           <span class="chip g">Best: O(n log n)</span>
@@ -1657,5 +1657,6 @@ if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
 <script src="firebase-config.js"></script>
 <script src="mindaicode-auth.js"></script>
 <script src="code-langs.js"></script>
+<script src="complexity.js"></script>
 </body>
 </html>

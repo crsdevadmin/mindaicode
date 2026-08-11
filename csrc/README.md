@@ -70,6 +70,35 @@ nothing. `clangtest.js` checks this.
 | `dp_*` | dynamic programming — knapsack |
 | `_v_*`, `_b_*`, `verify_c.c` | the test harnesses `verify.sh` runs |
 | `runtime.js` | the browser-side half of `code-langs.js` (tab injection + memory) |
+| `count_operations.py` | counts real operations, for the Big-O explanations |
+| `clangtest.js` | jsdom tests for the C / C++ language tabs |
+| `cxtest.js` | jsdom tests for the complexity chips, plus number checking |
+
+## The Big-O explanations
+
+Tapping a chip like **Worst: O(n²)** opens an explanation written in
+`../complexity.js`. Those explanations quote concrete figures — "n=20 reversed
+costs 190 comparisons", "a million items needs 20 probes" — and none of them are
+guesses.
+
+```bash
+python3 count_operations.py
+```
+
+runs each algorithm with a counter attached and prints the real numbers. Every
+counted function asserts its own output against `sorted()` first, so the
+instrumented copy is provably the same algorithm.
+
+`cxtest.js` then re-derives the same figures independently in JavaScript and
+fails if any of them disagree with what the website says. So each number is
+checked twice, in two languages:
+
+```bash
+npm install jsdom && node cxtest.js
+```
+
+That test also refuses to pass if any explanation is shorter than two paragraphs
+— a guard against a chip quietly shipping with a one-line non-answer.
 
 ## A note on C vs C++
 

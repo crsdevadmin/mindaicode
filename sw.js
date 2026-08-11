@@ -1,7 +1,7 @@
 /* MindAICode service worker — makes every page usable with no internet.
    Strategy: cache-first for our own files, with a background refresh. */
 
-const CACHE = 'mindaicode-v15';
+const CACHE = 'mindaicode-v16';
 
 const FILES = [
   'index.html',
@@ -11,6 +11,7 @@ const FILES = [
   'basics-content.js',
   'basics-engine.js',
   'code-langs.js',
+  'complexity.js',
   'firebase-config.js',
   'mindaicode-auth.js',
   'mindaicode-big-o.html',

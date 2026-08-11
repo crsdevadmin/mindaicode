@@ -679,7 +679,7 @@
       <h3>📚 How it works</h3>
       <div class="learn">
         For each position <strong>i</strong>, hold onto <strong>key = arr[i]</strong>. Slide every value bigger than <strong>key</strong> one step right, opening a gap. Drop <strong>key</strong> into that gap. The sorted region (green) is always everything to the <strong>left</strong> of i, and it grows one element at a time.
-        <div class="complexity">
+        <div class="complexity" data-cx="insertion">
           <span class="chip g">Best: O(n)</span>
           <span class="chip">Average: O(n²)</span>
           <span class="chip">Worst: O(n²)</span>
@@ -1668,5 +1668,6 @@ if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
 <script src="firebase-config.js"></script>
 <script src="mindaicode-auth.js"></script>
 <script src="code-langs.js"></script>
+<script src="complexity.js"></script>
 </body>
 </html>

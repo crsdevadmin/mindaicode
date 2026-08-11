@@ -184,12 +184,14 @@
         <div class="sideSub">Checks <b id="lSteps">0</b> item(s) · <span id="lState">ready</span></div>
         <div class="cells" id="cellsL"></div>
         <div class="note" id="noteL">Starts at the first item and walks forward one at a time.</div>
+        <div class="complexity" data-cx="linear"></div>
       </div>
       <div class="side" id="sideJ">
         <div class="sideHead"><strong>🦘 Jump Search</strong><span class="big sqrt">O(√n)</span></div>
         <div class="sideSub">Checks <b id="jSteps">0</b> item(s) · <span id="jState">ready</span></div>
         <div class="cells" id="cellsJ"></div>
         <div class="note" id="noteJ">Hops forward in fixed blocks, then walks back through the one block it lands in.</div>
+        <div class="complexity" data-cx="jump"></div>
       </div>
 
       <div class="side" id="sideB">
@@ -197,6 +199,7 @@
         <div class="sideSub">Checks <b id="bSteps">0</b> item(s) · <span id="bState">ready</span></div>
         <div class="cells" id="cellsB"></div>
         <div class="note" id="noteB">Jumps to the middle and throws away half the list each time.</div>
+        <div class="complexity" data-cx="bsearch"></div>
       </div>
     </div>
 
@@ -614,5 +617,6 @@ if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
 <script src="firebase-config.js"></script>
 <script src="mindaicode-auth.js"></script>
 <script src="code-langs.js"></script>
+<script src="complexity.js"></script>
 </body>
 </html>

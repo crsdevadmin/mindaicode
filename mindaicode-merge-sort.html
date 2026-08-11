@@ -689,7 +689,7 @@
       <h3>📚 How it works</h3>
       <div class="learn">
         Split the array in half, recursively, down to single elements (always sorted). Then <strong>merge</strong> pairs of sorted halves by always taking whichever front value is smaller. The blue bracket shows the current range being split or merged. Merging is only correct because both halves are ALREADY sorted before it starts.
-        <div class="complexity">
+        <div class="complexity" data-cx="merge">
           <span class="chip g">Worst: O(n log n)</span>
           <span class="chip g">Average: O(n log n)</span>
           <span class="chip g">Best: O(n log n)</span>
@@ -1681,5 +1681,6 @@ if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
 <script src="firebase-config.js"></script>
 <script src="mindaicode-auth.js"></script>
 <script src="code-langs.js"></script>
+<script src="complexity.js"></script>
 </body>
 </html>

@@ -690,7 +690,7 @@
       <h3>📚 How it works</h3>
       <div class="learn">
         Every partition places its pivot in its final sorted position immediately — unlike Merge Sort, where nothing is truly final until the very last merge. Quick Sort sorts <strong>in place</strong> (no extra array), which is why it's often faster in practice than Merge Sort despite matching Big-O on average.
-        <div class="complexity">
+        <div class="complexity" data-cx="quick">
           <span class="chip g">Average: O(n log n)</span>
           <span class="chip r">Worst: O(n²)</span>
           <span class="chip">Best: O(n log n)</span>
@@ -1727,5 +1727,6 @@ if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
 <script src="firebase-config.js"></script>
 <script src="mindaicode-auth.js"></script>
 <script src="code-langs.js"></script>
+<script src="complexity.js"></script>
 </body>
 </html>

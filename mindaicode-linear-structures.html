@@ -190,6 +190,7 @@
     <div class="note" id="stackNote">Push a value to add a tray on top. Pop removes whichever tray is currently on top — never one from the middle or bottom.</div>
     <div class="log" id="stackLog"></div>
 
+    <div class="complexity" data-cx="stack"></div>
     <div class="tabs" style="margin-top:16px;">
       <button class="tab on" data-target="stack-py" type="button">Python</button>
       <button class="tab" data-target="stack-java" type="button">Java</button>
@@ -241,6 +242,7 @@
     <div class="note" id="queueNote">Enqueue adds to the rear. Dequeue always removes from the front — whoever has been waiting longest.</div>
     <div class="log" id="queueLog"></div>
 
+    <div class="complexity" data-cx="queue"></div>
     <div class="tabs" style="margin-top:16px;">
       <button class="tab on" data-target="queue-py" type="button">Python</button>
       <button class="tab" data-target="queue-java" type="button">Java</button>
@@ -282,6 +284,7 @@
     <div class="note" id="listNote">Insert at head hooks a new carriage on at the front and repoints the head. Delete searches carriage by carriage until it finds the value, then relinks around it.</div>
     <div class="log" id="listLog"></div>
 
+    <div class="complexity" data-cx="list"></div>
     <div class="tabs" style="margin-top:16px;">
       <button class="tab on" data-target="list-py" type="button">Python</button>
       <button class="tab" data-target="list-java" type="button">Java</button>
@@ -690,5 +693,6 @@ if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
 <script src="firebase-config.js"></script>
 <script src="mindaicode-auth.js"></script>
 <script src="code-langs.js"></script>
+<script src="complexity.js"></script>
 </body>
 </html>
