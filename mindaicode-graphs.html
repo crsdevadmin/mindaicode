@@ -65,6 +65,10 @@
   .node circle { fill:var(--panel2); stroke:var(--border); stroke-width:2; transition:all .25s; }
   .node text.lbl { fill:var(--text); font-size:14px; font-weight:700; text-anchor:middle; dominant-baseline:central; font-family:Consolas, monospace; }
   .node text.dist { fill:var(--yellow); font-size:11px; text-anchor:middle; font-family:Consolas, monospace; }
+  .node text.stn { fill:var(--muted); font-size:10.5px; text-anchor:middle; font-weight:600; }
+  .node.visited text.stn, .node.settled text.stn { fill:var(--text); }
+  .node.route circle { fill:rgba(63,185,80,.3); stroke:var(--green); stroke-width:3; }
+  .edge.fast { stroke:var(--yellow); stroke-width:4; stroke-dasharray:7 4; }
   .node.start circle { stroke:var(--green); stroke-width:3; }
   .node.visited circle { fill:rgba(88,166,255,.22); stroke:var(--accent); }
   .node.current circle { fill:rgba(210,153,34,.35); stroke:var(--yellow); stroke-width:3; }
@@ -76,6 +80,37 @@
   .infoBox b { color:var(--text); }
   .orderList { display:flex; flex-wrap:wrap; gap:5px; margin-top:6px; }
   .orderChip { background:var(--bg); border:1px solid var(--border); border-radius:6px; padding:2px 8px; font-family:Consolas, monospace; font-size:12px; }
+
+  .mapsBox { margin-top:14px; background:var(--panel2); border:1px solid var(--border); border-radius:10px; }
+  .mapsBox summary { cursor:pointer; padding:12px 16px; font-size:14px; font-weight:700; color:var(--accent);
+    list-style:none; user-select:none; }
+  .mapsBox summary::-webkit-details-marker { display:none; }
+  .mapsBox summary::before { content:'▸ '; display:inline-block; transition:transform .15s; }
+  .mapsBox[open] summary::before { content:'▾ '; }
+  .mapsBox summary:hover { filter:brightness(1.2); }
+  .mapsBody { padding:0 16px 16px; border-top:1px dashed var(--border); }
+  .mapsBody h4 { font-size:13.5px; color:var(--text); margin:14px 0 6px; }
+  .mapsBody p { font-size:13.5px; line-height:1.68; margin-bottom:9px; color:var(--muted); }
+  .mapsBody p b, .mapsBody li b { color:var(--text); }
+  .mapsBody ul { margin:0 0 10px 20px; }
+  .mapsBody li { font-size:13.5px; line-height:1.7; color:var(--muted); margin-bottom:4px; }
+
+  .mapNote { font-size:12.5px; color:var(--muted); background:var(--panel2); border:1px solid var(--border);
+    border-radius:8px; padding:9px 12px; margin-bottom:12px; line-height:1.5; }
+  .mapNote b { color:var(--text); }
+  .routeBox { margin-top:14px; background:var(--panel2); border:1px solid var(--border);
+    border-radius:10px; padding:14px 16px; }
+  .routeRow { display:flex; flex-wrap:wrap; gap:10px; align-items:baseline; margin-bottom:8px; }
+  .routeTag { font-size:11px; font-weight:800; padding:3px 10px; border-radius:10px; white-space:nowrap; }
+  .routeTag.g { background:rgba(63,185,80,.14); color:var(--green); border:1px solid rgba(63,185,80,.4); }
+  .routeTag.y { background:rgba(210,153,34,.16); color:var(--yellow); border:1px solid rgba(210,153,34,.42); }
+  .routeVal { font-size:13px; line-height:1.6; }
+  .routeVal b { color:var(--text); }
+  .routeVerdict { font-size:13.5px; line-height:1.6; margin-top:8px; padding-top:10px;
+    border-top:1px dashed var(--border); color:var(--muted); min-height:20px; }
+  .routeVerdict b { color:var(--text); }
+  .routeVerdict.warn { color:var(--yellow); }
+  .routeVerdict.warn b { color:var(--yellow); }
   .orderChip.hi { border-color:var(--yellow); color:var(--yellow); }
   .distTable { width:100%; font-size:12px; border-collapse:collapse; }
   .distTable td { padding:3px 4px; border-bottom:1px solid var(--border); font-family:Consolas, monospace; }
@@ -131,28 +166,97 @@
   <div class="intro">
     <h1>🗺️ Graphs: BFS, DFS &amp; Dijkstra</h1>
     <p>Cities connected by roads. <strong>BFS</strong> floods outward one ring at a time, like water finding every room the same distance away before moving further. <strong>DFS</strong> is a person exploring a maze — all the way down one corridor before backtracking. <strong>Dijkstra</strong> asks a sharper question: not "how many roads?" but "what's the cheapest total distance?"</p>
-    <p style="margin-bottom:0; color:var(--muted); font-size:14px;">Module 6 · Same 8-city road map used in all three sections below, so you can compare how differently each algorithm explores it.</p>
+    <p style="margin-bottom:0; color:var(--muted); font-size:14px;">Module 6 · All three sections below run on the <b>same 8-station metro map</b>, so you can compare how differently each algorithm explores it. Press 🎲 New random map in the first section to rebuild the network and try again.</p>
   </div>
 
   <!-- ================= BFS ================= -->
   <div class="card">
     <h2 class="secH">🌊 Breadth-First Search <span id="bfsBadge" class="badgeLbl">not earned</span></h2>
-    <p class="subtitle">Visits everything 1 road away, then everything 2 roads away, then 3 — level by level. Finds the path with the <strong>fewest roads</strong>, not necessarily the shortest distance.</p>
+    <p class="subtitle">This is how a maps app finds a route. BFS spreads outwards from where you are — everything 1 stop away, then everything 2 stops away, then 3 — until it reaches your destination. The first time it arrives, it has arrived by the <strong>fewest stops</strong>. Whether that is the <strong>fastest</strong> journey is a different question, and the demo will show you why.</p>
+
+    <div class="mapNote">
+      🚇 Real Chennai Metro station names, but a <b>simplified made-up network</b> — not the actual lines. Numbers on the lines are travel time in minutes. Don't plan a real journey with this.
+    </div>
+
     <div class="controls">
-      <label class="lbl" for="bfsStart">Start city</label>
+      <label class="lbl" for="bfsStart">From</label>
       <select id="bfsStart"></select>
-      <button id="bfsPlayBtn">▶ Play</button>
+      <label class="lbl" for="bfsTarget">To</label>
+      <select id="bfsTarget"></select>
+      <button id="bfsPlayBtn">▶ Find route</button>
       <button id="bfsStepBtn" class="secondary">⏭ Step</button>
       <button id="bfsResetBtn" class="secondary">↺ Reset</button>
+      <button id="bfsShuffleBtn" class="secondary">🎲 New random map</button>
     </div>
     <div class="graphWrap">
-      <div class="mapBox"><svg id="bfsSvg" viewBox="0 0 620 400"></svg></div>
+      <div class="mapBox"><svg id="bfsSvg" viewBox="0 0 700 390"></svg></div>
       <div class="sidePanel">
         <div class="infoBox"><b>Visit order</b><div class="orderList" id="bfsOrder"></div></div>
         <div class="infoBox"><b>Frontier (queue)</b><div class="orderList" id="bfsFrontier"></div></div>
       </div>
     </div>
-    <div class="note" id="bfsNote">Pick a start city and press Play or Step.</div>
+    <div class="note" id="bfsNote">Pick where you are and where you're going, then press Find route.</div>
+
+    <div class="routeBox" id="bfsRouteBox">
+      <div class="routeRow" id="rowStops">
+        <span class="routeTag g">Fewest stops</span>
+        <span class="routeVal" id="bfsRouteStops">—</span>
+      </div>
+      <div class="routeRow" id="rowFast">
+        <span class="routeTag y">Actually fastest</span>
+        <span class="routeVal" id="bfsRouteFast">—</span>
+      </div>
+      <div class="routeVerdict" id="bfsVerdict"></div>
+      <div class="controls" style="margin:10px 0 0;">
+        <button id="bfsFastBtn" class="secondary">🕒 Show the fastest route instead</button>
+        <button id="bfsFindDiffBtn" class="secondary">🎯 Find a journey where they disagree</button>
+      </div>
+    </div>
+
+    <details class="mapsBox">
+      <summary>🗺️ How does Google Maps <i>actually</i> do this?</summary>
+      <div class="mapsBody">
+
+        <h4>1. What you just watched</h4>
+        <p>Type a destination into a maps app and it does not somehow "know" the route. It searches — and the search looks a lot like what just happened on the map above.</p>
+        <p>The road network is a <b>graph</b>: junctions are nodes, roads are edges. Your search starts at one node and spreads outwards until it touches the destination.</p>
+
+        <h4>2. Why BFS spreads in rings</h4>
+        <p>BFS uses a <b>queue</b> — first in, first out. Stations discovered earlier come out earlier, so everything 1 stop away is processed before anything 2 stops away.</p>
+        <p>That ordering is the whole trick. Because the search never reaches distance 3 before finishing distance 2, <b>the first time it touches your destination it must have arrived by the fewest possible stops</b>. You get the shortest route for free, just from the order of the queue.</p>
+        <p>Swap the queue for a stack and you get DFS, which dives down one road to the end of the map before trying the second road out of your own street. Same graph, same cost, useless for directions.</p>
+
+        <h4>3. The bit that catches everyone out</h4>
+        <p>BFS counts <b>stops</b>. It never looks at the numbers written on the lines.</p>
+        <p>On the starting map, Chennai Central to Airport is 4 stops via Egmore and Guindy — and BFS is perfectly correct that this is the fewest stops possible. It also takes <b>35 minutes</b>, because that Egmore–Guindy line is a slow 22-minute crawl.</p>
+        <p>Go one extra stop through Vadapalani and you arrive in <b>28 minutes</b>. Fewer stops, slower journey. If a maps app worked this way it would confidently route you into the traffic.</p>
+
+        <h4>4. So Maps uses Dijkstra, not BFS</h4>
+        <p>Dijkstra is BFS with the queue upgraded: instead of "who was discovered first", it always expands <b>whoever is closest so far</b>, using a priority queue. Now the numbers on the edges matter, and "closest" can mean minutes, kilometres, fuel, or toll cost — whatever you put on the edges.</p>
+        <p>That is the Dijkstra demo further down this page, running on this same map. Compare the two and you are comparing "fewest stops" against "least time".</p>
+
+        <h4>5. Where BFS <i>is</i> the right answer</h4>
+        <p>Whenever every step genuinely costs the same, BFS is not just adequate — it is the better choice, because it is simpler and needs no priority queue:</p>
+        <ul>
+          <li><b>Metro route planners</b> minimising interchanges, where a change of line costs you more than a stop</li>
+          <li><b>"Degrees of separation"</b> — how many friend-hops between two people on a social network</li>
+          <li><b>Shortest path in a maze or grid</b>, where every move to an adjacent square costs one</li>
+          <li><b>Web crawlers</b> exploring pages near a starting site first</li>
+          <li><b>Chess puzzles</b> — fewest moves to reach a position</li>
+        </ul>
+
+        <h4>6. Being honest about the real thing</h4>
+        <p>A real maps app is a long way beyond plain Dijkstra. Running Dijkstra across every road in India for every request would be far too slow, so production routing engines add:</p>
+        <ul>
+          <li><b>A*</b> — Dijkstra plus a hint about which direction the destination lies in, so it stops exploring backwards</li>
+          <li><b>Contraction hierarchies</b> — the road network is pre-processed for weeks so motorway-level shortcuts can be reused instantly</li>
+          <li><b>Live traffic</b> — edge weights change minute by minute from other people's phones</li>
+          <li><b>Turn costs</b> — a left turn across traffic genuinely costs more than a right one</li>
+        </ul>
+        <p>But every one of those is a modification of the idea you just watched: spread out from the start, keep track of what you have already seen, stop when you arrive. Understand BFS and Dijkstra and you understand the shape of all of it.</p>
+
+      </div>
+    </details>
 
     <div class="complexity" data-cx="bfs"></div>
     <div class="tabs" style="margin-top:16px;">
@@ -202,7 +306,7 @@
       <button id="dfsResetBtn" class="secondary">↺ Reset</button>
     </div>
     <div class="graphWrap">
-      <div class="mapBox"><svg id="dfsSvg" viewBox="0 0 620 400"></svg></div>
+      <div class="mapBox"><svg id="dfsSvg" viewBox="0 0 700 390"></svg></div>
       <div class="sidePanel">
         <div class="infoBox"><b>Visit order</b><div class="orderList" id="dfsOrder"></div></div>
         <div class="infoBox"><b>Call stack</b><div class="orderList" id="dfsStack"></div></div>
@@ -252,7 +356,7 @@
       <button id="dijkResetBtn" class="secondary">↺ Reset</button>
     </div>
     <div class="graphWrap">
-      <div class="mapBox"><svg id="dijkSvg" viewBox="0 0 620 400"></svg></div>
+      <div class="mapBox"><svg id="dijkSvg" viewBox="0 0 700 390"></svg></div>
       <div class="sidePanel">
         <div class="infoBox"><b>Distances</b><table class="distTable" id="dijkTable"></table></div>
       </div>
@@ -293,7 +397,7 @@
     </div>
 
     <div class="warn" style="background:rgba(210,153,34,.1); border:1px solid rgba(210,153,34,.35); border-radius:10px; padding:13px 16px; font-size:14px; line-height:1.65; margin-top:14px;">
-      <b style="color:var(--yellow);">⚠️ Watch out:</b> Dijkstra assumes every road weight is <b>zero or positive</b>. A negative weight can make the algorithm settle a city too early and never revisit it — for graphs with negative edges, use Bellman-Ford instead.
+      <b style="color:var(--yellow);">⚠️ Watch out:</b> Dijkstra assumes every road weight is <b>zero or positive</b>. A negative weight can make the algorithm settle a station too early and never revisit it — for graphs with negative edges, use Bellman-Ford instead.
     </div>
   </div>
 
@@ -321,20 +425,100 @@
 </div>
 
 <script>
-/* ================= GRAPH DATA (shared "city map") ================= */
+/* ================= THE MAP =================
+   The station names are real Chennai Metro stations, but the LINES BETWEEN THEM
+   ARE NOT THE REAL NETWORK. This is a simplified teaching map, and the "new
+   random map" button rebuilds the connections from scratch. Do not use it to
+   plan an actual journey.
+   Numbers on the lines are travel time in minutes. */
 const NODES = {
-  A:{x:80,y:200}, B:{x:220,y:80}, C:{x:220,y:320}, D:{x:380,y:60},
-  E:{x:380,y:200}, F:{x:380,y:340}, G:{x:540,y:120}, H:{x:540,y:280},
+  CEN:{x:105,y:65,  name:'Chennai Central'},
+  EGM:{x:105,y:205, name:'Egmore'},
+  KOY:{x:265,y:55,  name:'Koyambedu'},
+  VAD:{x:265,y:195, name:'Vadapalani'},
+  ASH:{x:415,y:115, name:'Ashok Nagar'},
+  GUI:{x:415,y:275, name:'Guindy'},
+  ALA:{x:570,y:185, name:'Alandur'},
+  AIR:{x:570,y:325, name:'Airport'},
 };
-const NODE_IDS = Object.keys(NODES); // A..H, canonical order
-const EDGES = [
-  ['A','B',4], ['A','C',2], ['B','D',5], ['B','E',10], ['C','E',3], ['C','F',8],
-  ['D','G',6], ['E','G',2], ['E','F',4], ['F','H',5], ['G','H',3],
+const NODE_IDS = Object.keys(NODES);
+const nameOf = id => NODES[id].name;
+
+/* The starting map. Chosen deliberately: Central -> Airport takes 4 stops and
+   35 minutes by fewest-stops, but 5 stops and only 28 minutes the fast way.
+   That gap is the whole point of the lesson. */
+const DEFAULT_EDGES = [
+  ['CEN','EGM',4], ['EGM','VAD',8], ['VAD','KOY',5], ['KOY','ASH',6],
+  ['ASH','ALA',6], ['ALA','AIR',5], ['GUI','ALA',4], ['VAD','GUI',7],
+  ['EGM','GUI',22], ['VAD','ASH',16],
 ];
-const ADJ = {};
-NODE_IDS.forEach(n => ADJ[n] = []);
-EDGES.forEach(([u, v, w]) => { ADJ[u].push([v, w]); ADJ[v].push([u, w]); });
+let EDGES = DEFAULT_EDGES.map(e => e.slice());
+let ADJ = {};
+function rebuildAdj() {
+  ADJ = {};
+  NODE_IDS.forEach(n => ADJ[n] = []);
+  EDGES.forEach(([u, v, w]) => { ADJ[u].push([v, w]); ADJ[v].push([u, w]); });
+}
+rebuildAdj();
 function edgeId(u, v) { return [u, v].sort().join('-'); }
+function minutesBetween(u, v) { const e = ADJ[u].find(([m]) => m === v); return e ? e[1] : null; }
+
+/* ---- random map generation ----
+   Built as a random spanning tree first, which GUARANTEES every station stays
+   reachable, then a few extra links so there is more than one way to travel. */
+const geoDist = (a, b) => Math.hypot(NODES[a].x - NODES[b].x, NODES[a].y - NODES[b].y);
+
+function randomEdges(rnd) {
+  rnd = rnd || Math.random;
+  const inTree = [NODE_IDS[Math.floor(rnd() * NODE_IDS.length)]];
+  const out = new Set(NODE_IDS.filter(n => n !== inTree[0]));
+  const edges = [];
+  while (out.size) {
+    const cands = [];
+    inTree.forEach(u => out.forEach(v => cands.push([u, v, geoDist(u, v) * (0.6 + rnd() * 0.9)])));
+    cands.sort((a, b) => a[2] - b[2]);
+    // pick among the nearest few so the shape changes but the map stays tidy
+    const [u, v] = cands[Math.floor(rnd() * Math.min(3, cands.length))];
+    edges.push([u, v]); inTree.push(v); out.delete(v);
+  }
+  const have = new Set(edges.map(([u, v]) => edgeId(u, v)));
+  const pool = [];
+  NODE_IDS.forEach((u, i) => NODE_IDS.slice(i + 1).forEach(v => {
+    if (!have.has(edgeId(u, v))) pool.push([u, v, geoDist(u, v)]);
+  }));
+  pool.sort((a, b) => a[2] - b[2]);
+  const near = pool.slice(0, 10);
+  for (let i = 0; i < 3 && near.length; i++) {
+    edges.push(near.splice(Math.floor(rnd() * near.length), 1)[0].slice(0, 2));
+  }
+  // travel time roughly follows distance, with a traffic factor - which is
+  // exactly why the fewest-stops route is often NOT the fastest one
+  return edges.map(([u, v]) => {
+    const base = Math.max(2, Math.round(geoDist(u, v) / 28));
+    return [u, v, Math.max(2, Math.min(24, base + Math.floor(rnd() * 7) - 2))];
+  });
+}
+
+/* fewest-stops route, straight out of the BFS parent pointers */
+function bfsRoute(start, target) {
+  const prev = { [start]: null };
+  const seen = new Set([start]);
+  const q = [start];
+  while (q.length) {
+    const n = q.shift();
+    if (n === target) break;
+    for (const [m] of ADJ[n]) if (!seen.has(m)) { seen.add(m); prev[m] = n; q.push(m); }
+  }
+  if (!(target in prev)) return null;
+  const path = []; let c = target;
+  while (c !== null) { path.unshift(c); c = prev[c]; }
+  return path;
+}
+function routeMinutes(path) {
+  let t = 0;
+  for (let i = 0; i + 1 < path.length; i++) t += minutesBetween(path[i], path[i + 1]);
+  return t;
+}
 
 /* ================= ALGORITHMS (pure, precompute full run) ================= */
 function bfsRunDetailed(start) {
@@ -404,48 +588,132 @@ function buildMap(svgId) {
       <circle cx="${p.x}" cy="${p.y}" r="22"></circle>
       <text class="lbl" x="${p.x}" y="${p.y - 3}">${n}</text>
       <text class="dist" id="${svgId}-d-${n}" x="${p.x}" y="${p.y + 14}"></text>
+      <text class="stn" x="${p.x}" y="${p.y + 36}">${NODES[n].name}</text>
     </g>`;
   });
   svg.innerHTML = html;
 }
 function fillSelect(selId, defaultVal) {
   const sel = document.getElementById(selId);
-  sel.innerHTML = NODE_IDS.map(n => `<option value="${n}"${n === defaultVal ? ' selected' : ''}>${n}</option>`).join('');
+  if (!sel) return;
+  const keep = sel.value;
+  sel.innerHTML = NODE_IDS.map(n =>
+    `<option value="${n}">${NODES[n].name}</option>`).join('');
+  sel.value = (keep && NODE_IDS.includes(keep)) ? keep : defaultVal;
 }
 
-/* ================= BFS PLAYER ================= */
+/* ================= BFS ROUTE FINDER ================= */
 let bfsSteps = [], bfsIdx = 0, bfsTimer = null;
+const bfsFrom = () => document.getElementById('bfsStart').value;
+const bfsTo   = () => document.getElementById('bfsTarget').value;
+
 function bfsReset() {
   clearInterval(bfsTimer);
-  const start = document.getElementById('bfsStart').value;
+  const start = bfsFrom(), target = bfsTo();
   bfsSteps = bfsRunDetailed(start);
   bfsIdx = 0;
   buildMap('bfsSvg');
   document.getElementById(`bfsSvg-n-${start}`).classList.add('start');
+  if (target !== start) document.getElementById(`bfsSvg-n-${target}`).classList.add('target');
   document.getElementById('bfsOrder').innerHTML = '';
-  document.getElementById('bfsFrontier').innerHTML = `<span class="orderChip">${start}</span>`;
-  document.getElementById('bfsNote').innerHTML = `Starting BFS from <b>${start}</b>. Press Step or Play.`;
+  document.getElementById('bfsFrontier').innerHTML = `<span class="orderChip">${nameOf(start)}</span>`;
+  document.getElementById('bfsNote').innerHTML = start === target
+    ? `You are already at <b>${nameOf(start)}</b>. Pick a different destination.`
+    : `Looking for a route from <b>${nameOf(start)}</b> to <b>${nameOf(target)}</b>. BFS will spread outwards one stop at a time.`;
+  document.getElementById('bfsRouteStops').innerHTML = '—';
+  document.getElementById('bfsRouteFast').innerHTML = '—';
+  const v = document.getElementById('bfsVerdict');
+  v.className = 'routeVerdict';
+  v.innerHTML = 'Press <b>Find route</b> to watch the search, or <b>Step</b> to go one stop at a time.';
 }
+
+/* draw a route on the map */
+function paintRoute(path, cls) {
+  for (let i = 0; i + 1 < path.length; i++) {
+    const e = document.getElementById(`bfsSvg-e-${edgeId(path[i], path[i+1])}`);
+    if (e) e.classList.add(cls);
+  }
+}
+function clearRoutePaint() {
+  document.querySelectorAll('#bfsSvg .edge').forEach(e => e.classList.remove('path', 'fast'));
+  document.querySelectorAll('#bfsSvg .node').forEach(n => n.classList.remove('route'));
+}
+
+/* fill in the two-route comparison once the destination has been reached */
+function bfsShowRoutes() {
+  const start = bfsFrom(), target = bfsTo();
+  const stopsEl = document.getElementById('bfsRouteStops');
+  const fastEl  = document.getElementById('bfsRouteFast');
+  const v = document.getElementById('bfsVerdict');
+  if (start === target) return;
+
+  const bPath = bfsRoute(start, target);
+  if (!bPath) {
+    stopsEl.innerHTML = '<b>No route exists</b> — these stations are not connected on this map.';
+    fastEl.innerHTML = '—';
+    v.className = 'routeVerdict';
+    v.innerHTML = 'BFS explored everything it could reach and never found the destination. That is how you detect an unreachable node.';
+    return;
+  }
+  const bMins = routeMinutes(bPath);
+  const { prev } = dijkstraRun(start);
+  const dPath = pathTo(prev, target);
+  const dMins = routeMinutes(dPath);
+
+  const fmt = p => p.map(n => nameOf(n)).join(' → ');
+  stopsEl.innerHTML = `<b>${bPath.length - 1} stops</b> · ${bMins} min<br>${fmt(bPath)}`;
+  fastEl.innerHTML  = `<b>${dPath.length - 1} stops</b> · ${dMins} min<br>${fmt(dPath)}`;
+
+  clearRoutePaint();
+  paintRoute(bPath, 'path');
+  bPath.forEach(n => document.getElementById(`bfsSvg-n-${n}`).classList.add('route'));
+
+  if (bMins > dMins) {
+    v.className = 'routeVerdict warn';
+    v.innerHTML = `⚠️ <b>BFS picked the slower journey.</b> Its route has the fewest stops (${bPath.length - 1}), ` +
+      `but it takes <b>${bMins} minutes</b>. Going via ${dPath.length - 1} stops instead gets you there in ` +
+      `<b>${dMins} minutes</b> — <b>${bMins - dMins} minutes quicker</b>.<br><br>` +
+      `BFS counted <i>stops</i>, not <i>minutes</i>. It never looked at the numbers on the lines. ` +
+      `That is exactly why a real maps app uses <b>Dijkstra</b>, not BFS, for driving directions.`;
+  } else if (bMins === dMins) {
+    v.className = 'routeVerdict';
+    v.innerHTML = `✅ <b>Here BFS got lucky.</b> Its fewest-stops route also happens to be the fastest, at ${bMins} minutes. ` +
+      `That is not guaranteed — try another pair of stations, or press <b>🎯 Find a journey where they disagree</b>.`;
+  }
+}
+
 function bfsStep() {
   if (bfsIdx >= bfsSteps.length) { clearInterval(bfsTimer); return true; }
+  const target = bfsTo();
   const { node, via, frontier } = bfsSteps[bfsIdx];
   document.getElementById(`bfsSvg-n-${node}`).classList.add('visited');
   if (via) document.getElementById(`bfsSvg-e-${edgeId(via, node)}`).classList.add('used');
   const orderBox = document.getElementById('bfsOrder');
   const chip = document.createElement('span');
   chip.className = 'orderChip hi';
-  chip.textContent = node;
+  chip.textContent = nameOf(node);
   orderBox.appendChild(chip);
   [...orderBox.children].forEach(c => c.classList.remove('hi'));
   chip.classList.add('hi');
   document.getElementById('bfsFrontier').innerHTML = frontier.length
-    ? frontier.map(n => `<span class="orderChip">${n}</span>`).join('') : '<span class="orderChip">empty</span>';
+    ? frontier.map(n => `<span class="orderChip">${nameOf(n)}</span>`).join('') : '<span class="orderChip">empty</span>';
   document.getElementById('bfsNote').innerHTML = via
-    ? `Visited <b>${node}</b>, discovered via <b>${via}</b>. Its unvisited neighbors join the back of the queue.`
-    : `Visited <b>${node}</b> — the starting city.`;
+    ? `Reached <b>${nameOf(node)}</b>, arriving from <b>${nameOf(via)}</b>. Everything next to it joins the back of the queue.`
+    : `Starting at <b>${nameOf(node)}</b>.`;
   bfsIdx++;
+
+  if (node === target) {
+    document.getElementById('bfsNote').innerHTML +=
+      ` <b>Destination reached</b> — and because BFS expands one whole ring at a time, this is the fewest-stops route.`;
+    bfsShowRoutes();
+    try { localStorage.setItem('mgph_badge_bfs', '1'); } catch (e) {}
+    updateBadgeLabels();
+    clearInterval(bfsTimer);
+    return true;
+  }
   if (bfsIdx >= bfsSteps.length) {
-    document.getElementById('bfsNote').innerHTML += ` <b>All reachable cities visited.</b>`;
+    document.getElementById('bfsNote').innerHTML += ` <b>Everything reachable has been visited.</b>`;
+    bfsShowRoutes();
     try { localStorage.setItem('mgph_badge_bfs', '1'); } catch (e) {}
     updateBadgeLabels();
     clearInterval(bfsTimer);
@@ -453,14 +721,74 @@ function bfsStep() {
   }
   return false;
 }
+
 document.getElementById('bfsPlayBtn').onclick = () => {
   clearInterval(bfsTimer);
-  if (bfsIdx >= bfsSteps.length) bfsReset();
+  if (bfsIdx >= bfsSteps.length || bfsIdx === 0) bfsReset();
   bfsTimer = setInterval(() => { if (bfsStep()) clearInterval(bfsTimer); }, 700);
 };
 document.getElementById('bfsStepBtn').onclick = () => { clearInterval(bfsTimer); bfsStep(); };
 document.getElementById('bfsResetBtn').onclick = bfsReset;
 document.getElementById('bfsStart').onchange = bfsReset;
+document.getElementById('bfsTarget').onchange = bfsReset;
+
+/* overlay the genuinely fastest route in yellow, next to the BFS one */
+document.getElementById('bfsFastBtn').onclick = () => {
+  const start = bfsFrom(), target = bfsTo();
+  if (start === target) return;
+  const { prev } = dijkstraRun(start);
+  const dPath = pathTo(prev, target);
+  if (dPath.length < 2) return;
+  document.querySelectorAll('#bfsSvg .edge').forEach(e => e.classList.remove('fast'));
+  paintRoute(dPath, 'fast');
+  const bPath = bfsRoute(start, target);
+  document.getElementById('bfsVerdict').innerHTML =
+    `The <b style="color:var(--green)">green solid</b> line is BFS's fewest-stops route` +
+    (bPath ? ` (${bPath.length - 1} stops, ${routeMinutes(bPath)} min)` : '') +
+    `. The <b style="color:var(--yellow)">yellow dashed</b> line is the fastest route by travel time ` +
+    `(${dPath.length - 1} stops, ${routeMinutes(dPath)} min). Where they differ, BFS was counting the wrong thing.`;
+};
+
+/* hunt for a pair of stations where fewest-stops is NOT fastest */
+document.getElementById('bfsFindDiffBtn').onclick = () => {
+  const pairs = [];
+  NODE_IDS.forEach(a => NODE_IDS.forEach(b => { if (a !== b) pairs.push([a, b]); }));
+  // shuffle so repeated presses show different examples
+  for (let i = pairs.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [pairs[i], pairs[j]] = [pairs[j], pairs[i]];
+  }
+  for (const [a, b] of pairs) {
+    const bp = bfsRoute(a, b);
+    if (!bp) continue;
+    const { prev } = dijkstraRun(a);
+    const dp = pathTo(prev, b);
+    if (routeMinutes(bp) > routeMinutes(dp)) {
+      document.getElementById('bfsStart').value = a;
+      document.getElementById('bfsTarget').value = b;
+      bfsReset();
+      // run it straight through to the destination
+      let guard = 0;
+      while (!bfsStep() && guard++ < 200) {}
+      return;
+    }
+  }
+  document.getElementById('bfsVerdict').className = 'routeVerdict';
+  document.getElementById('bfsVerdict').innerHTML =
+    'On <b>this particular map</b> every fewest-stops route also happens to be the fastest. ' +
+    'That does happen — press <b>🎲 New random map</b> and try again.';
+};
+
+/* a brand new random network, shared by all three demos below */
+document.getElementById('bfsShuffleBtn').onclick = () => {
+  EDGES = randomEdges();
+  rebuildAdj();
+  bfsReset(); dfsReset(); dijkReset();
+  document.getElementById('bfsNote').innerHTML =
+    '🎲 <b>New map generated.</b> The lines and travel times are random, but every station is still ' +
+    'reachable — the map is built as a spanning tree first, so nothing is ever stranded. ' +
+    'DFS and Dijkstra below now use this same map.';
+};
 
 /* ================= DFS PLAYER ================= */
 let dfsSteps = [], dfsIdx = 0, dfsTimer = null;
@@ -472,7 +800,7 @@ function dfsReset() {
   buildMap('dfsSvg');
   document.getElementById(`dfsSvg-n-${start}`).classList.add('start');
   document.getElementById('dfsOrder').innerHTML = '';
-  document.getElementById('dfsStack').innerHTML = `<span class="orderChip">${start}</span>`;
+  document.getElementById('dfsStack').innerHTML = `<span class="orderChip">${nameOf(start)}</span>`;
   document.getElementById('dfsNote').innerHTML = `Starting DFS from <b>${start}</b>. Press Step or Play.`;
 }
 function dfsStep() {
@@ -485,18 +813,18 @@ function dfsStep() {
   const orderBox = document.getElementById('dfsOrder');
   const chip = document.createElement('span');
   chip.className = 'orderChip hi';
-  chip.textContent = node;
+  chip.textContent = nameOf(node);
   orderBox.appendChild(chip);
   [...orderBox.children].forEach(c => c.classList.remove('hi'));
   chip.classList.add('hi');
   const stackNow = [...stack, node];
-  document.getElementById('dfsStack').innerHTML = stackNow.map(n => `<span class="orderChip">${n}</span>`).join('');
+  document.getElementById('dfsStack').innerHTML = stackNow.map(n => `<span class="orderChip">${nameOf(n)}</span>`).join('');
   document.getElementById('dfsNote').innerHTML = via
     ? `Went deeper: <b>${via} → ${node}</b>. Will keep going until this corridor dead-ends, then backtrack.`
-    : `Visited <b>${node}</b> — the starting city.`;
+    : `Visited <b>${nameOf(node)}</b> — the starting station.`;
   dfsIdx++;
   if (dfsIdx >= dfsSteps.length) {
-    document.getElementById('dfsNote').innerHTML += ` <b>All reachable cities visited.</b>`;
+    document.getElementById('dfsNote').innerHTML += ` <b>All reachable stations visited.</b>`;
     try { localStorage.setItem('mgph_badge_dfs', '1'); } catch (e) {}
     updateBadgeLabels();
     clearInterval(dfsTimer);
@@ -547,8 +875,8 @@ function dijkStep() {
   const settledSoFar = new Set(dijkResult.order.slice(0, dijkIdx + 1).map(o => o.node));
   renderDijkTable(distSnapshot, settledSoFar);
   document.getElementById('dijkNote').innerHTML = via
-    ? `Settled <b>${node}</b> at distance <b>${dist}</b> (cheapest known route so far, via ${via}).`
-    : `Settled <b>${node}</b> at distance <b>0</b> — the starting city.`;
+    ? `Settled <b>${nameOf(node)}</b> at <b>${dist} min</b> (fastest known route so far, via ${nameOf(via)}).`
+    : `Settled <b>${nameOf(node)}</b> at <b>0 min</b> — the starting station.`;
   dijkIdx++;
   const target = document.getElementById('dijkTarget').value;
   if (node === target) {
@@ -606,19 +934,19 @@ document.querySelectorAll('.tabs').forEach(group => {
 const quiz = [
   { q:'BFS uses which data structure to decide what to visit next?',
     opts:['A stack','A queue','A priority queue'],
-    ans:1, why:'BFS processes cities in the order they were discovered — first discovered, first explored. That FIFO behavior is exactly what a queue gives you.' },
+    ans:1, why:'BFS processes stations in the order they were discovered — first discovered, first explored. That FIFO behavior is exactly what a queue gives you.' },
   { q:'DFS uses which approach to decide what to visit next?',
-    opts:['A queue (FIFO)','A stack, or the equivalent call stack via recursion','Always picks the closest city'],
+    opts:['A queue (FIFO)','A stack, or the equivalent call stack via recursion','Always picks the closest station'],
     ans:1, why:'DFS commits to one neighbor and keeps going deeper, only backtracking (popping) when it hits a dead end — that\'s stack (LIFO) behavior, which recursion gives you for free.' },
-  { q:'Why can Dijkstra find a path with MORE roads than BFS, for the same start and end city?',
+  { q:'Why can Dijkstra find a route with MORE stops than BFS, between the same two stations?',
     opts:['Dijkstra has a bug','Dijkstra minimizes total distance, not the number of roads — a longer route can still be cheaper','Dijkstra always picks the first path it finds'],
     ans:1, why:'BFS only counts hops, so it prefers fewer roads regardless of their length. Dijkstra adds up actual road weights, so a route with more, shorter roads can beat a route with fewer, longer ones.' },
   { q:'What happens to Dijkstra\'s guarantee if a road has a negative weight?',
-    opts:['Nothing changes, it still works correctly','It can settle a city too early with the wrong (too high) distance and never fix it','It runs faster'],
-    ans:1, why:'Dijkstra finalizes a city\'s distance the moment it\'s settled and never revisits it. A negative edge discovered later could have produced a cheaper route, but by then it\'s too late — this is why Dijkstra requires non-negative weights.' },
-  { q:'What is the time complexity of BFS and DFS on a graph with V cities and E roads?',
+    opts:['Nothing changes, it still works correctly','It can settle a station too early with the wrong (too high) distance and never fix it','It runs faster'],
+    ans:1, why:'Dijkstra finalizes a station\'s distance the moment it\'s settled and never revisits it. A negative edge discovered later could have produced a cheaper route, but by then it\'s too late — this is why Dijkstra requires non-negative weights.' },
+  { q:'What is the time complexity of BFS and DFS on a graph with V stations and E lines?',
     opts:['O(V²) always','O(V + E)','O(log V)'],
-    ans:1, why:'Both algorithms visit every city once and look at every road once (twice for undirected roads, which is still a constant factor), giving O(V + E) — linear in the size of the graph.' },
+    ans:1, why:'Both algorithms visit every station once and look at every line once (twice for two-way lines, which is still a constant factor), giving O(V + E) — linear in the size of the graph.' },
 ];
 let qi = 0, qCorrect = 0;
 function showQuiz() {
@@ -661,10 +989,11 @@ function showQuiz() {
 }
 
 /* ================= INIT ================= */
-fillSelect('bfsStart', 'A');
-fillSelect('dfsStart', 'A');
-fillSelect('dijkStart', 'A');
-fillSelect('dijkTarget', 'H');
+fillSelect('bfsStart',  'CEN');   // Chennai Central -> Airport is the journey where
+fillSelect('bfsTarget', 'AIR');   // fewest stops and fastest disagree most clearly
+fillSelect('dfsStart',  'CEN');
+fillSelect('dijkStart', 'CEN');
+fillSelect('dijkTarget','AIR');
 bfsReset();
 dfsReset();
 dijkReset();

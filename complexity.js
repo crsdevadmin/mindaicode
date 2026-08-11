@@ -382,10 +382,11 @@ window.MINDAICODE_COMPLEXITY = {
       body: '<p>V is the number of vertices (cities), E the number of edges (roads).</p>' +
             '<p>Each city is enqueued and dequeued exactly once — that is the V. While handling a city you look at each of its roads — across the whole run every road is examined once from each end, giving the E.</p>' +
             '<p>You cannot do better: any algorithm that visits the whole graph must at minimum look at every city and every road.</p>' },
-    { label: 'Shortest path: unweighted', tone: 'p', head: 'BFS finds the fewest hops — but ignores distance',
-      body: '<p>BFS explores in rings: everything 1 hop away, then everything 2 hops away, and so on. So the first time it reaches a city, it has arrived by the fewest possible hops.</p>' +
-            '<p>That is a genuine shortest path <b>if every road counts the same</b>. The moment roads have different lengths, "fewest roads" stops meaning "shortest distance" — three short hops can beat one long one.</p>' +
-            '<p>That is precisely the gap Dijkstra fills.</p>' },
+    { label: 'Shortest path: unweighted', tone: 'p', head: 'BFS finds the fewest stops — but ignores travel time',
+      body: '<p>BFS explores in rings: everything 1 stop away, then everything 2 stops away, and so on. So the first time it reaches a station, it must have arrived by the fewest possible stops.</p>' +
+            '<p>That is a genuine shortest path <b>if every step costs the same</b>. The moment the edges have different weights, "fewest stops" stops meaning "quickest" — several short hops can beat one long crawl.</p>' +
+            '<p><b>Try it on the map above.</b> Chennai Central to Airport is 4 stops by BFS and takes <b>35 minutes</b>. Going one stop further round, through Vadapalani, takes <b>28 minutes</b> — 7 minutes quicker with <i>more</i> stops.</p>' +
+            '<p>BFS is not wrong; it answered the question it was asked. It was just asked the wrong question. Dijkstra is what you use when the edges carry a cost.</p>' },
     { label: 'Space: O(V)', head: 'The queue plus the visited set',
       body: '<p>In the worst case the queue holds an entire level of the graph at once, which can be a large fraction of V. The visited set is V too.</p>' +
             '<p>On a wide, shallow graph BFS can use much more memory than DFS — the trade-off runs the other way on deep, narrow graphs.</p>' },
