@@ -3,192 +3,135 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>MindAICode — Learn. Visualize. Code. Master.</title>
+<title>MindAICode — See the algorithm. Don't just read it.</title>
+<meta name="description" content="A free animated Data Structures &amp; Algorithms course for students. Watch every algorithm run, step by step, with real-world metaphors. No sign-up needed.">
 <style>
   :root {
-    --bg: #0d1117;
-    --panel: #161b22;
-    --panel2: #1c2333;
-    --accent: #58a6ff;
-    --accent2: #f78166;
-    --purple: #d2a8ff;
-    --green: #3fb950;
-    --yellow: #d29922;
-    --text: #e6edf3;
-    --muted: #8b949e;
-    --border: #30363d;
+    --bg:#0d1117; --panel:#161b22; --panel2:#1c2333; --accent:#58a6ff; --accent2:#f78166;
+    --purple:#d2a8ff; --green:#3fb950; --yellow:#d29922; --red:#f85149;
+    --text:#e6edf3; --muted:#8b949e; --border:#30363d;
   }
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-  body {
-    font-family: 'Segoe UI', system-ui, sans-serif;
-    background: var(--bg);
-    color: var(--text);
-    min-height: 100vh;
-  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  html { scroll-behavior:smooth; }
+  body { font-family:'Segoe UI', system-ui, sans-serif; background:var(--bg); color:var(--text); min-height:100vh; overflow-x:hidden; }
+
   header {
-    display: flex; align-items: center; justify-content: space-between;
-    padding: 14px 28px;
-    background: var(--panel);
-    border-bottom: 1px solid var(--border);
+    display:flex; align-items:center; justify-content:space-between;
+    padding:14px 28px; background:rgba(22,27,34,.85); backdrop-filter:blur(8px);
+    border-bottom:1px solid var(--border); flex-wrap:wrap; gap:8px;
+    position:sticky; top:0; z-index:50;
   }
-  .logo { font-size: 22px; font-weight: 800; letter-spacing: .5px; }
-  .logo span { color: var(--accent); }
-  .tagline { display:flex; align-items:center; gap:14px; flex-wrap:wrap; color: var(--muted); font-size: 13px; }
+  .logo { font-size:22px; font-weight:800; }
+  .logo span { color:var(--accent); }
+  .tagline { display:flex; gap:14px; align-items:center; flex-wrap:wrap; font-size:13px; }
+  .tagline a { text-decoration:none; color:var(--muted); }
+  .tagline a:hover { color:var(--text); }
 
-  .container { max-width: 1200px; margin: 0 auto; padding: 24px; }
+  .wrap { max-width:1120px; margin:0 auto; padding:0 20px; }
 
-  /* Hero */
-  .hero {
-    background: linear-gradient(135deg, rgba(88,166,255,.12), rgba(63,185,80,.08));
-    border: 1px solid var(--border); border-radius: 16px;
-    padding: 40px 36px; margin-bottom: 28px; text-align: center;
+  /* ---------------- HERO ---------------- */
+  .hero { padding:56px 0 30px; display:grid; grid-template-columns:1.05fr .95fr; gap:44px; align-items:center; }
+  @media (max-width:900px) { .hero { grid-template-columns:1fr; gap:30px; padding:34px 0 20px; } }
+
+  .eyebrow {
+    display:inline-flex; align-items:center; gap:8px; font-size:12.5px; font-weight:700;
+    background:rgba(63,185,80,.12); color:var(--green); border:1px solid rgba(63,185,80,.32);
+    padding:5px 13px; border-radius:20px; margin-bottom:18px;
   }
-  .hero h1 { font-size: 32px; margin-bottom: 10px; }
-  .hero h1 span { color: var(--accent); }
-  .hero p { color: var(--muted); font-size: 16px; max-width: 640px; margin: 0 auto; line-height: 1.6; }
-  .hero .pills { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin-top: 18px; }
-  .pill {
-    background: var(--panel2); border: 1px solid var(--border);
-    padding: 6px 14px; border-radius: 20px; font-size: 13px; color: var(--text);
+  h1 { font-size:50px; line-height:1.12; margin-bottom:16px; letter-spacing:-1px; }
+  h1 .grad {
+    background:linear-gradient(100deg, var(--accent), var(--purple));
+    -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent;
+  }
+  @media (max-width:900px) { h1 { font-size:36px; } }
+  @media (max-width:420px) { h1 { font-size:30px; } }
+  .sub { font-size:17px; color:var(--muted); line-height:1.65; margin-bottom:26px; max-width:520px; }
+  .sub b { color:var(--text); }
+
+  .ctaRow { display:flex; gap:12px; flex-wrap:wrap; margin-bottom:18px; }
+  .btn {
+    display:inline-flex; align-items:center; gap:9px; text-decoration:none;
+    padding:14px 26px; border-radius:11px; font-size:15.5px; font-weight:800;
+    transition:transform .15s, box-shadow .15s, filter .15s;
+  }
+  .btn.primary { background:var(--green); color:#0d1117; box-shadow:0 6px 22px rgba(63,185,80,.28); }
+  .btn.primary:hover { transform:translateY(-2px); box-shadow:0 10px 30px rgba(63,185,80,.4); }
+  .btn.ghost { background:var(--panel2); color:var(--text); border:1px solid var(--border); }
+  .btn.ghost:hover { border-color:var(--accent); transform:translateY(-2px); }
+  .noSignup { font-size:13px; color:var(--muted); }
+  .noSignup b { color:var(--green); }
+
+  /* live demo panel */
+  .demo {
+    background:var(--panel); border:1px solid var(--border); border-radius:16px;
+    padding:18px; box-shadow:0 20px 50px rgba(0,0,0,.45);
+  }
+  .demoBar { display:flex; align-items:center; gap:7px; margin-bottom:14px; }
+  .dot { width:11px; height:11px; border-radius:50%; }
+  .demoTitle { font-size:12px; color:var(--muted); margin-left:8px; font-family:Consolas, monospace; }
+  .bars { display:flex; align-items:flex-end; gap:5px; height:190px; padding:0 2px; }
+  .bar { flex:1; background:var(--accent); border-radius:4px 4px 2px 2px; transition:height .28s ease, background .28s ease; }
+  .bar.cmp { background:var(--yellow); }
+  .bar.done { background:var(--green); }
+  .demoFoot { display:flex; justify-content:space-between; align-items:center; margin-top:13px; font-size:12.5px; color:var(--muted); font-family:Consolas, monospace; }
+  .demoFoot b { color:var(--text); }
+
+  /* ---------------- DOORS ---------------- */
+  .sec { padding:46px 0 10px; }
+  .secHead { text-align:center; margin-bottom:28px; }
+  .secHead h2 { font-size:27px; margin-bottom:8px; }
+  .secHead p { color:var(--muted); font-size:15px; }
+
+  .doors { display:grid; grid-template-columns:repeat(3,1fr); gap:16px; }
+  @media (max-width:860px) { .doors { grid-template-columns:1fr; } }
+  .door {
+    background:var(--panel); border:1px solid var(--border); border-radius:15px; padding:24px;
+    text-decoration:none; color:var(--text); display:flex; flex-direction:column; gap:9px;
+    transition:transform .16s, border-color .16s, box-shadow .16s; position:relative; overflow:hidden;
+  }
+  .door:hover { transform:translateY(-4px); border-color:var(--accent); box-shadow:0 14px 34px rgba(88,166,255,.14); }
+  .door .ic { font-size:32px; }
+  .door h3 { font-size:18px; }
+  .door p { font-size:13.5px; color:var(--muted); line-height:1.6; flex:1; }
+  .door .go { font-size:13.5px; font-weight:800; color:var(--accent); margin-top:4px; }
+  .door.rec { border-color:rgba(63,185,80,.45); }
+  .door.rec .go { color:var(--green); }
+  .recTag {
+    position:absolute; top:14px; right:14px; font-size:10px; font-weight:800; letter-spacing:.4px;
+    background:rgba(63,185,80,.16); color:var(--green); border:1px solid rgba(63,185,80,.4);
+    padding:3px 9px; border-radius:10px; text-transform:uppercase;
   }
 
-  .section-title {
-    display: flex; align-items: baseline; justify-content: space-between;
-    margin: 32px 0 14px;
-  }
-  .section-title h2 { font-size: 19px; }
-  .section-title span { color: var(--muted); font-size: 13px; }
+  /* ---------------- WHY ---------------- */
+  .why { display:grid; grid-template-columns:repeat(3,1fr); gap:16px; }
+  @media (max-width:860px) { .why { grid-template-columns:1fr; } }
+  .wCard { background:var(--panel2); border:1px solid var(--border); border-radius:14px; padding:22px; }
+  .wCard .ic { font-size:26px; margin-bottom:10px; }
+  .wCard h4 { font-size:16px; margin-bottom:7px; }
+  .wCard p { font-size:13.5px; color:var(--muted); line-height:1.65; }
 
-  /* Card grid */
-  .grid {
-    display: grid; grid-template-columns: repeat(auto-fill, minmax(270px, 1fr));
-    gap: 18px;
-  }
-  .card {
-    background: var(--panel); border: 1px solid var(--border); border-radius: 14px;
-    padding: 22px; display: flex; flex-direction: column; gap: 10px;
-    text-decoration: none; color: var(--text);
-    transition: transform .15s, border-color .15s, box-shadow .15s;
-    position: relative; overflow: hidden;
-  }
-  .card.live { cursor: pointer; }
-  .card.live:hover {
-    transform: translateY(-4px);
-    border-color: var(--accent);
-    box-shadow: 0 10px 28px rgba(88,166,255,.15);
-  }
-  .card.soon { opacity: .55; cursor: default; }
-  .card .icon { font-size: 34px; }
-  .card h3 { font-size: 17px; }
-  .card p { font-size: 13.5px; color: var(--muted); line-height: 1.5; flex: 1; }
-  .card .foot { display: flex; align-items: center; justify-content: space-between; margin-top: 6px; }
-  .chip {
-    font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 12px;
-    background: rgba(247,129,102,.12); color: var(--accent2); border: 1px solid rgba(247,129,102,.35);
-  }
-  .chip.g { background: rgba(63,185,80,.12); color: var(--green); border-color: rgba(63,185,80,.35); }
-  .go { font-size: 13px; font-weight: 700; color: var(--accent); }
-  .badge-soon {
-    position: absolute; top: 14px; right: 14px;
-    font-size: 10.5px; font-weight: 700; letter-spacing: .3px;
-    background: var(--panel2); color: var(--muted); border: 1px solid var(--border);
-    padding: 3px 9px; border-radius: 10px; text-transform: uppercase;
-  }
-  .badge-new {
-    position: absolute; top: 14px; right: 14px;
-    font-size: 10.5px; font-weight: 700; letter-spacing: .3px;
-    background: rgba(63,185,80,.15); color: var(--green); border: 1px solid rgba(63,185,80,.4);
-    padding: 3px 9px; border-radius: 10px; text-transform: uppercase;
-  }
+  /* ---------------- STATS ---------------- */
+  .stats { display:flex; justify-content:center; gap:52px; flex-wrap:wrap; padding:34px 0; text-align:center; }
+  .stat b { display:block; font-size:32px; font-weight:800; color:var(--accent); }
+  .stat span { font-size:13px; color:var(--muted); }
 
-  footer {
-    text-align: center; color: var(--muted); font-size: 12.5px;
-    padding: 30px 20px 40px;
+  /* ---------------- MODULES ---------------- */
+  .mods { display:grid; grid-template-columns:repeat(auto-fill, minmax(240px,1fr)); gap:13px; }
+  .mod {
+    background:var(--panel); border:1px solid var(--border); border-radius:12px; padding:16px 18px;
+    text-decoration:none; color:var(--text); display:flex; align-items:center; gap:13px;
+    transition:transform .14s, border-color .14s;
   }
+  .mod:hover { transform:translateY(-3px); border-color:var(--accent); }
+  .mod .ic { font-size:23px; }
+  .mod .t { font-size:14.5px; font-weight:700; }
+  .mod .n { font-size:11.5px; color:var(--muted); }
 
-  /* Progress dashboard */
-  .progressCard {
-    display: flex; gap: 26px; align-items: center; flex-wrap: wrap;
-    background: var(--panel); border: 1px solid var(--border);
-    border-radius: 14px; padding: 20px 24px;
-  }
-  .ringWrap { position: relative; width: 120px; height: 120px; flex-shrink: 0; }
-  .ring { width: 120px; height: 120px; transform: rotate(-90deg); }
-  .ring circle { fill: none; stroke-width: 9; }
-  .ringBg { stroke: var(--panel2); }
-  .ringFg {
-    stroke: var(--green); stroke-linecap: round;
-    stroke-dasharray: 326.7; stroke-dashoffset: 326.7;
-    transition: stroke-dashoffset .9s cubic-bezier(.4,0,.2,1);
-  }
-  .ringLabel {
-    position: absolute; inset: 0; display: flex; flex-direction: column;
-    align-items: center; justify-content: center; gap: 1px;
-  }
-  .ringLabel span { font-size: 24px; font-weight: 800; }
-  .ringLabel small { font-size: 11px; color: var(--muted); }
-  .progList { flex: 1; min-width: 260px; display: flex; flex-direction: column; gap: 9px; }
-  .progRow { display: flex; align-items: center; gap: 10px; font-size: 13.5px; }
-  .progRow .nm { width: 128px; flex-shrink: 0; }
-  .progRow .nm a { color: var(--text); text-decoration: none; }
-  .progRow .nm a:hover { color: var(--accent); }
-  .dots { display: flex; gap: 4px; }
-  .dot {
-    width: 13px; height: 13px; border-radius: 50%;
-    background: var(--panel2); border: 1px solid var(--border);
-  }
-  .dot.on { background: var(--yellow); border-color: var(--yellow); box-shadow: 0 0 7px rgba(210,153,34,.45); }
-  .progRow .cnt { margin-left: auto; color: var(--muted); font-size: 12px; font-variant-numeric: tabular-nums; }
-  .progActions { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-top: 12px; }
-  .revBtn {
-    background: rgba(210,168,255,.12); border: 1px solid rgba(210,168,255,.42);
-    color: var(--purple); text-decoration: none; font-weight: 700; font-size: 13.5px;
-    padding: 9px 16px; border-radius: 9px; transition: filter .15s;
-  }
-  .revBtn:hover { filter: brightness(1.2); }
-  .resetBtn {
-    background: transparent; border: 1px solid var(--border); color: var(--muted);
-    font-size: 12.5px; padding: 9px 14px; border-radius: 9px; cursor: pointer; font-weight: 600;
-  }
-  .resetBtn:hover { color: var(--text); border-color: var(--muted); }
+  .finalCta { text-align:center; padding:52px 0 20px; }
+  .finalCta h2 { font-size:26px; margin-bottom:10px; }
+  .finalCta p { color:var(--muted); font-size:15px; margin-bottom:22px; }
 
-  /* Featured wide card */
-  .feature {
-    display: block; text-decoration: none; color: var(--text);
-    background: linear-gradient(135deg, rgba(210,168,255,.14), rgba(88,166,255,.08));
-    border: 1px solid rgba(210,168,255,.4); border-radius: 14px;
-    padding: 22px 24px; margin-bottom: 4px;
-    transition: transform .15s, box-shadow .15s, border-color .15s;
-  }
-  .feature:hover { transform: translateY(-3px); border-color: var(--purple); box-shadow: 0 10px 28px rgba(210,168,255,.18); }
-  .feature .row { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
-  .feature .icon { font-size: 32px; }
-  .feature h3 { font-size: 18px; margin-bottom: 4px; }
-  .feature p { font-size: 13.5px; color: var(--muted); line-height: 1.55; }
-  .feature .go { margin-left: auto; font-size: 13px; font-weight: 700; color: var(--purple); white-space: nowrap; }
-
-  @media (max-width: 640px) {
-    header { padding: 12px 16px; }
-    .logo { font-size: 19px; }
-    .tagline { font-size: 12px; }
-    .container { padding: 16px 14px 30px; }
-    .hero { padding: 26px 18px; border-radius: 12px; margin-bottom: 20px; }
-    .hero h1 { font-size: 23px; }
-    .hero p { font-size: 14.5px; }
-    .pill { font-size: 12px; padding: 5px 12px; }
-    .grid { grid-template-columns: 1fr; gap: 14px; }
-    .card { padding: 18px; }
-    .section-title { margin: 24px 0 12px; }
-    .section-title h2 { font-size: 17px; }
-    .feature { padding: 18px; }
-    .feature .go { margin-left: 0; width: 100%; }
-    .progressCard { gap: 16px; padding: 16px; justify-content: center; }
-    .progList { min-width: 0; width: 100%; }
-    .progRow { font-size: 12.5px; }
-    .progRow .nm { width: 108px; }
-    .progActions { flex-direction: column; align-items: stretch; }
-    .revBtn { text-align: center; }
-  }
+  footer { text-align:center; color:var(--muted); font-size:12.5px; padding:34px 20px 44px; border-top:1px solid var(--border); margin-top:40px; line-height:1.8; }
 </style>
 <script>if(location.protocol.startsWith("http")){var m=document.createElement("link");m.rel="manifest";m.href="manifest.json";document.head.appendChild(m);}</script>
 <meta name="theme-color" content="#0d1117">
@@ -198,352 +141,216 @@
 <body>
 
 <header>
-  <div class="logo">🧠 MindAI<span>Code</span></div>
+  <a href="index.html" style="text-decoration:none; color:inherit;">
+    <div class="logo">🧠 MindAI<span>Code</span></div>
+  </a>
   <div class="tagline">
-    <a href="mindaicode-course-path.html" style="color:var(--purple); font-weight:600; text-decoration:none;">🗺️ Course path</a>
-    <span style="color:var(--muted);">Learn. Visualize. Code. Master.</span>
+    <a href="#modules">Modules</a>
+    <a href="mindaicode-course-path.html">🗺️ Course path</a>
+    <a href="mindaicode-programming-basics.html" style="color:var(--green); font-weight:700;">Start free →</a>
   </div>
 </header>
 
-<div class="container">
+<div class="wrap">
 
-  <div class="hero">
-    <h1>See the algorithm. <span>Don't just read it.</span></h1>
-    <p>Every algorithm here is animated with a real-world metaphor, explained line by line as it runs, and paired with an AI tutor you can pause and question at any point.</p>
-    <div class="pills">
-      <span class="pill">⚪ Balls · 📊 Bars · 🧑‍🎓 Students</span>
-      <span class="pill">🤖 AI Explainer</span>
-      <span class="pill">🎯 Predict Mode</span>
-      <span class="pill">🌐 English · தமிழ் · हिंदी</span>
-    </div>
-  </div>
-
-  <div class="section-title">
-    <h2>📈 Your progress</h2>
-    <span id="progSummary">—</span>
-  </div>
-  <div class="progressCard">
-    <div class="ringWrap">
-      <svg viewBox="0 0 120 120" class="ring">
-        <circle cx="60" cy="60" r="52" class="ringBg"></circle>
-        <circle cx="60" cy="60" r="52" class="ringFg" id="ringFg"></circle>
-      </svg>
-      <div class="ringLabel"><span id="ringPct">0%</span><small>complete</small></div>
-    </div>
-    <div class="progList" id="progList"></div>
-  </div>
-  <div class="progActions">
-    <a class="revBtn" href="mindaicode-revision.html">🔁 Revision mode — practise everything</a>
-    <button id="resetProg" class="resetBtn">Reset my progress</button>
-  </div>
-
-  <div class="section-title">
-    <h2>🧩 Start here</h2>
-    <span>New to programming? Begin below</span>
-  </div>
-  <a class="feature" href="mindaicode-programming-basics.html">
-    <div class="row">
-      <div class="icon">🧩</div>
-      <div style="flex:1; min-width:200px;">
-        <h3>Programming Basics</h3>
-        <p>Variables, arrays &amp; 0-based indexing, loops, functions, and recursion — the six words every other page on this site uses without explaining. Start here if any of that sounds unfamiliar.</p>
+  <!-- ================= HERO ================= -->
+  <section class="hero">
+    <div>
+      <div class="eyebrow">✦ Free forever · No sign-up to start</div>
+      <h1>See the algorithm.<br><span class="grad">Don't just read it.</span></h1>
+      <p class="sub">
+        Textbooks show you the finished code. Here you <b>watch it run</b> — every swap, every comparison,
+        explained line by line as it happens. Nine modules from your first variable to interview prep.
+      </p>
+      <div class="ctaRow">
+        <a class="btn primary" href="mindaicode-programming-basics.html">▶ Start learning — it's free</a>
+        <a class="btn ghost" href="mindaicode-bubble-sort.html">👀 Watch a sort first</a>
       </div>
-      <span class="go">Start here →</span>
+      <div class="noSignup">No account. No payment. <b>Works offline once loaded.</b></div>
     </div>
-  </a>
 
-  <div class="section-title">
-    <h2>🧮 Foundations</h2>
-    <span>Module 0</span>
-  </div>
-  <div class="grid">
-    <a class="card live" href="mindaicode-big-o.html">
-      <span class="badge-new">Live</span>
-      <div class="icon">🧮</div>
-      <h3>Big-O Foundations</h3>
-      <p>O(1), O(log n), O(n), O(n log n), O(n²), O(2ⁿ) on one chart — the shared vocabulary every other module leans on.</p>
-      <div class="foot"><span class="chip">Module 0</span><span class="go">Start →</span></div>
-    </a>
-  </div>
-
-  <div class="section-title">
-    <h2>📊 Sorting Algorithms</h2>
-    <span>Module 1 · 6 of 6 live</span>
-  </div>
-  <div class="grid">
-
-    <a class="card live" href="mindaicode-bubble-sort.html">
-      <span class="badge-new">Live</span>
-      <div class="icon">🫧</div>
-      <h3>Bubble Sort</h3>
-      <p>Neighbours compare and swap, one pass at a time, until the biggest values "bubble" to the end.</p>
-      <div class="foot"><span class="chip">O(n²)</span><span class="go">Start →</span></div>
-    </a>
-
-    <a class="card live" href="mindaicode-selection-sort.html">
-      <span class="badge-new">Live</span>
-      <div class="icon">🔎</div>
-      <h3>Selection Sort</h3>
-      <p>Scan everything for the smallest value, then place it — just one confirmed swap per round.</p>
-      <div class="foot"><span class="chip">O(n²)</span><span class="go">Start →</span></div>
-    </a>
-
-    <a class="card live" href="mindaicode-insertion-sort.html">
-      <span class="badge-new">Live</span>
-      <div class="icon">🃏</div>
-      <h3>Insertion Sort</h3>
-      <p>Hold each value out like a playing card, shift bigger ones right, then slide it into its gap.</p>
-      <div class="foot"><span class="chip">O(n²)</span><span class="go">Start →</span></div>
-    </a>
-
-    <a class="card live" href="mindaicode-merge-sort.html">
-      <span class="badge-new">Live</span>
-      <div class="icon">🪄</div>
-      <h3>Merge Sort</h3>
-      <p>Split the list in half again and again, then merge the sorted halves back together.</p>
-      <div class="foot"><span class="chip g">O(n log n)</span><span class="go">Start →</span></div>
-    </a>
-
-    <a class="card live" href="mindaicode-quick-sort.html">
-      <span class="badge-new">Live</span>
-      <div class="icon">⚡</div>
-      <h3>Quick Sort</h3>
-      <p>Pick a pivot, partition everything around it, and recurse — usually the fastest in practice.</p>
-      <div class="foot"><span class="chip g">O(n log n)</span><span class="go">Start →</span></div>
-    </a>
-
-    <a class="card live" href="mindaicode-heap-sort.html">
-      <span class="badge-new">Live</span>
-      <div class="icon">🌲</div>
-      <h3>Heap Sort</h3>
-      <p>Build a max-heap, then repeatedly pull the largest value off the top.</p>
-      <div class="foot"><span class="chip g">O(n log n)</span><span class="go">Start →</span></div>
-    </a>
-
-  </div>
-
-  <a class="feature" href="mindaicode-race-all.html" style="margin-bottom:18px;">
-    <div class="row">
-      <div class="icon">🏁</div>
-      <div style="flex:1; min-width:200px;">
-        <h3>Now race all six</h3>
-        <p>Once you've seen a few of these individually, give every algorithm the same numbers and watch them go. Change the starting data — already sorted, reversed, nearly sorted — and watch the winner change completely.</p>
+    <div class="demo">
+      <div class="demoBar">
+        <span class="dot" style="background:#f85149"></span>
+        <span class="dot" style="background:#d29922"></span>
+        <span class="dot" style="background:#3fb950"></span>
+        <span class="demoTitle">bubble_sort.py — running</span>
       </div>
-      <span class="go">Race them →</span>
+      <div class="bars" id="bars"></div>
+      <div class="demoFoot">
+        <span id="demoMsg">comparing…</span>
+        <span>swaps: <b id="demoSwaps">0</b></span>
+      </div>
     </div>
-  </a>
+  </section>
 
-  <div class="section-title">
-    <h2>🔍 Searching</h2>
-    <span>Module 2 · Why sorting was worth it</span>
-  </div>
-  <div class="grid">
-    <a class="card live" href="mindaicode-binary-search.html">
-      <span class="badge-new">Live</span>
-      <div class="icon">🔍</div>
-      <h3>Linear vs Jump vs Binary Search</h3>
-      <p>Race all three head to head on a sorted list. Binary search finds anything in a million items in 20 steps — this is the payoff for sorting.</p>
-      <div class="foot"><span class="chip g">O(log n)</span><span class="go">Start →</span></div>
-    </a>
-  </div>
+  <!-- ================= DOORS ================= -->
+  <section class="sec">
+    <div class="secHead">
+      <h2>Where are you right now?</h2>
+      <p>Pick the honest one. You can switch any time.</p>
+    </div>
+    <div class="doors">
+      <a class="door rec" href="mindaicode-programming-basics.html">
+        <span class="recTag">Start here</span>
+        <div class="ic">🌱</div>
+        <h3>I've never written code</h3>
+        <p>Six short games teach the six words every page here assumes — variable, array, index, loop, function, recursion. About 15 minutes, no experience needed.</p>
+        <div class="go">Play the first game →</div>
+      </a>
+      <a class="door" href="mindaicode-big-o.html">
+        <div class="ic">⚡</div>
+        <h3>I know the basics</h3>
+        <p>Jump into Big-O and the six sorting algorithms. Watch them race, predict the next step, and find out why Quick Sort usually wins.</p>
+        <div class="go">Start Module 0 →</div>
+      </a>
+      <a class="door" href="mindaicode-capstone.html">
+        <div class="ic">🏆</div>
+        <h3>I have an interview soon</h3>
+        <p>Timed mixed challenges across every topic, a personal leaderboard, and a mock-interview mode where you explain an algorithm out loud.</p>
+        <div class="go">Test yourself →</div>
+      </a>
+    </div>
+  </section>
 
-  <div class="section-title">
-    <h2>🧱 Linear Data Structures</h2>
-    <span>Module 3</span>
-  </div>
-  <div class="grid">
-    <a class="card live" href="mindaicode-linear-structures.html">
-      <span class="badge-new">Live</span>
-      <div class="icon">🧱</div>
-      <h3>Stack, Queue &amp; Linked List</h3>
-      <p>Push and pop a stack of trays, run a ticket-counter queue, and hook train-carriage nodes into a linked list.</p>
-      <div class="foot"><span class="chip g">O(1) ops</span><span class="go">Start →</span></div>
-    </a>
-  </div>
+  <!-- ================= WHY ================= -->
+  <section class="sec">
+    <div class="secHead">
+      <h2>Built to make it click</h2>
+      <p>Not another wall of code you have to decode alone.</p>
+    </div>
+    <div class="why">
+      <div class="wCard">
+        <div class="ic">🎓</div>
+        <h4>Real-world metaphors</h4>
+        <p>A stack is a pile of cafeteria trays. A queue is a ticket counter. Recursion is asking the person in front of you which cinema row you're in. The picture comes first, the code second.</p>
+      </div>
+      <div class="wCard">
+        <div class="ic">🎯</div>
+        <h4>Predict before you're told</h4>
+        <p>Guess the next swap, the loop's output, what prints first. Getting it wrong is the point — every wrong answer explains itself instead of just marking you down.</p>
+      </div>
+      <div class="wCard">
+        <div class="ic">🌐</div>
+        <h4>In your language</h4>
+        <p>The sorting lessons narrate in English, தமிழ், हिंदी, తెలుగు, ಕನ್ನಡ, বাংলা and मराठी. Classroom mode makes it all bigger for projecting to a class.</p>
+      </div>
+    </div>
+  </section>
 
-  <div class="section-title">
-    <h2>🔐 Hashing</h2>
-    <span>Module 4</span>
-  </div>
-  <div class="grid">
-    <a class="card live" href="mindaicode-hashing.html">
-      <span class="badge-new">Live</span>
-      <div class="icon">🔐</div>
-      <h3>Chaining vs Open Addressing</h3>
-      <p>Type a key and watch it land in a locker two different ways — see exactly what happens when two keys collide.</p>
-      <div class="foot"><span class="chip g">O(1) avg</span><span class="go">Start →</span></div>
-    </a>
-  </div>
-
-  <div class="section-title">
-    <h2>🌳 Trees</h2>
-    <span>Module 5</span>
-  </div>
-  <div class="grid">
-    <a class="card live" href="mindaicode-trees.html">
-      <span class="badge-new">Live</span>
-      <div class="icon">🌳</div>
-      <h3>BST &amp; Min-Heap</h3>
-      <p>Grow a Binary Search Tree node by node, run all three traversals, then explore a heap as an array-backed priority queue.</p>
-      <div class="foot"><span class="chip g">O(log n)</span><span class="go">Start →</span></div>
-    </a>
-  </div>
-
-  <div class="section-title">
-    <h2>🗺️ Graphs</h2>
-    <span>Module 6</span>
-  </div>
-  <div class="grid">
-    <a class="card live" href="mindaicode-graphs.html">
-      <span class="badge-new">Live</span>
-      <div class="icon">🗺️</div>
-      <h3>BFS, DFS &amp; Dijkstra</h3>
-      <p>An 8-city road map, explored three different ways — flood outward, dive down one corridor, or chase the cheapest route.</p>
-      <div class="foot"><span class="chip g">O(V + E)</span><span class="go">Start →</span></div>
-    </a>
+  <div class="stats">
+    <div class="stat"><b>9</b><span>modules</span></div>
+    <div class="stat"><b>30+</b><span>interactive lessons</span></div>
+    <div class="stat"><b>7</b><span>languages</span></div>
+    <div class="stat"><b>₹0</b><span>forever</span></div>
   </div>
 
-  <div class="section-title">
-    <h2>🌀 Recursion &amp; Dynamic Programming</h2>
-    <span>Module 7</span>
-  </div>
-  <div class="grid">
-    <a class="card live" href="mindaicode-recursion-dp.html">
-      <span class="badge-new">Live</span>
-      <div class="icon">🌀</div>
-      <h3>Fibonacci, Knapsack &amp; LCS</h3>
-      <p>Watch a recursion tree explode without memoization, then collapse the moment repeated work gets cached.</p>
-      <div class="foot"><span class="chip g">O(n)</span><span class="go">Start →</span></div>
-    </a>
-  </div>
+  <!-- ================= MODULES ================= -->
+  <section class="sec" id="modules">
+    <div class="secHead">
+      <h2>The whole course</h2>
+      <p>Everything a college DSA syllabus covers — free, and in order.</p>
+    </div>
+    <div class="mods">
+      <a class="mod" href="mindaicode-programming-basics.html"><span class="ic">🧩</span><span><span class="t">Programming Basics</span><br><span class="n">Before Module 0</span></span></a>
+      <a class="mod" href="mindaicode-big-o.html"><span class="ic">🧮</span><span><span class="t">Big-O Foundations</span><br><span class="n">Module 0</span></span></a>
+      <a class="mod" href="mindaicode-bubble-sort.html"><span class="ic">🫧</span><span><span class="t">Bubble Sort</span><br><span class="n">Module 1</span></span></a>
+      <a class="mod" href="mindaicode-selection-sort.html"><span class="ic">🔎</span><span><span class="t">Selection Sort</span><br><span class="n">Module 1</span></span></a>
+      <a class="mod" href="mindaicode-insertion-sort.html"><span class="ic">🃏</span><span><span class="t">Insertion Sort</span><br><span class="n">Module 1</span></span></a>
+      <a class="mod" href="mindaicode-merge-sort.html"><span class="ic">🪄</span><span><span class="t">Merge Sort</span><br><span class="n">Module 1</span></span></a>
+      <a class="mod" href="mindaicode-quick-sort.html"><span class="ic">⚡</span><span><span class="t">Quick Sort</span><br><span class="n">Module 1</span></span></a>
+      <a class="mod" href="mindaicode-heap-sort.html"><span class="ic">🌲</span><span><span class="t">Heap Sort</span><br><span class="n">Module 1</span></span></a>
+      <a class="mod" href="mindaicode-race-all.html"><span class="ic">🏁</span><span><span class="t">Race all six</span><br><span class="n">Module 1</span></span></a>
+      <a class="mod" href="mindaicode-binary-search.html"><span class="ic">🔍</span><span><span class="t">Searching</span><br><span class="n">Module 2</span></span></a>
+      <a class="mod" href="mindaicode-linear-structures.html"><span class="ic">🧱</span><span><span class="t">Stack, Queue, List</span><br><span class="n">Module 3</span></span></a>
+      <a class="mod" href="mindaicode-hashing.html"><span class="ic">🔐</span><span><span class="t">Hashing</span><br><span class="n">Module 4</span></span></a>
+      <a class="mod" href="mindaicode-trees.html"><span class="ic">🌳</span><span><span class="t">Trees &amp; Heaps</span><br><span class="n">Module 5</span></span></a>
+      <a class="mod" href="mindaicode-graphs.html"><span class="ic">🗺️</span><span><span class="t">Graphs</span><br><span class="n">Module 6</span></span></a>
+      <a class="mod" href="mindaicode-recursion-dp.html"><span class="ic">🌀</span><span><span class="t">Recursion &amp; DP</span><br><span class="n">Module 7</span></span></a>
+      <a class="mod" href="mindaicode-capstone.html"><span class="ic">🏆</span><span><span class="t">Interview Prep</span><br><span class="n">Module 8</span></span></a>
+      <a class="mod" href="mindaicode-sandbox.html"><span class="ic">🛠️</span><span><span class="t">Code Sandbox</span><br><span class="n">Practice</span></span></a>
+      <a class="mod" href="mindaicode-revision.html"><span class="ic">🔁</span><span><span class="t">Revision Mode</span><br><span class="n">Practice</span></span></a>
+    </div>
+  </section>
 
-  <div class="section-title">
-    <h2>🏆 Interview Prep</h2>
-    <span>Module 8 · Capstone</span>
-  </div>
-  <div class="grid">
-    <a class="card live" href="mindaicode-capstone.html">
-      <span class="badge-new">Live</span>
-      <div class="icon">🏆</div>
-      <h3>Timed Challenge &amp; Mock Interview</h3>
-      <p>Race the clock across every module you've learned, chase your own leaderboard, then practice explaining an algorithm out loud.</p>
-      <div class="foot"><span class="chip g">Final module</span><span class="go">Start →</span></div>
-    </a>
-  </div>
-
-  <div class="section-title">
-    <h2>🛠️ Practise &amp; understand</h2>
-    <span>Write it yourself</span>
-  </div>
-  <div class="grid">
-    <a class="card live" href="mindaicode-sandbox.html">
-      <span class="badge-new">Live</span>
-      <div class="icon">🛠️</div>
-      <h3>Code Sandbox</h3>
-      <p>Real, editable code. Change a character, press Run, and watch it break. Includes three "find the bug" challenges.</p>
-      <div class="foot"><span class="chip g">Hands on</span><span class="go">Open →</span></div>
-    </a>
-
-    <a class="card live" href="mindaicode-stability.html">
-      <span class="badge-new">Live</span>
-      <div class="icon">⚖️</div>
-      <h3>What "Stable" Means</h3>
-      <p>That Stable Yes/No column in every textbook table, finally explained — with five students and one screen.</p>
-      <div class="foot"><span class="chip g">Concept</span><span class="go">Open →</span></div>
-    </a>
-
-    <a class="card live" href="mindaicode-revision.html">
-      <span class="badge-new">Live</span>
-      <div class="icon">🔁</div>
-      <h3>Revision Mode</h3>
-      <p>Mixed questions across all six sorts. Anything you get wrong comes back until you get it right.</p>
-      <div class="foot"><span class="chip g">Practice</span><span class="go">Open →</span></div>
-    </a>
-  </div>
+  <section class="finalCta">
+    <h2>Start with one game. Fifteen minutes.</h2>
+    <p>If it doesn't click, you've lost nothing — there's no account to make.</p>
+    <a class="btn primary" href="mindaicode-programming-basics.html">▶ Start learning — it's free</a>
+  </section>
 
 </div>
 
 <footer>
-  🧠 MindAICode — Learn. Visualize. Code. Master.<br>
-  Full course structure covers Sorting → Searching → Data Structures → Hashing → Trees → Graphs → Recursion &amp; DP → Interview Prep.
+  🧠 <b>MindAICode</b> — Learn. Visualize. Code. Master.<br>
+  Foundations → Sorting → Searching → Data Structures → Hashing → Trees → Graphs → Recursion &amp; DP → Interview Prep
 </footer>
 
 <script>
-/* ===== Unified progress across all six algorithm pages =====
-   Each page stores its own badges under its own prefix; we just read them all. */
-const ALGOS = [
-  { key: 'mac',  name: 'Bubble Sort',    icon: '🫧', href: 'mindaicode-bubble-sort.html' },
-  { key: 'msel', name: 'Selection Sort', icon: '🔎', href: 'mindaicode-selection-sort.html' },
-  { key: 'mins', name: 'Insertion Sort', icon: '🃏', href: 'mindaicode-insertion-sort.html' },
-  { key: 'mmrg', name: 'Merge Sort',     icon: '🪄', href: 'mindaicode-merge-sort.html' },
-  { key: 'mqs',  name: 'Quick Sort',     icon: '⚡', href: 'mindaicode-quick-sort.html' },
-  { key: 'mhp',  name: 'Heap Sort',      icon: '🌲', href: 'mindaicode-heap-sort.html' },
-];
-const BADGES = [
-  { id: 'sort',    label: 'Watched a full sort' },
-  { id: 'predict', label: 'Predicted 5 in a row' },
-  { id: 'quiz',    label: 'Aced the quiz' },
-  { id: 'race',    label: 'Watched the race' },
-  { id: 'lab',     label: 'Ran an experiment' },
-];
-function readBadge(prefix, id) {
-  try { return localStorage.getItem(prefix + '_badge_' + id) === '1'; }
-  catch (e) { return false; }
-}
-function renderProgress() {
-  const list = document.getElementById('progList');
-  list.innerHTML = '';
-  let earned = 0;
-  const total = ALGOS.length * BADGES.length;
-  ALGOS.forEach(a => {
-    const got = BADGES.map(b => readBadge(a.key, b.id));
-    const n = got.filter(Boolean).length;
-    earned += n;
-    const row = document.createElement('div');
-    row.className = 'progRow';
-    row.innerHTML =
-      `<span class="nm">${a.icon} <a href="${a.href}">${a.name}</a></span>
-       <span class="dots">${got.map((g, i) =>
-         `<span class="dot${g ? ' on' : ''}" title="${BADGES[i].label}"></span>`).join('')}</span>
-       <span class="cnt">${n}/${BADGES.length}</span>`;
-    list.appendChild(row);
-  });
-  const pct = Math.round((earned / total) * 100);
-  document.getElementById('ringPct').textContent = pct + '%';
-  const CIRC = 2 * Math.PI * 52;
-  const fg = document.getElementById('ringFg');
-  fg.style.strokeDasharray = CIRC;
-  requestAnimationFrame(() => { fg.style.strokeDashoffset = CIRC * (1 - earned / total); });
-  const done = ALGOS.filter(a => BADGES.every(b => readBadge(a.key, b.id))).length;
-  const started = ALGOS.filter(a => BADGES.some(b => readBadge(a.key, b.id))).length;
-  const sum = document.getElementById('progSummary');
-  if (earned === 0) sum.textContent = 'Nothing yet — pick any algorithm to begin';
-  else if (done === ALGOS.length) sum.textContent = '🎉 All six mastered!';
-  else sum.textContent = `${earned}/${total} badges · ${done} mastered · ${started} started`;
-}
-document.getElementById('resetProg').onclick = () => {
-  if (!confirm('Clear all your badges and progress? This cannot be undone.')) return;
-  try {
-    ALGOS.forEach(a => {
-      BADGES.forEach(b => localStorage.removeItem(a.key + '_badge_' + b.id));
-      localStorage.removeItem(a.key + '_toured');
+/* A real bubble sort running in the hero, on loop. Shows what the site does
+   before the student has clicked anything. */
+(function () {
+  var N = 22, bars = [], arr = [], i = 0, j = 0, swaps = 0, done = false, timer = null;
+  var wrap = document.getElementById('bars');
+  var msg = document.getElementById('demoMsg');
+  var swapEl = document.getElementById('demoSwaps');
+  if (!wrap) return;
+
+  function build() {
+    arr = []; bars = []; wrap.innerHTML = '';
+    for (var k = 0; k < N; k++) arr.push(Math.floor(Math.random() * 85) + 12);
+    arr.forEach(function (v) {
+      var b = document.createElement('div');
+      b.className = 'bar';
+      b.style.height = v + '%';
+      wrap.appendChild(b);
+      bars.push(b);
     });
-    localStorage.removeItem('mrev_wrong');
-    localStorage.removeItem('mrev_seen');
-  } catch (e) {}
-  renderProgress();
-};
-renderProgress();
-</script>
-<script>
-/* ===== Offline support (works when served over http/https) ===== */
-if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
-  window.addEventListener('load', function () {
-    navigator.serviceWorker.register('sw.js').catch(function () { /* offline mode simply unavailable */ });
-  });
-}
+    i = 0; j = 0; swaps = 0; done = false;
+    if (swapEl) swapEl.textContent = '0';
+  }
+  function paint() {
+    bars.forEach(function (b, k) {
+      b.className = 'bar';
+      if (done || k >= arr.length - i) b.className = 'bar done';
+      else if (k === j || k === j + 1) b.className = 'bar cmp';
+      b.style.height = arr[k] + '%';
+    });
+  }
+  function step() {
+    if (done) return;
+    if (i >= arr.length - 1) {
+      done = true; paint();
+      if (msg) msg.textContent = 'sorted ✓ — starting again';
+      setTimeout(function () { build(); paint(); }, 1900);
+      return;
+    }
+    if (j >= arr.length - i - 1) { i++; j = 0; paint(); return; }
+    if (arr[j] > arr[j + 1]) {
+      var t = arr[j]; arr[j] = arr[j + 1]; arr[j + 1] = t;
+      swaps++;
+      if (swapEl) swapEl.textContent = swaps;
+      if (msg) msg.textContent = 'arr[' + j + '] > arr[' + (j + 1) + '] → swap';
+    } else if (msg) {
+      msg.textContent = 'arr[' + j + '] ≤ arr[' + (j + 1) + '] → keep';
+    }
+    j++;
+    paint();
+  }
+  build(); paint();
+  var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (!reduce) timer = setInterval(step, 130);
+  else if (msg) msg.textContent = 'animation paused (reduced motion)';
+})();
 </script>
 <script src="firebase-config.js"></script>
 <script src="mindaicode-auth.js"></script>
+<script>
+if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
+  window.addEventListener('load', function () {
+    navigator.serviceWorker.register('sw.js').catch(function () {});
+  });
+}
+</script>
 </body>
 </html>
