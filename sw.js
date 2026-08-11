@@ -1,7 +1,7 @@
 /* MindAICode service worker — makes every page usable with no internet.
    Strategy: cache-first for our own files, with a background refresh. */
 
-const CACHE = 'mindaicode-v18';
+const CACHE = 'mindaicode-v20';
 
 const FILES = [
   'index.html',

@@ -564,27 +564,77 @@ function renderLoopRound() {
     b.className = 'optBtn'; b.textContent = o; b.onclick = () => loopGuess(i);
     opts.appendChild(b);
   });
-  document.getElementById('loopBoxes').innerHTML = '';
-  document.getElementById('loopRunning').textContent = '';
+  // Draw what the code is working on BEFORE they answer. Reading code with no
+  // picture is exactly the thing this page exists to avoid.
+  loopDrawScene(r, -1);
   document.getElementById('loopFb').className = 'feedback';
   document.getElementById('loopNextBtn').style.display = 'none';
 }
+
+/* Draw the loop's world: the items it walks over, and the value it is building up.
+   step = -1 means "nothing has run yet", otherwise it is an index into show.trace. */
+function loopDrawScene(r, step) {
+  const wrap = document.getElementById('loopBoxes');
+  const runEl = document.getElementById('loopRunning');
+  const sh = r.show;
+  if (!sh) { wrap.innerHTML = ''; runEl.textContent = ''; return; }
+
+  const done = step >= sh.trace.length - 1;
+  const cur = step >= 0 ? sh.trace[Math.min(step, sh.trace.length - 1)] : null;
+  const visited = new Set(sh.trace.slice(0, Math.max(0, step + 1)).map(t => t.at));
+  const skipped = new Set(sh.trace.slice(0, Math.max(0, step + 1)).filter(t => t.skip).map(t => t.at));
+
+  let html = '';
+  if (sh.label) html += `<div class="sceneLbl">${sh.label}</div>`;
+  html += '<div class="boxRow">';
+  sh.items.forEach((v, i) => {
+    let cls = '';
+    if (cur && cur.at === i) cls = ' hi';
+    else if (skipped.has(i)) cls = ' skipped';
+    else if (visited.has(i)) cls = ' done';
+    if (sh.kind === 'array') {
+      html += `<div class="boxCol"><div class="box noclick${cls}" data-i="${i}">${postBoxSVG(v)}</div>` +
+              `<div class="idxLbl">index ${i}</div></div>`;
+    } else {
+      html += `<div class="boxCol"><div class="rangeTok${cls}" data-i="${i}">${v}</div>` +
+              `<div class="idxLbl">i = ${v}</div></div>`;
+    }
+  });
+  html += '</div>';
+
+  // the value being built up, drawn as the jar they already met in Game 1
+  const accVal = cur ? cur.acc : sh.accStart;
+  html += `<div class="accWrap"><div class="accJar${done ? ' full' : ''}">${jarSVG(accVal)}</div>` +
+          `<div class="accName">${sh.acc}</div></div>`;
+  wrap.innerHTML = html;
+
+  if (step < 0) {
+    runEl.innerHTML = `<span class="sceneHint">&#128064; This is what the code is working on. ` +
+                      `Work out the answer in your head first, then pick an option and watch it actually run.</span>`;
+  } else if (cur && cur.stop) {
+    runEl.innerHTML = `${sh.acc} = <b>${cur.acc}</b> &nbsp;<span class="stopTag">&#9209; stopped here</span>`;
+  } else if (cur && cur.skip) {
+    runEl.innerHTML = `${sh.acc} = <b>${cur.acc}</b> &nbsp;<span class="skipTag">skipped &mdash; nothing added</span>`;
+  } else {
+    runEl.innerHTML = `${sh.acc} = <b>${accVal}</b>`;
+  }
+}
 function animateLoopRun(r) {
-  const boxWrap = document.getElementById('loopBoxes'), runEl = document.getElementById('loopRunning');
   clearInterval(loopTimer);
-  if (!r.arr) { runEl.innerHTML = `answer: <b>${r.correctVal}</b>`; boxWrap.innerHTML = ''; return; }
-  const limit = r.code.some(l => l.includes('- 1')) ? r.arr.length - 1 : r.arr.length;
-  boxWrap.innerHTML = r.arr.map((v, i) =>
-    `<div class="boxCol"><div class="box noclick" data-i="${i}">${postBoxSVG(v)}</div><div class="idxLbl">index ${i}</div></div>`).join('');
-  let i = 0, total = 0;
-  runEl.textContent = 'total = 0';
+  if (!r.show) return;
+  let step = -1;
+  loopDrawScene(r, step);
   loopTimer = setInterval(() => {
-    if (i >= limit) { runEl.innerHTML = `total = <b>${total}</b>`; clearInterval(loopTimer); return; }
-    const boxes = boxWrap.querySelectorAll('.box');
-    boxes.forEach(b => b.classList.remove('hi'));
-    boxes[i].classList.add('hi', 'done');
-    total += r.arr[i]; runEl.innerHTML = `total = ${total}`; i++;
-  }, 550);
+    step++;
+    if (step >= r.show.trace.length) {
+      clearInterval(loopTimer);
+      loopDrawScene(r, r.show.trace.length - 1);
+      document.getElementById('loopRunning').innerHTML =
+        `${r.show.acc} = <b>${r.correctVal}</b> &nbsp;<span class="doneTag">&#10003; finished</span>`;
+      return;
+    }
+    loopDrawScene(r, step);
+  }, 620);
 }
 function loopGuess(i) {
   if (loopLocked) return;
@@ -667,6 +717,139 @@ function resetFns() {
   renderFnRound();
 }
 
+/* ---------------------------------------------- LOOP vs RECURSION, same job
+   A student who has just met loops will look at recursion and see "another way
+   to repeat things". The difference is not the repeating — it is what is left
+   half-finished while it repeats. So run both on the same numbers, side by side.  */
+const LR_ARR = [3, 7, 2];
+
+/* Build the two scripts once, so the animation is just replaying a list of
+   states rather than a tangle of timers. Each entry says what to show. */
+function lrBuildLoop() {
+  const steps = [];
+  let total = 0;
+  steps.push({ total: 0, i: null, note: 'total = 0. One box, and that is all the memory this needs.' });
+  for (let i = 0; i < LR_ARR.length; i++) {
+    total += LR_ARR[i];
+    steps.push({ total, i, note: `i = ${i}: total = total + ${LR_ARR[i]} &rarr; <b>${total}</b>. Item ${i} is now completely finished with.` });
+  }
+  steps.push({ total, i: null, done: true, note: `Finished: <b>${total}</b>. At no point was anything left half-done.` });
+  return steps;
+}
+function lrBuildRec() {
+  const steps = [];
+  const frames = [];
+  // winding: every call adds a frame and computes NOTHING yet
+  for (let i = 0; i < LR_ARR.length; i++) {
+    frames.push({ i, val: LR_ARR[i], result: null });
+    steps.push({
+      frames: frames.map(f => ({ ...f })), phase: 'down',
+      note: `<b>total(arr, ${i})</b> is called. It wants to return <code>${LR_ARR[i]} + total(arr, ${i + 1})</code> ` +
+            `&mdash; but it cannot, because it does not know the right-hand side yet. So it <b>freezes</b> and calls the next one.`
+    });
+  }
+  frames.push({ i: LR_ARR.length, val: null, result: 0, base: true });
+  steps.push({
+    frames: frames.map(f => ({ ...f })), phase: 'base',
+    note: `<b>total(arr, ${LR_ARR.length})</b> hits the base case and returns <b>0</b> immediately. ` +
+          `This is the first time any actual number has been produced &mdash; and there are <b>${LR_ARR.length}</b> calls stacked up above it, all still waiting.`
+  });
+  // unwinding: answers come back in reverse
+  let carry = 0;
+  for (let i = LR_ARR.length - 1; i >= 0; i--) {
+    frames.pop();
+    carry = LR_ARR[i] + carry;
+    frames[frames.length - 1].result = carry;
+    steps.push({
+      frames: frames.map(f => ({ ...f })), phase: 'up',
+      note: `The answer travels back. <b>total(arr, ${i})</b> was frozen on <code>${LR_ARR[i]} + ?</code> &mdash; ` +
+            `now the ? is <b>${carry - LR_ARR[i]}</b>, so it finally finishes and returns <b>${carry}</b>.`
+    });
+  }
+  steps.push({ frames: [], phase: 'done', result: carry,
+    note: `Finished: <b>${carry}</b> &mdash; the same answer the loop got. But it was computed <b>backwards</b>, and it needed ${LR_ARR.length + 1} calls alive at once.` });
+  return steps;
+}
+
+let lrLoopSteps = [], lrRecSteps = [], lrIdx = 0, lrTimer = null, lrPeak = 0;
+
+function lrRenderLoop(st) {
+  const box = document.getElementById('lrLoopState');
+  if (!box || !st) return;
+  box.innerHTML =
+    `<div class="lrBoxRow">` +
+      LR_ARR.map((v, i) =>
+        `<div class="lrItem${st.i === i ? ' now' : (st.i !== null && i < st.i) || st.done ? ' done' : ''}">${v}</div>`).join('') +
+    `</div>` +
+    `<div class="lrTotal">total = <b>${st.total}</b></div>` +
+    `<div class="lrDepth">things left half-finished: <b class="okNum">0</b></div>`;
+  document.getElementById('lrLoopNote').innerHTML = st.note;
+}
+function lrRenderRec(st) {
+  const box = document.getElementById('lrRecState');
+  if (!box || !st) return;
+  const fr = st.frames || [];
+  lrPeak = Math.max(lrPeak, fr.length);
+  box.innerHTML =
+    `<div class="lrStack">` +
+      (fr.length ? fr.map((f, k) => {
+        const isTop = k === fr.length - 1;
+        const label = f.base
+          ? `total(arr, ${f.i}) &rarr; <b class="okNum">0</b>`
+          : (f.result !== null
+              ? `total(arr, ${f.i}) &rarr; ${f.val} + ${f.result - f.val} = <b class="okNum">${f.result}</b>`
+              : `total(arr, ${f.i}) &rarr; ${f.val} + <span class="unk">?</span>`);
+        const cls = f.base ? 'lrFrame base' : (f.result !== null ? 'lrFrame resolved' : 'lrFrame frozen');
+        const badge = f.base ? '<span class="frBadge base">base case</span>'
+                    : f.result !== null ? '<span class="frBadge ok">returns</span>'
+                    : '<span class="frBadge wait">&#9208; frozen</span>';
+        return `<div class="${cls}" style="margin-left:${k * 14}px">${label} ${badge}</div>`;
+      }).join('') : '<div class="lrEmpty">no calls left &mdash; the stack is empty again</div>') +
+    `</div>` +
+    // once it is done, show the answer the same way the loop shows its total,
+    // otherwise the result vanishes with the last frame and there is nothing to compare
+    (st.phase === 'done' ? `<div class="lrTotal">answer = <b>${st.result}</b></div>` : '') +
+    `<div class="lrDepth">calls alive right now: <b class="${fr.length > 1 ? 'badNum' : 'okNum'}">${fr.length}</b>` +
+      (lrPeak ? ` &nbsp;·&nbsp; most so far: <b class="badNum">${lrPeak}</b>` : '') + `</div>`;
+  document.getElementById('lrRecNote').innerHTML = st.note;
+}
+
+function lrReset() {
+  clearInterval(lrTimer);
+  lrLoopSteps = lrBuildLoop();
+  lrRecSteps = lrBuildRec();
+  lrIdx = 0; lrPeak = 0;
+  lrRenderLoop(lrLoopSteps[0]);
+  lrRenderRec(lrRecSteps[0]);
+  const v = document.getElementById('lrVerdict');
+  if (v) { v.className = 'lrVerdict'; v.innerHTML = 'Press <b>Run both</b> and watch the right-hand side pile up.'; }
+}
+function lrStep() {
+  const maxLen = Math.max(lrLoopSteps.length, lrRecSteps.length);
+  if (lrIdx >= maxLen - 1) { clearInterval(lrTimer); return true; }
+  lrIdx++;
+  lrRenderLoop(lrLoopSteps[Math.min(lrIdx, lrLoopSteps.length - 1)]);
+  lrRenderRec(lrRecSteps[Math.min(lrIdx, lrRecSteps.length - 1)]);
+  if (lrIdx >= maxLen - 1) {
+    const v = document.getElementById('lrVerdict');
+    if (v) {
+      v.className = 'lrVerdict on';
+      v.innerHTML =
+        `<b>Both answered ${lrLoopSteps[lrLoopSteps.length - 1].total} &mdash; but by completely different journeys.</b><br><br>` +
+        `The <b>loop</b> finished each number as it went. Its busiest moment held <b class="okNum">1</b> value, ` +
+        `and nothing was ever left half-done.<br><br>` +
+        `<b>Recursion</b> did no arithmetic at all on the way down. It stacked up ` +
+        `<b class="badNum">${lrPeak}</b> frozen calls, each stuck on <code>something + ?</code>, ` +
+        `and only started adding once the base case answered. Then it finished them in <b>reverse</b> order.<br><br>` +
+        `That pile is the difference. It is also why deep recursion crashes with a <b>stack overflow</b> ` +
+        `and a loop never does.`;
+    }
+    clearInterval(lrTimer);
+    return true;
+  }
+  return false;
+}
+
 /* ========================================================== GAME 5 — RECURSION */
 const CINEMA_ROWS = 5;
 let cinemaAsking = CINEMA_ROWS, cinemaPhase = 'ask', cinemaAnswered = {};
@@ -676,18 +859,35 @@ function recCfg() { return REC_LEVELS[currentLevel]; }
 function renderCinema() {
   const row = document.getElementById('cinemaRow');
   row.innerHTML = '';
+  let waiting = 0;
   for (let r = 1; r <= CINEMA_ROWS; r++) {
     const seat = document.createElement('div');
     seat.className = 'seat';
     let cls = 'seatBody';
+    let tag = '';
     if (r === CINEMA_ROWS) cls += ' you';
     if (r === 1 && cinemaAsking <= 1) cls += ' base';
     if (cinemaAnswered[r] !== undefined) cls += ' answered';
     else if (r === cinemaAsking && cinemaPhase === 'ask') cls += ' asking';
+    // THE point of recursion: everyone who already asked is still stuck here,
+    // frozen mid-question, waiting on the person in front. A loop leaves nobody waiting.
+    else if (r > cinemaAsking && cinemaAnswered[r] === undefined) {
+      cls += ' waiting'; waiting++;
+      tag = '<div class="waitTag">&#9208; waiting</div>';
+    }
     const known = cinemaAnswered[r] !== undefined ? `<b>row ${cinemaAnswered[r]}</b>` : '?';
     seat.innerHTML = `<div class="${cls}">${seatSVG()}</div><div class="seatLbl">${known}</div>` +
-      (r === CINEMA_ROWS ? '<div class="youTag">YOU</div>' : '');
+      (r === CINEMA_ROWS ? '<div class="youTag">YOU</div>' : '') + tag;
     row.appendChild(seat);
+  }
+  const cnt = document.getElementById('cinemaWaiting');
+  if (cnt) {
+    cnt.innerHTML = waiting
+      ? `<b>${waiting}</b> ${waiting === 1 ? 'person is' : 'people are'} frozen mid-question, unable to finish until the answer comes back. ` +
+        `<span class="cmpNote">A loop would have <b>nobody</b> waiting.</span>`
+      : (cinemaPhase === 'done'
+          ? 'Everyone has their answer. Notice the answers arrived in the <b>reverse</b> order the questions were asked.'
+          : 'Nobody is waiting yet.');
   }
 }
 function cinemaAsk() {
@@ -935,6 +1135,19 @@ function initBasics() {
   document.getElementById('fnRetryBtn').onclick = resetFns;
   document.getElementById('cinemaAskBtn').onclick = cinemaAsk;
   document.getElementById('cinemaResetBtn').onclick = resetRecursion;
+
+  /* --- loop vs recursion, the panel that answers "isn't this just a loop?" --- */
+  if (document.getElementById('lrLoopState')) {
+    lrReset();
+    document.getElementById('lrStepBtn').onclick = () => { clearInterval(lrTimer); lrStep(); };
+    document.getElementById('lrResetBtn').onclick = lrReset;
+    document.getElementById('lrPlayBtn').onclick = () => {
+      clearInterval(lrTimer);
+      const maxLen = Math.max(lrLoopSteps.length, lrRecSteps.length);
+      if (lrIdx >= maxLen - 1) lrReset();
+      lrTimer = setInterval(() => { if (lrStep()) clearInterval(lrTimer); }, 1300);
+    };
+  }
   document.getElementById('recStepBtn').onclick = () => { clearInterval(recTimer); recStep(); };
   document.getElementById('recPlayBtn').onclick = () => {
     clearInterval(recTimer);

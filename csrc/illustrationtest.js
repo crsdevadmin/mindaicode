@@ -14,8 +14,8 @@ let allPass = true;
 const ok = (c, m) => { if (!c) { allPass = false; console.log('  !! FAIL: ' + m); } else console.log('  OK: ' + m); };
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 
-function boot() {
-  const store = {};
+function boot(seed) {
+  const store = Object.assign({}, seed || {});
   const dom = new JSDOM(fs.readFileSync(BASE + 'mindaicode-programming-basics.html', 'utf8'), {
     runScripts: 'dangerously', resources: 'usable', pretendToBeVisual: true,
     url: 'file://' + BASE + 'mindaicode-programming-basics.html',
@@ -156,6 +156,94 @@ console.log('\n=== 4. The vending machine (Functions) ===');
   ok(doc.getElementById('vmOut').textContent === '16',
      'feeding it 4 produces 16 — the square, matching the analogy of a fixed rule');
   ok(first !== null, 'and a second press shows a different number, so it does not look frozen');
+}
+
+/* ============ 4b. THE GUARD — no round may be code-only ============ */
+console.log('\n=== 4b. Every loop round shows what it is working on, BEFORE you answer ===');
+{
+  const content = require(BASE + 'basics-content.js');
+  const LEVELS = ['beginner', 'intermediate', 'pro'];
+
+  // the picture must never disagree with the answer key
+  let mismatched = [], missing = [];
+  LEVELS.forEach(lvl => content.LOOP_LEVELS[lvl].forEach((r, i) => {
+    if (!r.show) { missing.push(`${lvl}[${i}]`); return; }
+    const last = r.show.trace[r.show.trace.length - 1].acc;
+    if (String(last) !== String(r.correctVal)) {
+      mismatched.push(`${lvl}[${i}]: trace ends on ${last} but the quiz says ${r.correctVal}`);
+    }
+  }));
+  ok(missing.length === 0, `all 9 rounds have a picture spec (missing: ${missing.join(', ') || 'none'})`);
+  ok(mismatched.length === 0,
+     mismatched.length ? `traces disagreeing with the answer key:\n       - ${mismatched.join('\n       - ')}`
+                       : 'every round\'s step-by-step trace ends on exactly the answer the quiz marks correct');
+
+  // and every trace must only touch items that exist
+  let oob = 0;
+  LEVELS.forEach(lvl => content.LOOP_LEVELS[lvl].forEach(r => {
+    r.show.trace.forEach(t => { if (t.at < 0 || t.at >= r.show.items.length) oob++; });
+  }));
+  ok(oob === 0, `no trace step points at an item that is not drawn (${oob} out of range)`);
+
+  // now check it on screen, for every round of every level
+  // Intermediate and Pro are deliberately LOCKED until the level below is finished,
+  // which is correct behaviour — so award the badges first rather than fighting it.
+  const STEPS = ['variables', 'array', 'loop', 'function', 'recursion', 'quiz'];  // must match STEP_IDS exactly
+  const unlockAll = {};
+  STEPS.forEach(id => {
+    unlockAll['mbas_badge_' + id] = '1';                    // beginner
+    unlockAll['mbas_badge_intermediate_' + id] = '1';       // intermediate
+  });
+
+  for (const lvl of LEVELS) {
+    const d2 = await boot(unlockAll);
+    const w2 = d2.window, doc2 = w2.document;
+    const switched = w2.eval(`setLevel('${lvl}')`);
+    ok(switched === true, `${lvl}: the level can be selected once it is unlocked`);
+    w2.showStep(2);
+    await sleep(80);
+
+    const rounds = content.LOOP_LEVELS[lvl].length;
+    for (let n = 0; n < rounds; n++) {
+      const drawn = doc2.querySelectorAll('#loopBoxes .box, #loopBoxes .rangeTok').length;
+      const jar = doc2.querySelectorAll('#loopBoxes .accJar svg').length;
+      const spec = content.LOOP_LEVELS[lvl][n];
+      ok(drawn === spec.show.items.length,
+         `${lvl} round ${n + 1}: ${drawn} items drawn before answering (expected ${spec.show.items.length})`);
+      ok(jar === 1, `${lvl} round ${n + 1}: the value being built up is drawn as a jar`);
+      const hint = doc2.getElementById('loopRunning').textContent;
+      ok(/working on/.test(hint), `${lvl} round ${n + 1}: tells them to work it out first`);
+
+      // answer it and move on
+      const btns = doc2.querySelectorAll('#loopOpts .optBtn');
+      if (btns.length) btns[spec.ans].click();
+      await sleep(40);
+      const nextBtn = doc2.getElementById('loopNextBtn');
+      if (n < rounds - 1 && nextBtn) { nextBtn.click(); await sleep(60); }
+    }
+  }
+}
+
+/* ============ 4c. the run animation follows the trace ============ */
+console.log('\n=== 4c. Pressing an answer replays the loop over that same picture ===');
+{
+  const d3 = await boot();
+  const w3 = d3.window, doc3 = w3.document;
+  w3.showStep(2);
+  await sleep(60);
+  doc3.querySelectorAll('#loopOpts .optBtn')[1].click();   // round 1, correct answer
+
+  const seen = [];
+  for (let t = 0; t < 25; t++) {
+    const hi = doc3.querySelector('#loopBoxes .box.hi, #loopBoxes .rangeTok.hi');
+    if (hi) { const i = hi.dataset.i; if (seen[seen.length - 1] !== i) seen.push(i); }
+    if (/finished/.test(doc3.getElementById('loopRunning').textContent)) break;
+    await sleep(180);
+  }
+  ok(seen.join(',') === '0,1,2', `it walked the boxes in order 0 → 1 → 2 (got ${seen.join(' → ') || 'nothing'})`);
+  ok(/finished/.test(doc3.getElementById('loopRunning').textContent), 'and says when it has finished');
+  ok(/12/.test(doc3.getElementById('loopRunning').textContent), 'ending on 12, the correct total');
+  ok(doc3.querySelectorAll('#loopBoxes .box.done').length >= 2, 'the visited boxes are marked as done');
 }
 
 /* ============ 5. the games themselves still work ============ */

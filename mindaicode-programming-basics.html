@@ -278,6 +278,75 @@
   .seatLbl { font-size:11px; color:var(--muted); margin-top:5px; font-family:Consolas, monospace; }
   .seatLbl b { color:var(--green); }
   .youTag { font-size:9.5px; color:var(--purple); font-weight:800; letter-spacing:.5px; }
+  .waitTag { font-size:9.5px; color:var(--yellow); font-weight:700; margin-top:2px; }
+
+  /* ---- what the loop is working on, shown before you answer ---- */
+  .sceneLbl { font-size:11.5px; color:var(--muted); font-style:italic; margin-bottom:8px; text-align:center; }
+  .sceneHint { color:var(--muted); font-size:12.5px; font-style:italic; font-family:inherit; }
+  .rangeTok { width:40px; height:40px; border-radius:8px; background:var(--panel2);
+    border:1px solid var(--border); display:flex; align-items:center; justify-content:center;
+    font-family:Consolas, monospace; font-size:15px; font-weight:700; color:var(--text);
+    transition:all .22s; }
+  .rangeTok.hi      { border-color:var(--yellow); background:rgba(210,153,34,.25); color:var(--yellow); transform:translateY(-3px); }
+  .rangeTok.done    { border-color:rgba(63,185,80,.55); background:rgba(63,185,80,.15); color:var(--green); }
+  .rangeTok.skipped { border-color:var(--border); background:var(--bg); color:var(--muted); opacity:.45;
+    text-decoration:line-through; }
+  .box.skipped .boxShell { fill:#2b2f36; stroke:var(--border); }
+  .box.skipped { opacity:.5; }
+  .accWrap { display:flex; flex-direction:column; align-items:center; margin-top:14px; }
+  .accJar svg { width:52px; height:auto; display:block; transition:transform .25s; }
+  .accJar.full svg { transform:scale(1.08); }
+  .accName { font-family:Consolas, monospace; font-size:12px; color:var(--muted); margin-top:4px; font-weight:700; }
+  .stopTag { color:var(--red); font-size:11.5px; font-weight:700; }
+  .skipTag { color:var(--muted); font-size:11.5px; font-style:italic; }
+  .doneTag { color:var(--green); font-size:11.5px; font-weight:700; }
+  .seatBody.waiting .seatBack { stroke:var(--yellow); stroke-dasharray:4 3; fill:rgba(210,153,34,.10); }
+  .seatBody.waiting .seatHead { fill:rgba(210,153,34,.55); }
+  .waitCount { font-size:13px; color:var(--muted); margin:10px 0 4px; line-height:1.6; text-align:center; }
+  .waitCount b { color:var(--yellow); }
+  .cmpNote { color:var(--green); }
+  .cmpNote b { color:var(--green); }
+
+  /* ---- loop vs recursion, side by side ---- */
+  .lrGrid { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+  @media (max-width:760px) { .lrGrid { grid-template-columns:1fr; } }
+  .lrCol { background:var(--panel2); border:1px solid var(--border); border-radius:10px; padding:12px; }
+  .lrCol.loop { border-top:3px solid var(--green); }
+  .lrCol.rec  { border-top:3px solid var(--purple); }
+  .lrHead { font-size:13.5px; font-weight:800; margin-bottom:8px; }
+  .lrCol.loop .lrHead { color:var(--green); }
+  .lrCol.rec  .lrHead { color:var(--purple); }
+  .lrCode { font-size:11.5px !important; margin-bottom:10px; }
+  .lrState { min-height:132px; }
+  .lrBoxRow { display:flex; gap:6px; margin-bottom:10px; }
+  .lrItem { width:34px; height:34px; border-radius:6px; background:var(--bg); border:1px solid var(--border);
+    display:flex; align-items:center; justify-content:center; font-family:Consolas, monospace;
+    font-size:14px; font-weight:700; transition:all .25s; }
+  .lrItem.now  { border-color:var(--yellow); background:rgba(210,153,34,.2); color:var(--yellow); }
+  .lrItem.done { border-color:rgba(63,185,80,.5); background:rgba(63,185,80,.14); color:var(--green); }
+  .lrTotal { font-family:Consolas, monospace; font-size:15px; margin-bottom:8px; }
+  .lrTotal b { color:var(--green); font-size:17px; }
+  .lrDepth { font-size:11.5px; color:var(--muted); font-family:Consolas, monospace; margin-top:6px; }
+  .okNum  { color:var(--green); }
+  .badNum { color:var(--accent2); }
+  .lrStack { display:flex; flex-direction:column; gap:4px; min-height:96px; }
+  .lrFrame { font-family:Consolas, monospace; font-size:11.5px; padding:5px 8px; border-radius:6px;
+    border:1px solid var(--border); background:var(--bg); line-height:1.5; }
+  .lrFrame.frozen   { border-color:rgba(210,153,34,.55); background:rgba(210,153,34,.10); }
+  .lrFrame.base     { border-color:rgba(88,166,255,.6);  background:rgba(88,166,255,.12); }
+  .lrFrame.resolved { border-color:rgba(63,185,80,.55);  background:rgba(63,185,80,.12); }
+  .lrFrame .unk { color:var(--accent2); font-weight:800; }
+  .frBadge { font-size:9px; font-weight:800; padding:1px 6px; border-radius:8px; margin-left:4px; white-space:nowrap; }
+  .frBadge.wait { background:rgba(210,153,34,.2); color:var(--yellow); }
+  .frBadge.base { background:rgba(88,166,255,.2); color:var(--accent); }
+  .frBadge.ok   { background:rgba(63,185,80,.2);  color:var(--green); }
+  .lrEmpty { font-size:11.5px; color:var(--muted); font-style:italic; padding:6px 2px; }
+  .lrNote { font-size:12px; color:var(--muted); line-height:1.6; margin-top:10px; min-height:56px; }
+  .lrNote b { color:var(--text); }
+  .lrVerdict { margin-top:12px; font-size:13.5px; line-height:1.7; color:var(--muted);
+    background:var(--panel2); border-left:3px solid var(--border); border-radius:8px; padding:12px 14px; }
+  .lrVerdict.on { border-left-color:var(--purple); }
+  .lrVerdict b { color:var(--text); }
 
   .stackWrap { display:flex; flex-direction:column-reverse; gap:5px; align-items:center; min-height:120px;
     padding:12px; background:var(--panel2); border-radius:9px; margin-bottom:12px; }
@@ -681,12 +750,40 @@
         &#127891; <strong>You are in a dark cinema and cannot see the row numbers.</strong> So you tap the person in front and ask, "which row are you in?" They cannot see either &mdash; so they ask the person in front of <em>them</em>. This carries on until someone in the very front row says "I'm row 1". Then each person adds one and passes the answer back.
       </div>
 
+      <div class="gameBox" id="lrBox">
+        <div class="gameTitle">&#129300; "Isn't this just a loop?"</div>
+        <div class="gameSub">Fair question &mdash; and the most common thing to get stuck on. Here is the <b>same job</b> (add up 3, 7 and 2) done both ways at the same time. Watch what each one leaves behind.</div>
+
+        <div class="lrGrid">
+          <div class="lrCol loop">
+            <div class="lrHead">&#128257; A loop</div>
+            <div class="code lrCode"><div class="line">total = <span class="num">0</span></div><div class="line"><span class="kw">for</span> i <span class="kw">in</span> <span class="fn">range</span>(<span class="num">3</span>):</div><div class="line">    total = total + arr[i]</div></div>
+            <div class="lrState" id="lrLoopState"></div>
+            <div class="lrNote" id="lrLoopNote"></div>
+          </div>
+          <div class="lrCol rec">
+            <div class="lrHead">&#127860; Recursion</div>
+            <div class="code lrCode"><div class="line"><span class="kw">def</span> <span class="fn">total</span>(arr, i):</div><div class="line">    <span class="kw">if</span> i == <span class="fn">len</span>(arr): <span class="kw">return</span> <span class="num">0</span></div><div class="line">    <span class="kw">return</span> arr[i] + <span class="fn">total</span>(arr, i+<span class="num">1</span>)</div></div>
+            <div class="lrState" id="lrRecState"></div>
+            <div class="lrNote" id="lrRecNote"></div>
+          </div>
+        </div>
+
+        <div class="controls" style="margin-top:12px;">
+          <button id="lrPlayBtn">&#9654; Run both</button>
+          <button id="lrStepBtn" class="secondary">&#9197; One step</button>
+          <button id="lrResetBtn" class="ghost">&#8634; Restart</button>
+        </div>
+        <div class="lrVerdict" id="lrVerdict"></div>
+      </div>
+
       <div class="gameBox">
-        <div class="gameTitle">&#127918; Play it out</div>
-        <div class="gameSub">Keep asking forward until someone knows, then watch the answers travel back.</div>
+        <div class="gameTitle">&#127918; Now play it out yourself</div>
+        <div class="gameSub">Keep asking forward until someone knows, then watch the answers travel back. Look at how many people are stuck waiting at once.</div>
 
         <div class="screenBar">S C R E E N</div>
         <div class="cinemaRow" id="cinemaRow"></div>
+        <div class="waitCount" id="cinemaWaiting"></div>
         <div class="controls">
           <button id="cinemaAskBtn">&#128587; Ask the person in front</button>
           <button id="cinemaResetBtn" class="ghost">&#8634; Restart</button>

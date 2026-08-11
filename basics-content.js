@@ -117,46 +117,81 @@ const LOCKER_LEVELS = {
 
 /* ---------------------------------------------------------------- GAME 3: LOOPS */
 const LOOP_LEVELS = {
+  /* Each round carries a `show` block so the student can SEE what the code is
+     working on before they answer — not just read code.
+       kind  : 'array'  -> draw post boxes (the picture already learned in Game 2)
+               'range'  -> draw the values the loop counter walks through
+       items : what to draw
+       acc   : the name of the variable being built up, drawn as a jar (Game 1)
+       trace : [{at, acc}] one entry per pass — `at` is which item is being handled,
+               `acc` is the value AFTER that pass. The last acc MUST equal correctVal;
+               basicstest.js enforces that, so the picture can never disagree with
+               the answer key. */
   beginner: [
     { arr: [3, 7, 2],
       code: ['arr = [3, 7, 2]', 'total = 0', 'for i in range(len(arr)):', '    total = total + arr[i]'],
       question: 'What is <b>total</b> at the end?', opts: ['10', '12', '3'], ans: 1, correctVal: 12,
+      show: { kind: 'array', items: [3, 7, 2], acc: 'total', accStart: 0,
+              trace: [{ at: 0, acc: 3 }, { at: 1, acc: 10 }, { at: 2, acc: 12 }] },
       teach: 'It adds every item: 3 + 7 + 2 = <b>12</b>. The loop visited index 0, 1 and 2 — every box exactly once.' },
     { arr: null,
       code: ['count = 0', 'for i in range(5):', '    count = count + 1'],
       question: 'How many times does the loop body run?', opts: ['4', '5', '6'], ans: 1, correctVal: 5,
+      show: { kind: 'range', items: [0, 1, 2, 3, 4], acc: 'count', accStart: 0, label: 'range(5) gives you these values of i',
+              trace: [{ at: 0, acc: 1 }, { at: 1, acc: 2 }, { at: 2, acc: 3 }, { at: 3, acc: 4 }, { at: 4, acc: 5 }] },
       teach: '<b>5 times.</b> range(5) gives 0, 1, 2, 3, 4 — five values. It never reaches 5 itself.' },
     { arr: [10, 20, 30, 40],
       code: ['arr = [10, 20, 30, 40]', 'total = 0', 'for i in range(len(arr) - 1):', '    total = total + arr[i]'],
       question: 'What is <b>total</b> at the end? (look closely at line 3)', opts: ['100', '60', '90'], ans: 1, correctVal: 60,
+      show: { kind: 'array', items: [10, 20, 30, 40], acc: 'total', accStart: 0,
+              trace: [{ at: 0, acc: 10 }, { at: 1, acc: 30 }, { at: 2, acc: 60 }] },
       teach: 'That <code>- 1</code> makes it stop early: indexes 0, 1, 2 only, so 10 + 20 + 30 = <b>60</b>. The 40 is never touched.' },
   ],
   intermediate: [
     { arr: null,
       code: ['count = 0', 'for i in range(3):', '    for j in range(4):', '        count = count + 1'],
       question: 'How many times does the innermost line run?', opts: ['7', '12', '4'], ans: 1, correctVal: 12,
+      show: { kind: 'range', items: [0, 1, 2], acc: 'count', accStart: 0,
+              label: 'outer i — the inner loop runs 4 times inside EACH of these',
+              trace: [{ at: 0, acc: 4 }, { at: 1, acc: 8 }, { at: 2, acc: 12 }] },
       teach: 'The inner loop runs fully for <em>each</em> pass of the outer one: 3 × 4 = <b>12</b>. Nested loops multiply, they do not add — this is exactly why bubble sort is O(n²).' },
     { arr: null,
       code: ['count = 0', 'for i in range(10):', '    if i == 3:', '        break', '    count = count + 1'],
       question: 'What is <b>count</b> at the end?', opts: ['3', '4', '10'], ans: 0, correctVal: 3,
+      show: { kind: 'range', items: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9], acc: 'count', accStart: 0,
+              label: 'range(10) — but watch where it stops',
+              trace: [{ at: 0, acc: 1 }, { at: 1, acc: 2 }, { at: 2, acc: 3 }, { at: 3, acc: 3, stop: true }] },
       teach: '<code>break</code> leaves the loop immediately. It counted i = 0, 1, 2 and then quit at i = 3 <em>before</em> counting, so <b>3</b>.' },
     { arr: null,
       code: ['total = 0', 'for i in range(5):', '    if i % 2 == 0:', '        continue', '    total = total + i'],
       question: 'What is <b>total</b> at the end?', opts: ['6', '4', '10'], ans: 1, correctVal: 4,
+      show: { kind: 'range', items: [0, 1, 2, 3, 4], acc: 'total', accStart: 0,
+              label: 'range(5) — the even ones get skipped over',
+              trace: [{ at: 0, acc: 0, skip: true }, { at: 1, acc: 1 }, { at: 2, acc: 1, skip: true },
+                      { at: 3, acc: 4 }, { at: 4, acc: 4, skip: true }] },
       teach: '<code>continue</code> skips the rest of <em>this</em> pass and moves on. Evens 0, 2, 4 are skipped, so it adds 1 + 3 = <b>4</b>.' },
   ],
   pro: [
     { arr: null,
       code: ['a = [1, 2, 2, 3]', 'for x in a:', '    if x % 2 == 0:', '        a.remove(x)'],
       question: 'What is <b>a</b> at the end?', opts: ['[1, 3]', '[1, 2, 3]', '[1, 2, 2, 3]'], ans: 1, correctVal: '[1, 2, 3]',
+      show: { kind: 'array', items: [1, 2, 2, 3], acc: 'a', accStart: '[1, 2, 2, 3]',
+              label: 'the list is being changed WHILE it is looped over',
+              trace: [{ at: 0, acc: '[1, 2, 2, 3]' }, { at: 1, acc: '[1, 2, 3]' }, { at: 2, acc: '[1, 2, 3]' }] },
       teach: 'Removing while looping shifts everything left, so the loop <b>skips</b> the item that moves into the slot it just handled. One of the 2s survives: <b>[1, 2, 3]</b>. Never mutate a list you are iterating — loop over a copy instead.' },
     { arr: null,
       code: ['r = []', 'for i in range(0, 10, 3):', '    r.append(i)'],
       question: 'How many items end up in <b>r</b>?', opts: ['3', '4', '10'], ans: 1, correctVal: 4,
+      show: { kind: 'range', items: [0, 3, 6, 9], acc: 'len(r)', accStart: 0,
+              label: 'range(0, 10, 3) — start, stop, step',
+              trace: [{ at: 0, acc: 1 }, { at: 1, acc: 2 }, { at: 2, acc: 3 }, { at: 3, acc: 4 }] },
       teach: 'The third number is the <b>step</b>. It gives 0, 3, 6, 9 — the next would be 12, past the stop. So <b>4</b> items.' },
     { arr: null,
       code: ['i = 0', 'steps = 0', 'while i < 5:', '    i = i + 2', '    steps = steps + 1'],
       question: 'What is <b>steps</b> when the loop ends?', opts: ['2', '3', '5'], ans: 1, correctVal: 3,
+      show: { kind: 'range', items: [0, 2, 4], acc: 'steps', accStart: 0,
+              label: 'the values of i that pass the test i < 5',
+              trace: [{ at: 0, acc: 1 }, { at: 1, acc: 2 }, { at: 2, acc: 3 }] },
       teach: 'i goes 0 → 2 → 4 → 6. It runs on 0, 2 and 4, then 6 fails the test. <b>3</b> steps — and note i ends on 6, overshooting 5 entirely. A while loop can skip straight past its stop value.' },
   ],
 };
