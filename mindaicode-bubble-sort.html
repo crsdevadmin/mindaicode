@@ -401,7 +401,7 @@
     background: rgba(88,166,255,.14);
     border-left-color: var(--accent);
   }
-  .tabs { display: flex; gap: 6px; margin-bottom: 10px; }
+  .tabs { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
   .tab {
     background: var(--panel2); color: var(--muted);
     border: 1px solid var(--border);
@@ -1550,6 +1550,9 @@ const aiBody = document.getElementById('aiBody');
 const aiChips = document.getElementById('aiChips');
 
 function currentCodeLang() {
+  // C and C++ are C-shaped like Java - only Python is the odd one out here,
+  // so the explanation follows the syntax family, not the exact tab.
+  if (window.MindAICodeLang) return window.MindAICodeLang.family();
   return document.querySelector('.tab.on')?.dataset.lang === 'java' ? 'java' : 'py';
 }
 
@@ -1585,7 +1588,8 @@ function explainForStep() {
       <h5>How the swap actually works</h5>
       ${codeLang === 'java' ? `
       <p>In Java you can't do <code>arr[j] = arr[j+1]; arr[j+1] = arr[j];</code> directly — the first line would already have overwritten <code>arr[j]</code>'s old value before you use it! That's why we need a temporary variable:</p>
-      <p><code>int t = arr[j]; arr[j] = arr[j+1]; arr[j+1] = t;</code> — <code>t</code> holds onto the original value just long enough to complete the trade.</p>` : `
+      <p><code>int t = arr[j]; arr[j] = arr[j+1]; arr[j+1] = t;</code> — <code>t</code> holds onto the original value just long enough to complete the trade.</p>
+      <p><strong>C</strong> works exactly the same way. <strong>C++</strong> lets you skip the temp with <code>swap(arr[j], arr[j+1])</code> from <code>&lt;algorithm&gt;</code> — but that function is writing the same three lines for you underneath.</p>` : `
       <p>Python lets you swap in one line: <code>arr[j], arr[j+1] = arr[j+1], arr[j]</code>. Python builds a small temporary tuple <code>(arr[j+1], arr[j])</code> first, THEN assigns it — so it never loses a value, without needing an explicit temp variable like Java does.</p>`}
       <div class="mistake-note">⚠️ <strong>Common bug:</strong> forgetting the temp variable in Java/C is one of the most common Bubble Sort mistakes — it silently duplicates a value and loses another one, and the array ends up wrong with no error thrown.</div>`;
   } else if (s.t === 'lock') {
@@ -1715,5 +1719,6 @@ if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
 </script>
 <script src="firebase-config.js"></script>
 <script src="mindaicode-auth.js"></script>
+<script src="code-langs.js"></script>
 </body>
 </html>

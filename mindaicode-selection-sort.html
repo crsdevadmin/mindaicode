@@ -408,7 +408,7 @@
   }
   .ai-chip:hover { border-color: var(--accent); color: var(--accent); }
 
-  .tabs { display: flex; gap: 6px; margin-bottom: 10px; }
+  .tabs { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
   .tab {
     background: var(--panel2); color: var(--muted);
     border: 1px solid var(--border);
@@ -1568,6 +1568,9 @@ const aiBody = document.getElementById('aiBody');
 const aiChips = document.getElementById('aiChips');
 
 function currentCodeLang() {
+  // C and C++ are C-shaped like Java - only Python is the odd one out here,
+  // so the explanation follows the syntax family, not the exact tab.
+  if (window.MindAICodeLang) return window.MindAICodeLang.family();
   return document.querySelector('.tab.on')?.dataset.lang === 'java' ? 'java' : 'py';
 }
 
@@ -1723,5 +1726,6 @@ if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
 </script>
 <script src="firebase-config.js"></script>
 <script src="mindaicode-auth.js"></script>
+<script src="code-langs.js"></script>
 </body>
 </html>

@@ -1,0 +1,9 @@
+# compiled test binaries produced by verify.sh
+_verify_c
+_v_*
+!_v_*.cpp
+_b_*
+!_b_*.c
+!_b_*.cpp
+_frag_*.cpp
+*.o

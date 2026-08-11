@@ -368,7 +368,7 @@
   }
   .ai-chip:hover { border-color: var(--accent); color: var(--accent); }
 
-  .tabs { display: flex; gap: 6px; margin-bottom: 10px; }
+  .tabs { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
   .tab {
     background: var(--panel2); color: var(--muted); border: 1px solid var(--border);
     padding: 6px 16px; border-radius: 8px 8px 0 0; font-size: 13px; font-weight: 700; cursor: pointer;
@@ -1726,5 +1726,6 @@ if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
 </script>
 <script src="firebase-config.js"></script>
 <script src="mindaicode-auth.js"></script>
+<script src="code-langs.js"></script>
 </body>
 </html>

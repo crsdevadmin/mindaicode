@@ -83,6 +83,17 @@
   table.dp td.path { background:rgba(210,153,34,.22); }
   .dpScroll { overflow-x:auto; margin-bottom:12px; }
 
+  /* language tabs for the code panel */
+  .tabs { display:flex; flex-wrap: wrap; gap:6px; margin-bottom:10px; }
+  .tab { background:var(--panel2); color:var(--muted); border:1px solid var(--border); padding:6px 16px;
+    border-radius:8px 8px 0 0; font-size:13px; font-weight:700; cursor:pointer; font-family:inherit; }
+  .tab.on { background:var(--accent); color:#0d1117; border-color:var(--accent); }
+  .codeWrap { display:none; } .codeWrap.on { display:block; }
+  .code { font-family:'Cascadia Code', Consolas, monospace; font-size:12.5px; line-height:1.55;
+    background:var(--panel2); border-radius:10px; padding:14px 0; overflow-x:auto; }
+  .code .line { padding:3px 14px; white-space:pre; }
+  .kw { color:#ff7b72; } .fn { color:#d2a8ff; } .num, .num2 { color:#79c0ff; } .cm { color:#6e7681; }
+
   table.cmp { width:100%; border-collapse:collapse; font-size:13.5px; }
   table.cmp th, table.cmp td { text-align:left; padding:9px 10px; border-bottom:1px solid var(--border); }
   table.cmp th { color:var(--muted); font-size:12px; text-transform:uppercase; letter-spacing:.4px; }
@@ -169,14 +180,34 @@
     <div class="note" id="knapNote">Press Build to fill the table row by row.</div>
 
     <div class="tabs" style="margin-top:6px;">
-      <div class="code" style="font-family:'Cascadia Code', Consolas, monospace; font-size:12.5px; line-height:1.55; background:var(--panel2); border-radius:10px; padding:14px;">
-<span class="cm" style="color:#6e7681;"># dp[i][c] = best value using the first i items with capacity c</span><br>
-<span style="color:#ff7b72;">for</span> i in range(1, n+1):<br>
-&nbsp;&nbsp;<span style="color:#ff7b72;">for</span> c in range(capacity+1):<br>
-&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#ff7b72;">if</span> weight[i-1] &gt; c:<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;dp[i][c] = dp[i-1][c]&nbsp;&nbsp;<span class="cm" style="color:#6e7681;"># item doesn't fit, skip it</span><br>
-&nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#ff7b72;">else</span>:<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;dp[i][c] = max(dp[i-1][c], dp[i-1][c-weight[i-1]] + value[i-1])
+      <button class="tab on" data-target="knap-py" type="button">Python</button>
+      <button class="tab" data-target="knap-java" type="button">Java</button>
+    </div>
+    <div class="codeWrap on" id="knap-py">
+      <div class="code">
+        <div class="line"><span class="cm"># dp[i][c] = best value using the first i items with capacity c</span></div>
+        <div class="line"><span class="kw">for</span> i <span class="kw">in</span> <span class="fn">range</span>(<span class="num2">1</span>, n+<span class="num2">1</span>):</div>
+        <div class="line">    <span class="kw">for</span> c <span class="kw">in</span> <span class="fn">range</span>(capacity+<span class="num2">1</span>):</div>
+        <div class="line">        <span class="kw">if</span> weight[i-<span class="num2">1</span>] &gt; c:</div>
+        <div class="line">            dp[i][c] = dp[i-<span class="num2">1</span>][c]   <span class="cm"># item doesn't fit, skip it</span></div>
+        <div class="line">        <span class="kw">else</span>:</div>
+        <div class="line">            dp[i][c] = <span class="fn">max</span>(dp[i-<span class="num2">1</span>][c],</div>
+        <div class="line">                       dp[i-<span class="num2">1</span>][c-weight[i-<span class="num2">1</span>]] + value[i-<span class="num2">1</span>])</div>
+      </div>
+    </div>
+    <div class="codeWrap" id="knap-java">
+      <div class="code">
+        <div class="line"><span class="kw">int</span>[][] dp = <span class="kw">new</span> <span class="kw">int</span>[n + <span class="num2">1</span>][capacity + <span class="num2">1</span>];</div>
+        <div class="line"><span class="kw">for</span> (<span class="kw">int</span> i = <span class="num2">1</span>; i &lt;= n; i++) {</div>
+        <div class="line">    <span class="kw">for</span> (<span class="kw">int</span> c = <span class="num2">0</span>; c &lt;= capacity; c++) {</div>
+        <div class="line">        <span class="kw">if</span> (weight[i-<span class="num2">1</span>] &gt; c) {</div>
+        <div class="line">            dp[i][c] = dp[i-<span class="num2">1</span>][c];   <span class="cm">// item doesn't fit, skip it</span></div>
+        <div class="line">        } <span class="kw">else</span> {</div>
+        <div class="line">            dp[i][c] = Math.<span class="fn">max</span>(dp[i-<span class="num2">1</span>][c],</div>
+        <div class="line">                       dp[i-<span class="num2">1</span>][c-weight[i-<span class="num2">1</span>]] + value[i-<span class="num2">1</span>]);</div>
+        <div class="line">        }</div>
+        <div class="line">    }</div>
+        <div class="line">}</div>
       </div>
     </div>
   </div>
@@ -480,5 +511,6 @@ if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
 </script>
 <script src="firebase-config.js"></script>
 <script src="mindaicode-auth.js"></script>
+<script src="code-langs.js"></script>
 </body>
 </html>

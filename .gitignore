@@ -1,3 +1,16 @@
 .DS_Store
 node_modules/
 *.log
+
+# leftovers from editing files inside a mounted folder — safe to delete
+.fuse_hidden*
+
+# compiled test binaries from csrc/verify.sh
+csrc/_verify_c
+csrc/_v_*
+!csrc/_v_*.cpp
+csrc/_b_*
+!csrc/_b_*.c
+!csrc/_b_*.cpp
+csrc/_frag_*.cpp
+*.o
