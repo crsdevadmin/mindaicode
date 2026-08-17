@@ -281,6 +281,25 @@
   .waitTag { font-size:9.5px; color:var(--yellow); font-weight:700; margin-top:2px; }
 
   /* ---- what the loop is working on, shown before you answer ---- */
+  /* the plain-language job, shown before any code */
+  .taskCard { background:rgba(63,185,80,.08); border:1px solid rgba(63,185,80,.32);
+    border-left:3px solid var(--green); border-radius:8px; padding:12px 14px; margin-bottom:14px;
+    font-size:14.5px; line-height:1.65; }
+  .taskCard b { color:var(--green); }
+  .taskCard .taskTag { display:block; font-size:10.5px; font-weight:800; color:var(--green);
+    letter-spacing:.6px; margin-bottom:5px; }
+
+  /* the code, revealed only after they have answered */
+  .codeReveal { display:none; margin-top:16px; }
+  .codeReveal.on { display:block; animation:revealIn .28s ease-out; }
+  @keyframes revealIn { from { opacity:0; transform:translateY(-6px); } to { opacity:1; transform:none; } }
+  .revealHead { font-size:13.5px; line-height:1.6; margin-bottom:10px; padding:10px 12px;
+    background:var(--panel2); border-radius:8px; border-left:3px solid var(--accent); }
+  .revealHead b { color:var(--text); }
+  .code .line.keyLine { background:rgba(210,153,34,.18); box-shadow:inset 3px 0 0 var(--yellow); }
+  .keyTag { display:inline-block; font-size:10px; font-weight:800; color:var(--yellow);
+    background:rgba(210,153,34,.2); border-radius:8px; padding:1px 7px; margin-left:8px; }
+
   .sceneLbl { font-size:11.5px; color:var(--muted); font-style:italic; margin-bottom:8px; text-align:center; }
   .sceneHint { color:var(--muted); font-size:12.5px; font-style:italic; font-family:inherit; }
   .rangeTok { width:40px; height:40px; border-radius:8px; background:var(--panel2);
@@ -646,7 +665,7 @@
           <div class="regEcho" id="regEcho">Press play and watch the counter <b>i</b> move down the register.</div>
           <button id="regPlayBtn" class="ghost apBtn">&#9654; Watch her take attendance</button>
         </div>
-        <div class="apArt reg">
+        <div class="apArt reg" data-photo="register">
           <div id="regArt"></div>
           <div class="apCaption">5 names, 5 ticks &mdash; <code>for i in range(5)</code></div>
         </div>
@@ -654,19 +673,27 @@
 
       <div class="gameBox">
         <div class="gameTitle">&#127918; Predict the answer</div>
-        <div class="gameSub">Read the code and work it out <em>first</em>. Then pick your answer and watch it run.</div>
+        <div class="gameSub">Do the job by hand first &mdash; no code yet. Once you have your answer, you will be shown the code that does exactly the same thing.</div>
 
         <div class="scoreRow">
           <span class="scorePill" id="loopRound">Round 1</span>
           <span class="scorePill" id="loopScore">Score 0</span>
         </div>
 
-        <div class="code" id="loopCode" style="margin-bottom:14px;"></div>
-        <div style="font-size:13px; color:var(--muted); margin-bottom:8px;" id="loopQuestion"></div>
-        <div class="optRow" id="loopOpts"></div>
+        <!-- DO IT FIRST. No code on screen while they work it out. -->
+        <div class="taskCard" id="loopTask"></div>
 
         <div class="boxRow" id="loopBoxes"></div>
         <div style="text-align:center; font-family:Consolas, monospace; font-size:14px; margin-bottom:10px;" id="loopRunning"></div>
+
+        <div style="font-size:13px; color:var(--muted); margin-bottom:8px;" id="loopQuestion"></div>
+        <div class="optRow" id="loopOpts"></div>
+
+        <!-- ...and ONLY then the code, as the name for what they just did. -->
+        <div class="codeReveal" id="loopReveal">
+          <div class="revealHead" id="loopRevealHead"></div>
+          <div class="code" id="loopCode"></div>
+        </div>
 
         <div class="feedback" id="loopFb"></div>
         <div class="controls" style="margin-top:10px;">
@@ -674,6 +701,9 @@
           <button id="loopRetryBtn" class="ghost" style="display:none;">&#8634; Play again</button>
         </div>
       </div>
+
+      <!-- FREE PLAY. Their numbers, their choices, code generated from what they pick. -->
+      <div class="lab" id="loopLab"></div>
 
       <div class="dq">
         <div class="dqHead">THERE ARE NO DUMB QUESTIONS</div>
@@ -697,7 +727,7 @@
           &#127891; <strong>Think of a vending machine.</strong> Something goes <em>in</em>, it makes a <em>decision</em>, something comes <em>out</em>. Same input, same output, every time. A <b>function</b> is exactly that.
           <button id="vmPlayBtn" class="ghost apBtn">&#9654; Put a number in</button>
         </div>
-        <div class="apArt vend">
+        <div class="apArt vend" data-photo="vending">
           <div id="vmArt"></div>
           <div class="apCaption">in &rarr; decide &rarr; out</div>
         </div>
@@ -869,6 +899,11 @@
 
 <div class="toast" id="toast"></div>
 
+<script src="tutor-config.js"></script>
+<script src="explain.js"></script>
+<script src="loop-lab.js"></script>
+<script src="tutor.js"></script>
+<script src="photos.js"></script>
 <script src="basics-content.js"></script>
 <script src="basics-engine.js"></script>
 <script>initBasics();</script>

@@ -77,6 +77,8 @@ function renderRail() {
    sitting still until they notice the button. */
 const STEP_HOOKS = {};
 function onStepShown(i, fn) { (STEP_HOOKS[i] = STEP_HOOKS[i] || []).push(fn); }
+// the tutor lives in its own file and needs to follow the student between steps
+if (typeof window !== 'undefined') window.onStepShown = onStepShown;
 function fireStepHooks(i) { (STEP_HOOKS[i] || []).forEach(fn => { try { fn(); } catch (e) {} }); }
 
 function showStep(i) {
@@ -555,8 +557,15 @@ function renderLoopRound() {
   const rs = loopRounds(), r = rs[loopRound];
   document.getElementById('loopRound').textContent = `Round ${loopRound + 1} of ${rs.length}`;
   document.getElementById('loopScore').textContent = `Score ${loopScore}`;
-  document.getElementById('loopCode').innerHTML = r.code.map(l => `<div class="line">${l}</div>`).join('');
-  document.getElementById('loopQuestion').innerHTML = r.question;
+
+  // The job, in plain words. No code on screen yet — the whole point is that they
+  // can work this out from the picture without being able to read Python.
+  document.getElementById('loopTask').innerHTML =
+    '<span class="taskTag">&#127919; YOUR JOB</span>' + (r.task || r.question);
+  document.getElementById('loopCode').innerHTML = '';
+  document.getElementById('loopReveal').classList.remove('on');
+  document.getElementById('loopRevealHead').innerHTML = '';
+  document.getElementById('loopQuestion').innerHTML = r.question.replace(/\s*\(look closely at line \d+\)/i, '');
   const opts = document.getElementById('loopOpts');
   opts.innerHTML = '';
   r.opts.forEach((o, i) => {
@@ -647,6 +656,7 @@ function loopGuess(i) {
   else { btns[i].classList.add('wrong'); btns[r.ans].classList.add('correct'); setFb(fb, 'bad', '❌ Not quite. ' + r.teach); }
   document.getElementById('loopScore').textContent = `Score ${loopScore}`;
   animateLoopRun(r);
+  revealLoopCode(r, i === r.ans);
   if (loopRound < rs.length - 1) document.getElementById('loopNextBtn').style.display = 'inline-block';
   else {
     document.getElementById('loopRetryBtn').style.display = 'inline-block';
@@ -654,6 +664,28 @@ function loopGuess(i) {
     completeStep(2);
   }
 }
+/* Now — and only now — show the code. It is the NAME for the thing they just did,
+   not the thing to be decoded before starting. */
+function revealLoopCode(r, gotItRight) {
+  const codeEl = document.getElementById('loopCode');
+  const head = document.getElementById('loopRevealHead');
+  const wrap = document.getElementById('loopReveal');
+
+  codeEl.innerHTML = r.code.map((l, idx) =>
+    `<div class="line${idx === r.keyLine ? ' keyLine' : ''}">${l}` +
+    (idx === r.keyLine ? '<span class="keyTag">&#9668; this is the line that decides it</span>' : '') +
+    `</div>`).join('');
+
+  head.innerHTML = (gotItRight
+      ? '&#9989; <b>You worked that out without reading a single line of code.</b> '
+      : '&#128161; <b>Now look at what the code was actually doing.</b> ') +
+    'Here is how a programmer writes the job you just did &mdash; ' +
+    '<b>tap any line</b> to see what it means, piece by piece.';
+
+  wrap.classList.add('on');
+  if (window.MindAICodeExplainUI) window.MindAICodeExplainUI.scan();
+}
+
 function resetLoops() {
   clearInterval(loopTimer);
   loopRound = 0; loopScore = 0; loopLocked = false;

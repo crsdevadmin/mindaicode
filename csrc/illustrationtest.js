@@ -8,7 +8,7 @@
 const fs = require('fs');
 const { JSDOM } = require('jsdom');
 // the site lives one folder up from csrc/
-const BASE = require('path').join(__dirname, '..') + '/';
+const BASE = require("path").join(__dirname, "..") + "/";
 
 let allPass = true;
 const ok = (c, m) => { if (!c) { allPass = false; console.log('  !! FAIL: ' + m); } else console.log('  OK: ' + m); };
@@ -259,8 +259,15 @@ console.log('\n=== 5. The lessons still work ===');
   ok(d.querySelectorAll('#loopOpts .optBtn').length > 0 ||
      (await boot()).window.document.querySelectorAll('#loopOpts .optBtn').length > 0,
      'the loop prediction game still offers answers');
-  const d2 = (await boot()).window.document;
-  ok(d2.querySelectorAll('#loopCode .line').length > 0, 'the loop code is still shown');
+  // the code is revealed only AFTER answering now, which is the whole point
+  const dom2 = await boot();
+  const d2 = dom2.window.document;
+  dom2.window.showStep(2);
+  await sleep(80);
+  ok(d2.querySelectorAll('#loopCode .line').length === 0, 'no code is shown while the student works it out');
+  d2.querySelectorAll('#loopOpts .optBtn')[1].click();
+  await sleep(140);
+  ok(d2.querySelectorAll('#loopCode .line').length > 0, 'and the code appears once they have answered');
   ok(d2.querySelector('#step2 .dq') !== null, 'the "no dumb questions" box is still there');
 }
 
