@@ -8,9 +8,10 @@
  * proxy. Never put an API key in this file — it is public. The key belongs on
  * your own server; this file only holds the address of that server.
  *
- *   1. Deploy a tiny endpoint that accepts { question, context } and returns
- *      { answer }. It holds the key and calls the model.
- *   2. Set ENABLED: true and ENDPOINT to its URL.
+ *   1. Deploy server/cloudflare-worker.js — about ten minutes, free tier.
+ *      It holds your Anthropic key as a secret and calls the model for you.
+ *   2. Set ENABLED: true and ENDPOINT to the Worker URL.
+ *   Full walkthrough: server/README.md
  *
  * Even switched on, the scripted explanations stay as the offline fallback, so
  * a student with no connection loses nothing.
@@ -19,8 +20,9 @@ window.MINDAICODE_TUTOR = {
 
   ENABLED: false,
 
-  /* Your own proxy, NOT the model provider. Never a raw provider URL from a
-     public page — that would expose the key to anyone who views source. */
+  /* Your own Cloudflare Worker, NOT api.anthropic.com. Pointing this straight at
+     Anthropic would put your key in a public file — see server/README.md.
+     Looks like: https://mindaicode-tutor.your-name.workers.dev */
   ENDPOINT: '',
 
   /* Shown next to the button so a student knows what it is and what it costs. */

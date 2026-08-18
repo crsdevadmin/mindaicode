@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MindAICode — switch the AI tutor on</title>
+<style>
+:root{--bg:#0d1117;--panel:#161b22;--panel2:#1c2333;--accent:#58a6ff;--green:#3fb950;
+--yellow:#d29922;--red:#f85149;--text:#e6edf3;--muted:#8b949e;--border:#30363d;}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);line-height:1.6}
+.wrap{max-width:820px;margin:0 auto;padding:32px 20px 80px}
+h1{font-size:26px;margin-bottom:6px}
+.sub{color:var(--muted);font-size:15px;margin-bottom:26px}
+.step{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:20px 22px;margin-bottom:16px}
+.step h2{font-size:17px;margin-bottom:10px;display:flex;align-items:center;gap:10px}
+.n{background:var(--accent);color:#0d1117;width:26px;height:26px;border-radius:50%;
+display:inline-flex;align-items:center;justify-content:center;font-size:14px;font-weight:800;flex:0 0 auto}
+p{margin-bottom:10px;font-size:14.5px}
+ol,ul{margin:0 0 10px 22px}li{margin-bottom:6px;font-size:14.5px}
+code{font-family:Consolas,monospace;font-size:13px;background:rgba(110,118,129,.25);padding:2px 6px;border-radius:4px}
+table{width:100%;border-collapse:collapse;margin:12px 0;font-size:14px}
+th,td{text-align:left;padding:9px 10px;border-bottom:1px solid var(--border)}
+th{color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.5px}
+.warn{background:rgba(210,153,34,.12);border-left:3px solid var(--yellow);border-radius:8px;
+padding:12px 14px;margin:12px 0;font-size:14px}
+.danger{background:rgba(248,81,73,.12);border-left:3px solid var(--red);border-radius:8px;
+padding:12px 14px;margin:12px 0;font-size:14px}
+.good{background:rgba(63,185,80,.10);border-left:3px solid var(--green);border-radius:8px;
+padding:12px 14px;margin:12px 0;font-size:14px}
+.codebox{position:relative;margin:14px 0}
+.codebox pre{background:#0b0f14;border:1px solid var(--border);border-radius:10px;padding:14px;
+overflow-x:auto;max-height:340px;font-family:Consolas,monospace;font-size:11.5px;line-height:1.5;color:#c9d1d9}
+.copy{position:absolute;top:10px;right:10px;background:var(--accent);color:#0d1117;border:none;
+border-radius:7px;padding:8px 14px;font-size:12.5px;font-weight:800;cursor:pointer;font-family:inherit}
+.copy:hover{filter:brightness(1.12)}
+.copy.done{background:var(--green)}
+.big{background:var(--green);color:#0d1117;border:none;border-radius:9px;padding:13px 20px;
+font-size:15px;font-weight:800;cursor:pointer;font-family:inherit;margin-top:6px}
+.big:hover{filter:brightness(1.1)}
+.big.done{background:var(--accent)}
+b{color:#fff}
+</style></head><body><div class="wrap">
+
+<h1>Switch the AI tutor on</h1>
+<p class="sub">About ten minutes. You never send your key to anyone &mdash; it goes straight into your own Cloudflare account.</p>
+
+<div class="danger">
+<b>The one rule.</b> Your Anthropic key must never go into the MindAICode repository.
+Every file there is public on GitHub Pages, so a key would be found by bots and billed to you
+within days. That is the only reason this small server exists.
+</div>
+
+<div class="step">
+<h2><span class="n">1</span> Create a free Cloudflare Worker</h2>
+<ol>
+<li>Go to <b>dash.cloudflare.com</b> and sign in (free account is fine).</li>
+<li><b>Workers &amp; Pages</b> &rarr; <b>Create</b> &rarr; <b>Create Worker</b>.</li>
+<li>Name it <code>mindaicode-tutor</code>. Click <b>Deploy</b> on the default example.</li>
+<li>Click <b>Edit code</b>. Select everything in the editor and delete it.</li>
+<li>Press the button below, paste into the empty editor, then click <b>Deploy</b>.</li>
+</ol>
+<div class="codebox">
+  <button class="copy" onclick="cp(this,'w')">&#128203; Copy all the code</button>
+  <pre id="w">/* MindAICode — AI tutor proxy (Cloudflare Worker).
+ *
+ * WHY THIS EXISTS
+ * Your Anthropic key must never go in the website. GitHub Pages files are public,
+ * so a key there would be scraped and billed to you within days. This tiny server
+ * holds the key instead: the page asks this Worker, this Worker asks Anthropic.
+ *
+ * WHAT IT PROTECTS YOU FROM
+ *   - key theft        : the key lives in a Worker secret, never sent to a browser
+ *   - other sites      : only your own domain is allowed to call it
+ *   - runaway cost     : a per-student daily cap, plus a hard token limit
+ *   - abuse            : long questions are rejected, prompts are size-capped
+ *
+ * See server/README.md for the ten-minute deploy.
+ */
+
+const MODEL = &#x27;claude-haiku-4-5-20251001&#x27;;   // cheap and fast; plenty for beginner Q&amp;A
+const MAX_TOKENS = 400;                       // answers are short by design
+const MAX_QUESTION = 300;                      // characters
+const DAILY_PER_STUDENT = 25;                  // questions per IP per day
+
+/* The teaching brief. This is the most important part of the whole file — it is
+   what makes the answers useful to a struggling student rather than a textbook. */
+const SYSTEM = `You are a warm, patient programming tutor sitting next to an Indian school or college student who is learning to code for the first time on a site called MindAICode. Many of them find programming frightening and have been told they are &quot;not technical&quot;. Your job is to make them feel capable.
+
+HOW TO ANSWER
+- Reply in 2 to 4 short sentences. They are usually on a phone.
+- Plain words. No jargon unless you immediately explain it in the same breath.
+- ANSWER THE QUESTION. Do not withhold it to make them work harder, and never reply with only another question. A student who stays stuck loses confidence.
+- Then, if it helps, add one short &quot;why&quot; so they understand rather than memorise.
+- Be encouraging but never fake. Do not praise a wrong idea; say what is wrong kindly and correct it.
+- If they ask in Tamil, Hindi, Telugu, Kannada, Bengali or Marathi, reply in that language.
+
+THINGS THAT MATTER FOR THIS AUDIENCE
+- &quot;=&quot; means &quot;put into&quot;, not &quot;equals&quot;. Say so if it comes up.
+- Indexes start at 0. Say it plainly whenever it is relevant.
+- Their exams are usually in C, C++ or Java, so if they ask how something differs in those languages, answer directly.
+- Never say &quot;it is simple&quot; or &quot;just&quot; or &quot;obviously&quot;. For them it is not simple.
+
+WHAT NOT TO DO
+- Do not invent behaviour. If you are unsure what some code does, say you are not certain rather than guessing.
+- Do not write long code listings. One or two lines at most.
+- If the question is not about programming or this lesson, say kindly that you can only help with the lesson.`;
+
+function cors(origin, allowed) {
+  const ok = allowed.includes(origin);
+  return {
+    &#x27;Access-Control-Allow-Origin&#x27;: ok ? origin : allowed[0] || &#x27;&#x27;,
+    &#x27;Access-Control-Allow-Methods&#x27;: &#x27;POST, OPTIONS&#x27;,
+    &#x27;Access-Control-Allow-Headers&#x27;: &#x27;Content-Type&#x27;,
+    &#x27;Access-Control-Max-Age&#x27;: &#x27;86400&#x27;,
+    &#x27;Vary&#x27;: &#x27;Origin&#x27;
+  };
+}
+
+function json(body, status, headers) {
+  return new Response(JSON.stringify(body), {
+    status: status || 200,
+    headers: Object.assign({ &#x27;Content-Type&#x27;: &#x27;application/json&#x27; }, headers || {})
+  });
+}
+
+export default {
+  async fetch(request, env) {
+    // ALLOWED_ORIGINS is a comma-separated list you set when deploying.
+    const allowed = (env.ALLOWED_ORIGINS || &#x27;&#x27;).split(&#x27;,&#x27;).map(s =&gt; s.trim()).filter(Boolean);
+    const origin = request.headers.get(&#x27;Origin&#x27;) || &#x27;&#x27;;
+    const head = cors(origin, allowed);
+
+    if (request.method === &#x27;OPTIONS&#x27;) return new Response(null, { status: 204, headers: head });
+    if (request.method !== &#x27;POST&#x27;) return json({ error: &#x27;POST only&#x27; }, 405, head);
+
+    // only your own site may call this
+    if (allowed.length &amp;&amp; !allowed.includes(origin)) {
+      return json({ error: &#x27;not allowed from this origin&#x27; }, 403, head);
+    }
+    if (!env.ANTHROPIC_API_KEY) {
+      return json({ error: &#x27;server is not configured&#x27; }, 500, head);
+    }
+
+    let payload;
+    try { payload = await request.json(); }
+    catch (e) { return json({ error: &#x27;bad request&#x27; }, 400, head); }
+
+    const question = String((payload &amp;&amp; payload.question) || &#x27;&#x27;).trim().slice(0, MAX_QUESTION);
+    if (!question) return json({ error: &#x27;no question&#x27; }, 400, head);
+
+    /* ---- daily cap per student, so one person cannot drain your credit ----
+       Needs a KV namespace bound as RATE. If you skip KV the tutor still works;
+       you just lose this protection, which I would not recommend. */
+    const ip = request.headers.get(&#x27;CF-Connecting-IP&#x27;) || &#x27;unknown&#x27;;
+    const day = new Date().toISOString().slice(0, 10);
+    const key = `q:${day}:${ip}`;
+    if (env.RATE) {
+      const used = parseInt(await env.RATE.get(key) || &#x27;0&#x27;, 10);
+      if (used &gt;= DAILY_PER_STUDENT) {
+        return json({
+          answer: &quot;You have asked me quite a few questions today — that is a good thing! I have to rest now, but every written explanation on the page still works. Tap any line of code to see it explained.&quot;
+        }, 200, head);
+      }
+      await env.RATE.put(key, String(used + 1), { expirationTtl: 60 * 60 * 30 });
+    }
+
+    /* what the student was looking at, so the answer is about THEIR screen */
+    const ctx = (payload &amp;&amp; payload.context) || {};
+    const bits = [];
+    if (ctx.line)    bits.push(&#x27;The line of code they are looking at: &#x27; + String(ctx.line).slice(0, 200));
+    if (ctx.reading) bits.push(&#x27;The written explanation already shown to them: &#x27; + String(ctx.reading).slice(0, 400));
+    if (ctx.lesson)  bits.push(&#x27;Lesson: &#x27; + String(ctx.lesson).slice(0, 100));
+    if (typeof ctx.step === &#x27;number&#x27;) {
+      bits.push(&#x27;They are on step &#x27; + (ctx.step + 1) + &#x27; of the beginner course &#x27; +
+                &#x27;(1 variables, 2 arrays, 3 loops, 4 functions, 5 recursion).&#x27;);
+    }
+    if (ctx.language) bits.push(&#x27;They are reading the code in: &#x27; + String(ctx.language).slice(0, 20));
+
+    const userMsg = (bits.length ? bits.join(&#x27;\n&#x27;) + &#x27;\n\n&#x27; : &#x27;&#x27;) + &#x27;Their question: &#x27; + question;
+
+    try {
+      const r = await fetch(&#x27;https://api.anthropic.com/v1/messages&#x27;, {
+        method: &#x27;POST&#x27;,
+        headers: {
+          &#x27;Content-Type&#x27;: &#x27;application/json&#x27;,
+          &#x27;x-api-key&#x27;: env.ANTHROPIC_API_KEY,
+          &#x27;anthropic-version&#x27;: &#x27;2023-06-01&#x27;
+        },
+        body: JSON.stringify({
+          model: env.MODEL || MODEL,
+          max_tokens: MAX_TOKENS,
+          system: SYSTEM,
+          messages: [{ role: &#x27;user&#x27;, content: userMsg }]
+        })
+      });
+
+      if (!r.ok) {
+        const detail = await r.text();
+        console.log(&#x27;anthropic error&#x27;, r.status, detail.slice(0, 300));
+        // never leak the upstream error to a student
+        return json({
+          answer: &quot;Sorry — I could not think of an answer just then. The written explanations on the page all still work, so nothing is lost. Try me again in a moment.&quot;
+        }, 200, head);
+      }
+
+      const data = await r.json();
+      const answer = (data.content || [])
+        .filter(b =&gt; b.type === &#x27;text&#x27;)
+        .map(b =&gt; b.text)
+        .join(&#x27;&#x27;)
+        .trim();
+
+      if (!answer) {
+        return json({ answer: &quot;I did not manage an answer that time. Tap the line of code and the written explanation will help.&quot; }, 200, head);
+      }
+      return json({ answer }, 200, head);
+
+    } catch (e) {
+      console.log(&#x27;proxy failure&#x27;, String(e).slice(0, 200));
+      return json({
+        answer: &quot;I cannot reach my brain right now — probably the internet. Everything else on this page works without it.&quot;
+      }, 200, head);
+    }
+  }
+};
+</pre>
+</div>
+<button class="big" onclick="cp(this,'w')">&#128203; Copy the Worker code to my clipboard</button>
+</div>
+
+<div class="step">
+<h2><span class="n">2</span> Put your key in, as a Secret</h2>
+<p>In the Worker: <b>Settings</b> &rarr; <b>Variables and Secrets</b> &rarr; <b>Add</b>.</p>
+<table>
+<tr><th>Name</th><th>Type</th><th>Value</th></tr>
+<tr><td><code>ANTHROPIC_API_KEY</code></td><td><b>Secret</b></td><td>your key, starts <code>sk-ant-</code></td></tr>
+<tr><td><code>ALLOWED_ORIGINS</code></td><td>Text</td><td><code>https://crsdevadmin.github.io</code></td></tr>
+</table>
+<div class="warn">
+Choose <b>Secret</b>, not Text, for the key. A Secret cannot be read back out of the dashboard
+afterwards &mdash; not even by you. <code>ALLOWED_ORIGINS</code> stops other websites pointing at
+your Worker and spending your money. No trailing slash.
+</div>
+</div>
+
+<div class="step">
+<h2><span class="n">3</span> Add the spend guard <span style="font-size:12px;color:var(--muted);font-weight:400">&mdash; please do not skip this</span></h2>
+<p>This caps each student at 25 questions a day, so one person cannot drain your credit.</p>
+<ol>
+<li>Worker &rarr; <b>Settings</b> &rarr; <b>Bindings</b> &rarr; <b>Add</b> &rarr; <b>KV namespace</b>.</li>
+<li>Create a namespace named <code>mindaicode_rate</code>.</li>
+<li>Bind it with the variable name <code>RATE</code> &mdash; exactly that word, in capitals.</li>
+</ol>
+<p>Without it the tutor still works, but there is no daily limit at all.</p>
+</div>
+
+<div class="step">
+<h2><span class="n">4</span> Point the site at your Worker</h2>
+<p>Copy your Worker address from the Cloudflare page. It looks like
+<code>https://mindaicode-tutor.<i>your-name</i>.workers.dev</code></p>
+<p>Then open <code>tutor-config.js</code> in your MindAICode folder and change just two lines:</p>
+<div class="codebox">
+  <button class="copy" onclick="cp(this,'c')">&#128203; Copy</button>
+  <pre id="c">  ENABLED: true,
+
+  ENDPOINT: 'https://mindaicode-tutor.YOUR-NAME.workers.dev',</pre>
+</div>
+<p>Replace <code>YOUR-NAME</code> with your real Worker address. Save, then commit and push in GitHub Desktop.</p>
+<div class="good">
+<b>To check it worked:</b> open the site in a <b>private window</b> (&#8984;&#8679;N), go to
+Programming Basics, and ask the tutor in the bottom-right corner something like
+<i>&ldquo;why does the first box start at 0?&rdquo;</i>
+<br><br>
+A real answer means you are done. If it says <i>&ldquo;I cannot reach my brain right now&rdquo;</i>,
+check the Worker URL and that <code>ALLOWED_ORIGINS</code> matches your site exactly.
+</div>
+</div>
+
+<div class="step">
+<h2>&#8377; What it will cost you</h2>
+<p>It uses <b>Claude Haiku</b> &mdash; the cheap, fast model, which is the right choice for
+beginner questions &mdash; capped at 400 tokens per answer.</p>
+<div class="warn">
+<b>Set a monthly spend limit in the Anthropic console before you share the site widely.</b>
+That is your real safety net; the 25-a-day cap is the second one. I deliberately am not quoting
+you a price per question, because I cannot promise what it is today &mdash; check
+<b>anthropic.com/pricing</b> yourself.
+</div>
+</div>
+
+<div class="step">
+<h2>&#128683; If you want to turn it off</h2>
+<p>Set <code>ENABLED: false</code> in <code>tutor-config.js</code> and push. The site falls
+straight back to the written explanations, which cover every line of code on the page and work
+with no internet. Nothing breaks and no student sees an error.</p>
+</div>
+
+<div class="step">
+<h2>&#129300; One honest word about the AI</h2>
+<p>The written explanations were checked and cannot be wrong. The AI is for the questions nobody
+anticipated.</p>
+<p>An AI can also be <b>confidently wrong</b>, and a beginner is exactly the person who cannot
+spot it. That is why the instructions I gave the model tell it to admit uncertainty rather than
+guess, and why the written answers were built first rather than as an afterthought. Where the two
+disagree, the written one is the one to trust &mdash; and the tutor panel tells students that.</p>
+</div>
+
+<script>
+function cp(btn, id){
+  var t = document.getElementById(id).textContent;
+  var done = function(){
+    var old = btn.textContent;
+    btn.textContent = '\u2705 Copied!';
+    btn.classList.add('done');
+    setTimeout(function(){ btn.textContent = old; btn.classList.remove('done'); }, 2000);
+  };
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(t).then(done, function(){ fallback(t, done); });
+  } else fallback(t, done);
+}
+function fallback(t, done){
+  var a = document.createElement('textarea');
+  a.value = t; a.style.position='fixed'; a.style.opacity='0';
+  document.body.appendChild(a); a.select();
+  try { document.execCommand('copy'); done(); } catch(e) { alert('Could not copy automatically — select the code and press Cmd+C.'); }
+  document.body.removeChild(a);
+}
+</script>
+</div></body></html>

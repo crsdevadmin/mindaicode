@@ -1,0 +1,13 @@
+{
+  "name": "mindaicode-tutor",
+  "version": "1.0.0",
+  "description": "AI tutor proxy for MindAICode. Holds the Anthropic key server-side so it never appears in the public website.",
+  "main": "index.js",
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "@google-cloud/functions-framework": "^3.4.0",
+    "@google-cloud/firestore": "^7.9.0"
+  }
+}
